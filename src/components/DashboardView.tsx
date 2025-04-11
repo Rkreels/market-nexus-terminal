@@ -5,6 +5,15 @@ import MarketDataPanel from "./panels/MarketDataPanel";
 import StockDetailPanel from "./panels/StockDetailPanel";
 import WatchlistPanel from "./panels/WatchlistPanel";
 import NewsPanel from "./panels/NewsPanel";
+import PortfolioPanel from "./panels/PortfolioPanel";
+import ResearchPanel from "./panels/ResearchPanel";
+import AlertsPanel from "./panels/AlertsPanel";
+import TradingPanel from "./panels/TradingPanel";
+import RiskAnalyticsPanel from "./panels/RiskAnalyticsPanel";
+import FixedIncomePanel from "./panels/FixedIncomePanel";
+import MacroEconomyPanel from "./panels/MacroEconomyPanel";
+import AIModulePanel from "./panels/AIModulePanel";
+import TerminalPanel from "./panels/TerminalPanel";
 
 interface DashboardViewProps {
   activeModule: string;
@@ -36,14 +45,112 @@ const DashboardView: FC<DashboardViewProps> = ({ activeModule, darkMode }) => {
             <h2 className={cn("text-2xl font-bold mb-4", darkMode ? "text-white" : "text-black")}>
               Market Data & Analytics
             </h2>
-            <div className="bg-opacity-20 backdrop-blur-lg rounded-lg p-6 border border-gray-700">
-              <p className={cn("text-lg", darkMode ? "text-gray-300" : "text-gray-700")}>
-                This module will provide real-time price feeds, historical charts, technical analysis tools, and more.
-              </p>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="lg:col-span-2">
+                <MarketDataPanel darkMode={darkMode} />
+              </div>
+              <div className="lg:col-span-1">
+                <WatchlistPanel darkMode={darkMode} />
+              </div>
+              <div className="lg:col-span-3">
+                <StockDetailPanel darkMode={darkMode} />
+              </div>
             </div>
           </div>
         );
-      // Placeholder content for other modules
+      case "portfolio":
+        return (
+          <div className="p-4">
+            <h2 className={cn("text-2xl font-bold mb-4", darkMode ? "text-white" : "text-black")}>
+              Portfolio Management
+            </h2>
+            <PortfolioPanel darkMode={darkMode} />
+          </div>
+        );
+      case "research":
+        return (
+          <div className="p-4">
+            <h2 className={cn("text-2xl font-bold mb-4", darkMode ? "text-white" : "text-black")}>
+              Research & Intelligence
+            </h2>
+            <ResearchPanel darkMode={darkMode} />
+          </div>
+        );
+      case "news":
+        return (
+          <div className="p-4">
+            <h2 className={cn("text-2xl font-bold mb-4", darkMode ? "text-white" : "text-black")}>
+              News & Sentiment
+            </h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <NewsPanel darkMode={darkMode} />
+              <StockDetailPanel darkMode={darkMode} />
+            </div>
+          </div>
+        );
+      case "alerts":
+        return (
+          <div className="p-4">
+            <h2 className={cn("text-2xl font-bold mb-4", darkMode ? "text-white" : "text-black")}>
+              Alerts & Watchlists
+            </h2>
+            <AlertsPanel darkMode={darkMode} />
+          </div>
+        );
+      case "trading":
+        return (
+          <div className="p-4">
+            <h2 className={cn("text-2xl font-bold mb-4", darkMode ? "text-white" : "text-black")}>
+              Trading
+            </h2>
+            <TradingPanel darkMode={darkMode} />
+          </div>
+        );
+      case "risk":
+        return (
+          <div className="p-4">
+            <h2 className={cn("text-2xl font-bold mb-4", darkMode ? "text-white" : "text-black")}>
+              Risk Analytics
+            </h2>
+            <RiskAnalyticsPanel darkMode={darkMode} />
+          </div>
+        );
+      case "fixed-income":
+        return (
+          <div className="p-4">
+            <h2 className={cn("text-2xl font-bold mb-4", darkMode ? "text-white" : "text-black")}>
+              Fixed Income
+            </h2>
+            <FixedIncomePanel darkMode={darkMode} />
+          </div>
+        );
+      case "macro":
+        return (
+          <div className="p-4">
+            <h2 className={cn("text-2xl font-bold mb-4", darkMode ? "text-white" : "text-black")}>
+              Macro Economy
+            </h2>
+            <MacroEconomyPanel darkMode={darkMode} />
+          </div>
+        );
+      case "ai":
+        return (
+          <div className="p-4">
+            <h2 className={cn("text-2xl font-bold mb-4", darkMode ? "text-white" : "text-black")}>
+              AI Module
+            </h2>
+            <AIModulePanel darkMode={darkMode} />
+          </div>
+        );
+      case "terminal":
+        return (
+          <div className="p-4">
+            <h2 className={cn("text-2xl font-bold mb-4", darkMode ? "text-white" : "text-black")}>
+              Terminal
+            </h2>
+            <TerminalPanel darkMode={darkMode} />
+          </div>
+        );
       default:
         return (
           <div className="flex items-center justify-center h-full">
