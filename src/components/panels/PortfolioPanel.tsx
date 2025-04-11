@@ -1,11 +1,10 @@
-
-import { FC } from "react";
+import React, { FC } from "react";
 import { 
   Briefcase, 
   TrendingUp, 
   TrendingDown, 
   PieChart, 
-  Refresh, 
+  RefreshCw, 
   Download, 
   Upload
 } from "lucide-react";
@@ -67,7 +66,7 @@ const PortfolioPanel: FC<PortfolioPanelProps> = ({ darkMode }) => {
           </CardTitle>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" className="h-8">
-              <Refresh className="h-4 w-4 mr-1" /> Refresh
+              <RefreshCw className="h-4 w-4 mr-1" /> Refresh
             </Button>
             <Button variant="outline" size="sm" className="h-8">
               <Download className="h-4 w-4 mr-1" /> Export

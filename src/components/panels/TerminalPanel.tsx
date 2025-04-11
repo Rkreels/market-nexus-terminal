@@ -1,5 +1,4 @@
-
-import { FC, useState, useRef, useEffect } from "react";
+import React, { FC, useState, useRef, useEffect } from "react";
 import { 
   Terminal as TerminalIcon, 
   HelpCircle, 
@@ -8,7 +7,8 @@ import {
   XCircle,
   Clock,
   FileText,
-  Keyboard
+  Keyboard,
+  SendHorizontal
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +31,6 @@ const TerminalPanel: FC<TerminalPanelProps> = ({ darkMode }) => {
   const [commandHistory, setCommandHistory] = useState<CommandOutput[]>([]);
   const terminalRef = useRef<HTMLDivElement | null>(null);
   
-  // Scroll to bottom when commandHistory changes
   useEffect(() => {
     if (terminalRef.current) {
       terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
@@ -49,7 +48,6 @@ const TerminalPanel: FC<TerminalPanelProps> = ({ darkMode }) => {
     
     const command = input.toUpperCase();
     
-    // Process command
     if (command === "HELP") {
       output = (
         <div className="space-y-2">
@@ -419,7 +417,6 @@ const TerminalPanel: FC<TerminalPanelProps> = ({ darkMode }) => {
       );
     }
     
-    // Add to command history
     setCommandHistory([
       ...commandHistory, 
       { 
@@ -429,13 +426,11 @@ const TerminalPanel: FC<TerminalPanelProps> = ({ darkMode }) => {
       }
     ]);
     
-    // Clear input
     setInput("");
   };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-      {/* Terminal Interface */}
       <Card className={cn(
         "border md:col-span-3", 
         darkMode ? "bg-zinc-800 border-zinc-700" : "bg-white border-gray-200"
@@ -475,7 +470,6 @@ const TerminalPanel: FC<TerminalPanelProps> = ({ darkMode }) => {
               </div>
             ))}
             
-            {/* Command prompt */}
             <div className="flex items-center text-yellow-500 animate-pulse">
               <ArrowRight className="w-3 h-3 mr-1" />
               <span className="opacity-50">[{getCurrentTimestamp()}]</span>
@@ -495,14 +489,13 @@ const TerminalPanel: FC<TerminalPanelProps> = ({ darkMode }) => {
               )}
             />
             <Button onClick={handleCommand}>
-              <Send className="w-4 h-4 mr-2" />
+              <SendHorizontal className="w-4 h-4 mr-2" />
               Execute
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Terminal Guide */}
       <Card className={cn(
         "border", 
         darkMode ? "bg-zinc-800 border-zinc-700" : "bg-white border-gray-200"
