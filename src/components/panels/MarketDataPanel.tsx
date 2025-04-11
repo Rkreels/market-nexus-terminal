@@ -20,30 +20,30 @@ interface MarketDataPanelProps {
 const marketIndexes = [
   { 
     name: "S&P 500", 
-    value: 4,892.17, 
-    change: +15.28, 
-    percentChange: +0.31, 
+    value: 4892.17, 
+    change: 15.28, 
+    percentChange: 0.31, 
     direction: "up" 
   },
   { 
     name: "Dow Jones", 
-    value: 38,671.69, 
-    change: +134.22, 
-    percentChange: +0.35, 
+    value: 38671.69, 
+    change: 134.22, 
+    percentChange: 0.35, 
     direction: "up" 
   },
   { 
     name: "NASDAQ", 
-    value: 15,461.84, 
+    value: 15461.84, 
     change: -3.25, 
     percentChange: -0.02, 
     direction: "down" 
   },
   { 
     name: "Russell 2000", 
-    value: 1,998.32, 
-    change: +12.07, 
-    percentChange: +0.61, 
+    value: 1998.32, 
+    change: 12.07, 
+    percentChange: 0.61, 
     direction: "up" 
   }
 ];
