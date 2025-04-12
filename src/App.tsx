@@ -45,7 +45,7 @@ const App = () => (
           <Route path="/risk" element={<RiskAnalyticsPage />} />
           <Route path="/fixed-income" element={<FixedIncomePage />} />
           <Route path="/macro" element={<MacroEconomyPage />} />
-          <Route path="/ai" element={<AIModulePanel />} />
+          <Route path="/ai" element={<AIModulePage />} />
           <Route path="/terminal" element={<TerminalPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
