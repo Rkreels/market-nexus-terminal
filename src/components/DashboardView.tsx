@@ -14,6 +14,7 @@ import FixedIncomePanel from "./panels/FixedIncomePanel";
 import MacroEconomyPanel from "./panels/MacroEconomyPanel";
 import AIModulePanel from "./panels/AIModulePanel";
 import TerminalPanel from "./panels/TerminalPanel";
+import DashboardSummaryPanel from "./panels/DashboardSummaryPanel";
 
 interface DashboardViewProps {
   activeModule: string;
@@ -26,16 +27,15 @@ const DashboardView: FC<DashboardViewProps> = ({ activeModule, darkMode }) => {
     switch (activeModule) {
       case "dashboard":
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-            <div className="lg:col-span-2">
-              <MarketDataPanel darkMode={darkMode} />
-            </div>
-            <div className="lg:col-span-1 flex flex-col gap-4">
-              <WatchlistPanel darkMode={darkMode} />
-              <NewsPanel darkMode={darkMode} />
-            </div>
-            <div className="lg:col-span-3">
-              <StockDetailPanel darkMode={darkMode} />
+          <div className="grid grid-cols-1 gap-4 p-4">
+            <DashboardSummaryPanel darkMode={darkMode} />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-2">
+                <NewsPanel darkMode={darkMode} />
+              </div>
+              <div>
+                <WatchlistPanel darkMode={darkMode} />
+              </div>
             </div>
           </div>
         );

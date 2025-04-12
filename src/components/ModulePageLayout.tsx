@@ -1,43 +1,76 @@
 
-import { FC, ReactNode } from "react";
-import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter, 
-         SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset } from "@/components/ui/sidebar";
-import { LayoutDashboard, LineChart, Briefcase, Newspaper, Bell, BookOpen, CircleDollarSign, 
-         BarChart3, TrendingUp, Globe, Bot, Terminal, MoonStar, Sun } from "lucide-react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { 
+  LayoutDashboard, 
+  LineChart, 
+  Briefcase, 
+  Newspaper, 
+  Bell, 
+  BookOpen, 
+  CircleDollarSign, 
+  BarChart3, 
+  TrendingUp, 
+  Globe, 
+  Bot, 
+  Terminal,
+  MoonStar,
+  Sun
+} from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
-import { Link } from "react-router-dom";
+import { 
+  SidebarProvider, 
+  Sidebar, 
+  SidebarHeader, 
+  SidebarContent, 
+  SidebarMenu, 
+  SidebarMenuItem, 
+  SidebarMenuButton, 
+  SidebarFooter,
+  SidebarInset
+} from "@/components/ui/sidebar";
 import DashboardView from "@/components/DashboardView";
+import { useToast } from "@/hooks/use-toast";
 
 interface ModulePageLayoutProps {
   activeModule: string;
   darkMode: boolean;
   toggleDarkMode: () => void;
-  children?: ReactNode;
 }
 
-const ModulePageLayout: FC<ModulePageLayoutProps> = ({ 
+const ModulePageLayout: React.FC<ModulePageLayoutProps> = ({ 
   activeModule, 
   darkMode, 
-  toggleDarkMode,
-  children 
+  toggleDarkMode 
 }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
-  const menuItems = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/" },
-    { id: "market-data", label: "Market Data", icon: LineChart, path: "/market-data" },
-    { id: "portfolio", label: "Portfolio", icon: Briefcase, path: "/portfolio" },
-    { id: "news", label: "News & Sentiment", icon: Newspaper, path: "/news" },
-    { id: "alerts", label: "Alerts & Watchlists", icon: Bell, path: "/alerts" },
-    { id: "research", label: "Research", icon: BookOpen, path: "/research" },
-    { id: "trading", label: "Trading", icon: CircleDollarSign, path: "/trading" },
-    { id: "risk", label: "Risk Analytics", icon: BarChart3, path: "/risk" },
-    { id: "fixed-income", label: "Fixed Income", icon: TrendingUp, path: "/fixed-income" },
-    { id: "macro", label: "Macro Economy", icon: Globe, path: "/macro" },
-    { id: "ai", label: "AI Module", icon: Bot, path: "/ai" },
-    { id: "terminal", label: "Terminal", icon: Terminal, path: "/terminal" }
-  ];
+  const handleModuleChange = (moduleId: string) => {
+    // Map module IDs to their routes
+    const routes: Record<string, string> = {
+      "dashboard": "/",
+      "market-data": "/market-data",
+      "portfolio": "/portfolio",
+      "news": "/news",
+      "alerts": "/alerts",
+      "research": "/research",
+      "trading": "/trading",
+      "risk": "/risk",
+      "fixed-income": "/fixed-income",
+      "macro": "/macro",
+      "ai": "/ai",
+      "terminal": "/terminal"
+    };
+
+    toast({
+      title: "Module Changed",
+      description: `Navigating to ${moduleId} module`,
+      duration: 2000,
+    });
+
+    navigate(routes[moduleId]);
+  };
 
   return (
     <div className={cn("min-h-screen transition-colors", darkMode ? "dark bg-zinc-900" : "bg-white")}>
@@ -59,35 +92,126 @@ const ModulePageLayout: FC<ModulePageLayoutProps> = ({
             </SidebarHeader>
             <SidebarContent>
               <SidebarMenu>
-                {menuItems.map((item) => (
-                  <SidebarMenuItem key={item.id}>
-                    <SidebarMenuButton 
-                      isActive={activeModule === item.id}
-                      asChild={activeModule !== item.id}
-                      tooltip={item.label}
-                    >
-                      {activeModule === item.id ? (
-                        <div className="flex items-center">
-                          <item.icon className="w-5 h-5" />
-                          <span>{item.label}</span>
-                        </div>
-                      ) : (
-                        <Link 
-                          to={item.path}
-                          className="flex items-center w-full"
-                          onClick={() => toast({
-                            title: "Module Changed",
-                            description: `Navigated to ${item.label} module`,
-                            duration: 2000,
-                          })}
-                        >
-                          <item.icon className="w-5 h-5" />
-                          <span>{item.label}</span>
-                        </Link>
-                      )}
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    isActive={activeModule === "dashboard"} 
+                    onClick={() => handleModuleChange("dashboard")}
+                    tooltip="Dashboard"
+                  >
+                    <LayoutDashboard className="w-5 h-5" />
+                    <span>Dashboard</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    isActive={activeModule === "market-data"} 
+                    onClick={() => handleModuleChange("market-data")}
+                    tooltip="Market Data"
+                  >
+                    <LineChart className="w-5 h-5" />
+                    <span>Market Data</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    isActive={activeModule === "portfolio"} 
+                    onClick={() => handleModuleChange("portfolio")}
+                    tooltip="Portfolio"
+                  >
+                    <Briefcase className="w-5 h-5" />
+                    <span>Portfolio</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    isActive={activeModule === "news"} 
+                    onClick={() => handleModuleChange("news")}
+                    tooltip="News"
+                  >
+                    <Newspaper className="w-5 h-5" />
+                    <span>News & Sentiment</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    isActive={activeModule === "alerts"} 
+                    onClick={() => handleModuleChange("alerts")}
+                    tooltip="Alerts"
+                  >
+                    <Bell className="w-5 h-5" />
+                    <span>Alerts & Watchlists</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    isActive={activeModule === "research"} 
+                    onClick={() => handleModuleChange("research")}
+                    tooltip="Research"
+                  >
+                    <BookOpen className="w-5 h-5" />
+                    <span>Research</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    isActive={activeModule === "trading"} 
+                    onClick={() => handleModuleChange("trading")}
+                    tooltip="Trading"
+                  >
+                    <CircleDollarSign className="w-5 h-5" />
+                    <span>Trading</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    isActive={activeModule === "risk"} 
+                    onClick={() => handleModuleChange("risk")}
+                    tooltip="Risk"
+                  >
+                    <BarChart3 className="w-5 h-5" />
+                    <span>Risk Analytics</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    isActive={activeModule === "fixed-income"} 
+                    onClick={() => handleModuleChange("fixed-income")}
+                    tooltip="Fixed Income"
+                  >
+                    <TrendingUp className="w-5 h-5" />
+                    <span>Fixed Income</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    isActive={activeModule === "macro"} 
+                    onClick={() => handleModuleChange("macro")}
+                    tooltip="Macro"
+                  >
+                    <Globe className="w-5 h-5" />
+                    <span>Macro Economy</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    isActive={activeModule === "ai"} 
+                    onClick={() => handleModuleChange("ai")}
+                    tooltip="AI"
+                  >
+                    <Bot className="w-5 h-5" />
+                    <span>AI Module</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    isActive={activeModule === "terminal"} 
+                    onClick={() => handleModuleChange("terminal")}
+                    tooltip="Terminal"
+                  >
+                    <Terminal className="w-5 h-5" />
+                    <span>Terminal</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarContent>
             <SidebarFooter className={cn("p-4 text-xs text-center", darkMode ? "text-gray-400" : "text-gray-500")}>
@@ -95,7 +219,7 @@ const ModulePageLayout: FC<ModulePageLayoutProps> = ({
             </SidebarFooter>
           </Sidebar>
           <SidebarInset>
-            {children || <DashboardView activeModule={activeModule} darkMode={darkMode} />}
+            <DashboardView activeModule={activeModule} darkMode={darkMode} />
           </SidebarInset>
         </div>
       </SidebarProvider>

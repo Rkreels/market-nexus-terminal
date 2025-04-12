@@ -1,6 +1,6 @@
 
-import { FC } from "react";
-import { LineChart as LineChartIcon, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { FC, useState } from "react";
+import { LineChart as LineChartIcon, ArrowUpRight, ArrowDownRight, Plus, Edit, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { 
   LineChart, 
@@ -11,6 +11,9 @@ import {
   Tooltip, 
   ResponsiveContainer 
 } from "recharts";
+import { Button } from "@/components/ui/button";
+import { Timeframe, timeframeOptions, generateTimeframeData } from "@/utils/timeframeUtils";
+import { useToast } from "@/hooks/use-toast";
 
 interface MarketDataPanelProps {
   darkMode: boolean;
@@ -48,25 +51,45 @@ const marketIndexes = [
   }
 ];
 
-// Mock chart data
-const chartData = [
-  { time: "9:30", value: 4850 },
-  { time: "10:00", value: 4855 },
-  { time: "10:30", value: 4848 },
-  { time: "11:00", value: 4860 },
-  { time: "11:30", value: 4865 },
-  { time: "12:00", value: 4870 },
-  { time: "12:30", value: 4868 },
-  { time: "13:00", value: 4875 },
-  { time: "13:30", value: 4880 },
-  { time: "14:00", value: 4876 },
-  { time: "14:30", value: 4882 },
-  { time: "15:00", value: 4885 },
-  { time: "15:30", value: 4890 },
-  { time: "16:00", value: 4892 }
-];
-
 const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
+  const [activeTimeframe, setActiveTimeframe] = useState<Timeframe>('1M');
+  const [chartData, setChartData] = useState(() => generateTimeframeData(activeTimeframe));
+  const { toast } = useToast();
+
+  const handleTimeframeChange = (timeframe: Timeframe) => {
+    setActiveTimeframe(timeframe);
+    setChartData(generateTimeframeData(timeframe));
+    toast({
+      title: "Timeframe Changed",
+      description: `Showing data for ${timeframe}`,
+      duration: 2000,
+    });
+  };
+
+  const handleAddWatchlist = () => {
+    toast({
+      title: "Add to Watchlist",
+      description: "Item added to your watchlist",
+      duration: 2000,
+    });
+  };
+
+  const handleEditData = () => {
+    toast({
+      title: "Edit Data",
+      description: "Data editing functionality coming soon",
+      duration: 2000,
+    });
+  };
+
+  const handleDeleteData = () => {
+    toast({
+      title: "Delete Data",
+      description: "Data removed from view",
+      duration: 2000,
+    });
+  };
+
   return (
     <div className={cn("rounded-lg overflow-hidden shadow-md", 
       darkMode ? "bg-zinc-800 border border-zinc-700" : "bg-white border border-gray-200"
@@ -76,18 +99,34 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
           <LineChartIcon className={cn("w-5 h-5 mr-2", darkMode ? "text-blue-400" : "text-blue-600")} />
           <h3 className="font-medium">Market Overview</h3>
         </div>
-        <div className={cn("text-xs px-2 py-1 rounded", 
-          darkMode ? "bg-zinc-700 text-zinc-300" : "bg-gray-100 text-gray-700"
-        )}>
-          Live
+        <div className="flex items-center gap-2">
+          <div className={cn("text-xs px-2 py-1 rounded", 
+            darkMode ? "bg-zinc-700 text-zinc-300" : "bg-gray-100 text-gray-700"
+          )}>
+            Live
+          </div>
+          <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleAddWatchlist}>
+            <Plus className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleEditData}>
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleDeleteData}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
       </div>
       
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4">
         {marketIndexes.map((index) => (
-          <div key={index.name} className={cn("p-3 rounded-lg", 
-            darkMode ? "bg-zinc-700" : "bg-gray-50"
-          )}>
+          <div key={index.name} className={cn("p-3 rounded-lg cursor-pointer hover:bg-opacity-80 transition-colors", 
+            darkMode ? "bg-zinc-700 hover:bg-zinc-600" : "bg-gray-50 hover:bg-gray-100"
+          )}
+          onClick={() => toast({
+            title: `${index.name} Selected`,
+            description: "View detailed information for this index",
+            duration: 2000,
+          })}>
             <div className="text-sm font-medium mb-1">{index.name}</div>
             <div className="flex items-end justify-between">
               <div className="text-lg font-semibold">{index.value.toLocaleString()}</div>
@@ -105,12 +144,26 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
           </div>
         ))}
       </div>
+
+      <div className="flex border-t border-b px-4 py-2 overflow-x-auto gap-2 whitespace-nowrap scrollbar-none">
+        {timeframeOptions.map(timeframe => (
+          <Button 
+            key={timeframe}
+            variant={activeTimeframe === timeframe ? "default" : "outline"}
+            size="sm"
+            onClick={() => handleTimeframeChange(timeframe)}
+            className="min-w-16"
+          >
+            {timeframe}
+          </Button>
+        ))}
+      </div>
       
       <div className="p-4 h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={chartData}
-            margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
+            margin={{ top: 5, right: 20, bottom: 5, left: 20 }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? "#444" : "#ccc"} />
             <XAxis 
