@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
   LineChart, 
@@ -45,6 +45,7 @@ const ModulePageLayout: React.FC<ModulePageLayoutProps> = ({
 }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleModuleChange = (moduleId: string) => {
     // Map module IDs to their routes
@@ -62,6 +63,11 @@ const ModulePageLayout: React.FC<ModulePageLayoutProps> = ({
       "ai": "/ai",
       "terminal": "/terminal"
     };
+
+    // Prevent navigation if we're already on this page
+    if (location.pathname === routes[moduleId]) {
+      return;
+    }
 
     toast({
       title: "Module Changed",
