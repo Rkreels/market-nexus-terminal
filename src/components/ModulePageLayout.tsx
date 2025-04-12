@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/sidebar";
 import DashboardView from "@/components/DashboardView";
 import { useToast } from "@/hooks/use-toast";
+import FilterPanel from "@/components/FilterPanel";
 
 interface ModulePageLayoutProps {
   activeModule: string;
@@ -46,6 +47,19 @@ const ModulePageLayout: React.FC<ModulePageLayoutProps> = ({
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Apply dark mode on first load
+  useEffect(() => {
+    if (!isInitialized) {
+      if (darkMode) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+      setIsInitialized(true);
+    }
+  }, [darkMode, isInitialized]);
 
   const handleModuleChange = (moduleId: string) => {
     // Map module IDs to their routes

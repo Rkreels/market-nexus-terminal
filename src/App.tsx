@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { UIProvider } from "@/contexts/UIContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import MarketDataPage from "./pages/MarketDataPage";
@@ -31,25 +32,27 @@ const queryClient = new QueryClient({
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/market-data" element={<MarketDataPage />} />
-          <Route path="/portfolio" element={<PortfolioPage />} />
-          <Route path="/research" element={<ResearchPage />} />
-          <Route path="/news" element={<NewsPage />} />
-          <Route path="/alerts" element={<AlertsPage />} />
-          <Route path="/trading" element={<TradingPage />} />
-          <Route path="/risk" element={<RiskAnalyticsPage />} />
-          <Route path="/fixed-income" element={<FixedIncomePage />} />
-          <Route path="/macro" element={<MacroEconomyPage />} />
-          <Route path="/ai" element={<AIModulePage />} />
-          <Route path="/terminal" element={<TerminalPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <UIProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/market-data" element={<MarketDataPage />} />
+            <Route path="/portfolio" element={<PortfolioPage />} />
+            <Route path="/research" element={<ResearchPage />} />
+            <Route path="/news" element={<NewsPage />} />
+            <Route path="/alerts" element={<AlertsPage />} />
+            <Route path="/trading" element={<TradingPage />} />
+            <Route path="/risk" element={<RiskAnalyticsPage />} />
+            <Route path="/fixed-income" element={<FixedIncomePage />} />
+            <Route path="/macro" element={<MacroEconomyPage />} />
+            <Route path="/ai" element={<AIModulePage />} />
+            <Route path="/terminal" element={<TerminalPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </UIProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

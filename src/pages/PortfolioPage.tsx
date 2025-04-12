@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ModulePageLayout from "@/components/ModulePageLayout";
 
 const PortfolioPage = () => {
@@ -9,6 +9,13 @@ const PortfolioPage = () => {
     setDarkMode(!darkMode);
     document.documentElement.classList.toggle("dark");
   };
+
+  // Add dark mode class to root on initial load
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    }
+  }, []);
 
   return (
     <ModulePageLayout 
