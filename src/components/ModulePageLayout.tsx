@@ -69,6 +69,7 @@ const ModulePageLayout: React.FC<ModulePageLayoutProps> = ({
       duration: 2000,
     });
 
+    // Navigate to the correct route
     navigate(routes[moduleId]);
   };
 

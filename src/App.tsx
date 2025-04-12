@@ -18,7 +18,15 @@ import MacroEconomyPage from "./pages/MacroEconomyPage";
 import AIModulePage from "./pages/AIModulePage";
 import TerminalPage from "./pages/TerminalPage";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 30000,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -37,7 +45,7 @@ const App = () => (
           <Route path="/risk" element={<RiskAnalyticsPage />} />
           <Route path="/fixed-income" element={<FixedIncomePage />} />
           <Route path="/macro" element={<MacroEconomyPage />} />
-          <Route path="/ai" element={<AIModulePage />} />
+          <Route path="/ai" element={<AIModulePanel />} />
           <Route path="/terminal" element={<TerminalPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
