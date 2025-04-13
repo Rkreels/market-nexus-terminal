@@ -1,21 +1,22 @@
 
 import { useState } from "react";
 import ModulePageLayout from "@/components/ModulePageLayout";
+import AlertsPanel from "@/components/panels/AlertsPanel";
+import { useUI } from "@/contexts/UIContext";
 
 const AlertsPage = () => {
-  const [darkMode, setDarkMode] = useState<boolean>(true);
+  const { isDarkMode, toggleDarkMode } = useUI();
   
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    document.documentElement.classList.toggle("dark");
-  };
-
   return (
     <ModulePageLayout 
       activeModule="alerts" 
-      darkMode={darkMode} 
+      darkMode={isDarkMode} 
       toggleDarkMode={toggleDarkMode} 
-    />
+    >
+      <div className="p-6">
+        <AlertsPanel darkMode={isDarkMode} />
+      </div>
+    </ModulePageLayout>
   );
 };
 
