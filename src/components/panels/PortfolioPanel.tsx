@@ -1,4 +1,5 @@
-import React, { FC } from "react";
+
+import React, { FC, useState } from "react";
 import { 
   Briefcase, 
   TrendingUp, 
@@ -6,7 +7,9 @@ import {
   PieChart, 
   RefreshCw, 
   Download, 
-  Upload
+  Upload,
+  FileDown,
+  Share2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { 
@@ -19,12 +22,25 @@ import {
 } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface PortfolioPanelProps {
   darkMode: boolean;
 }
 
-// Mock portfolio data
+// Mock portfolio summary data
 const portfolioSummary = {
   totalValue: 847392.58,
   dailyChange: 12481.32,
@@ -52,6 +68,51 @@ const topHoldings = [
 ];
 
 const PortfolioPanel: FC<PortfolioPanelProps> = ({ darkMode }) => {
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [isRebalanceDialogOpen, setIsRebalanceDialogOpen] = useState(false);
+  const { toast } = useToast();
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    setTimeout(() => {
+      setIsRefreshing(false);
+      toast({
+        title: "Portfolio Refreshed",
+        description: "All portfolio data has been updated",
+        duration: 2000,
+      });
+    }, 1000);
+  };
+
+  const handleExport = (format: string) => {
+    toast({
+      title: "Portfolio Exported",
+      description: `Portfolio data exported as ${format}`,
+      duration: 2000,
+    });
+    setIsExportDialogOpen(false);
+  };
+
+  const handleImport = () => {
+    toast({
+      title: "Portfolio Imported",
+      description: "External portfolio data has been imported successfully",
+      duration: 2000,
+    });
+    setIsImportDialogOpen(false);
+  };
+
+  const handleRebalance = () => {
+    toast({
+      title: "Portfolio Rebalanced",
+      description: "Portfolio has been rebalanced to target allocations",
+      duration: 2000,
+    });
+    setIsRebalanceDialogOpen(false);
+  };
+
   return (
     <div className="space-y-4">
       {/* Portfolio Summary Card */}
@@ -65,12 +126,97 @@ const PortfolioPanel: FC<PortfolioPanelProps> = ({ darkMode }) => {
             Portfolio Summary
           </CardTitle>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="h-8">
-              <RefreshCw className="h-4 w-4 mr-1" /> Refresh
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8"
+              disabled={isRefreshing}
+              onClick={handleRefresh}
+            >
+              <RefreshCw className={cn("h-4 w-4 mr-1", isRefreshing && "animate-spin")} /> 
+              {isRefreshing ? "Refreshing..." : "Refresh"}
             </Button>
-            <Button variant="outline" size="sm" className="h-8">
-              <Download className="h-4 w-4 mr-1" /> Export
-            </Button>
+            
+            <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8">
+                  <Download className="h-4 w-4 mr-1" /> Export
+                </Button>
+              </DialogTrigger>
+              <DialogContent className={cn(
+                darkMode ? "bg-zinc-800 border-zinc-700" : "bg-white"
+              )}>
+                <DialogHeader>
+                  <DialogTitle>Export Portfolio</DialogTitle>
+                  <DialogDescription>
+                    Select the format and content to export
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                  <div className="mb-4">
+                    <Label className="mb-2 block">Export Format</Label>
+                    <RadioGroup defaultValue="csv" className="flex flex-col space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="csv" id="csv" />
+                        <Label htmlFor="csv">CSV</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="pdf" id="pdf" />
+                        <Label htmlFor="pdf">PDF</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="excel" id="excel" />
+                        <Label htmlFor="excel">Excel</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  <div className="mb-4">
+                    <Label className="mb-2 block">Content to Include</Label>
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="holdings" defaultChecked />
+                        <label htmlFor="holdings" className="text-sm">Holdings & Positions</label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="performance" defaultChecked />
+                        <label htmlFor="performance" className="text-sm">Performance History</label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="transactions" defaultChecked />
+                        <label htmlFor="transactions" className="text-sm">Recent Transactions</label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="analytics" />
+                        <label htmlFor="analytics" className="text-sm">Analytics & Metrics</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter className="flex justify-between">
+                  <Button variant="outline" onClick={() => setIsExportDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <div className="flex gap-2">
+                    <Button onClick={() => handleExport("PDF")}>
+                      <FileDown className="w-4 h-4 mr-2" /> Export
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => {
+                        toast({
+                          title: "Share Link Generated",
+                          description: "Portfolio share link has been copied to clipboard",
+                          duration: 2000,
+                        });
+                        setIsExportDialogOpen(false);
+                      }}
+                    >
+                      <Share2 className="w-4 h-4 mr-2" /> Share
+                    </Button>
+                  </div>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardHeader>
         <CardContent>
@@ -110,12 +256,175 @@ const PortfolioPanel: FC<PortfolioPanelProps> = ({ darkMode }) => {
             <div className={cn("p-4 rounded-lg", darkMode ? "bg-zinc-700" : "bg-gray-50")}>
               <div className="text-sm opacity-70 mb-1">Actions</div>
               <div className="flex gap-2">
-                <Button size="sm">
-                  <Upload className="h-4 w-4 mr-1" /> Import
-                </Button>
-                <Button size="sm" variant="outline">
-                  <PieChart className="h-4 w-4 mr-1" /> Rebalance
-                </Button>
+                <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="sm">
+                      <Upload className="h-4 w-4 mr-1" /> Import
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className={cn(
+                    darkMode ? "bg-zinc-800 border-zinc-700" : "bg-white"
+                  )}>
+                    <DialogHeader>
+                      <DialogTitle>Import Portfolio Data</DialogTitle>
+                      <DialogDescription>
+                        Import external portfolio data or transactions
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                      <div className="mb-4">
+                        <Label className="mb-2 block">Import Type</Label>
+                        <RadioGroup defaultValue="holdings" className="flex flex-col space-y-1">
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="holdings" id="import-holdings" />
+                            <Label htmlFor="import-holdings">Holdings & Positions</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="transactions" id="import-transactions" />
+                            <Label htmlFor="import-transactions">Transaction History</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="watchlist" id="import-watchlist" />
+                            <Label htmlFor="import-watchlist">Watchlist</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+                      <div className="mb-4">
+                        <Label className="mb-2 block">File Format</Label>
+                        <RadioGroup defaultValue="csv" className="flex flex-col space-y-1">
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="csv" id="import-csv" />
+                            <Label htmlFor="import-csv">CSV</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="excel" id="import-excel" />
+                            <Label htmlFor="import-excel">Excel</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="api" id="import-api" />
+                            <Label htmlFor="import-api">External API</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+                      <div className={cn(
+                        "p-8 border-2 border-dashed rounded-lg text-center cursor-pointer",
+                        darkMode ? "border-zinc-600 hover:border-zinc-500" : "border-gray-300 hover:border-gray-400"
+                      )}>
+                        <Upload className="w-8 h-8 mx-auto mb-2 opacity-60" />
+                        <p className="text-sm mb-1">Drag & drop file here or click to browse</p>
+                        <p className="text-xs opacity-60">Supports CSV, XLS, XLSX files up to 10MB</p>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsImportDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleImport}>
+                        Import Data
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+                
+                <Dialog open={isRebalanceDialogOpen} onOpenChange={setIsRebalanceDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" variant="outline">
+                      <PieChart className="h-4 w-4 mr-1" /> Rebalance
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className={cn(
+                    darkMode ? "bg-zinc-800 border-zinc-700" : "bg-white"
+                  )}>
+                    <DialogHeader>
+                      <DialogTitle>Rebalance Portfolio</DialogTitle>
+                      <DialogDescription>
+                        Adjust your portfolio to match target allocations
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                      <div className="mb-4">
+                        <h3 className="font-medium mb-2">Current vs Target Allocation</h3>
+                        <div className="space-y-3">
+                          <div>
+                            <div className="flex justify-between mb-1">
+                              <span className="text-sm">Stocks</span>
+                              <span className="text-sm">65% → 60%</span>
+                            </div>
+                            <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                              <div className="h-full bg-blue-500 w-[65%] relative">
+                                <div className="absolute top-0 bottom-0 right-0 border-r-2 border-dashed border-black h-full" style={{ right: '5%' }}></div>
+                              </div>
+                            </div>
+                          </div>
+                          <div>
+                            <div className="flex justify-between mb-1">
+                              <span className="text-sm">Bonds</span>
+                              <span className="text-sm">15% → 20%</span>
+                            </div>
+                            <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                              <div className="h-full bg-green-500 w-[15%] relative">
+                                <div className="absolute top-0 bottom-0 right-0 border-r-2 border-dashed border-black h-full" style={{ right: '-5%' }}></div>
+                              </div>
+                            </div>
+                          </div>
+                          <div>
+                            <div className="flex justify-between mb-1">
+                              <span className="text-sm">Cash</span>
+                              <span className="text-sm">10% → 10%</span>
+                            </div>
+                            <div className="w-full bg-gray-200 h-2 rounded-full">
+                              <div className="h-full bg-yellow-500 w-[10%]"></div>
+                            </div>
+                          </div>
+                          <div>
+                            <div className="flex justify-between mb-1">
+                              <span className="text-sm">Alternatives</span>
+                              <span className="text-sm">10% → 10%</span>
+                            </div>
+                            <div className="w-full bg-gray-200 h-2 rounded-full">
+                              <div className="h-full bg-pink-500 w-[10%]"></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mb-4">
+                        <h3 className="font-medium mb-2">Rebalance Method</h3>
+                        <RadioGroup defaultValue="auto" className="flex flex-col space-y-1">
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="auto" id="auto" />
+                            <Label htmlFor="auto">Automatic (System Recommended)</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="manual" id="manual" />
+                            <Label htmlFor="manual">Manual Adjustment</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="tax" id="tax" />
+                            <Label htmlFor="tax">Tax-Optimized</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+                      
+                      <div className={cn(
+                        "p-3 rounded-lg border",
+                        darkMode ? "border-amber-800 bg-amber-950/20" : "border-amber-200 bg-amber-50"
+                      )}>
+                        <p className="text-sm text-amber-600 dark:text-amber-400">
+                          Rebalancing may trigger tax events. Consider consulting with your financial advisor.
+                        </p>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsRebalanceDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleRebalance}>
+                        Rebalance Portfolio
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
           </div>

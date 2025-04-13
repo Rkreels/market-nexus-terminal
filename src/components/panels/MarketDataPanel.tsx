@@ -1,3 +1,4 @@
+
 import { FC, useState } from "react";
 import { 
   PlusCircle, 
@@ -32,6 +33,7 @@ import { useUI } from "@/contexts/UIContext";
 import { MarketDataItem } from "@/types/marketData";
 import AddMarketDataForm from "@/components/AddMarketDataForm";
 import DataTable from "@/components/DataTable";
+import { useToast } from "@/hooks/use-toast";
 
 interface MarketDataPanelProps {
   darkMode: boolean;
@@ -42,6 +44,7 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [isAddItemDialogOpen, setIsAddItemDialogOpen] = useState(false);
   const { marketData, addMarketDataItem, deleteMarketDataItem, editMarketDataItem } = useUI();
+  const { toast } = useToast();
 
   const filteredData = marketData.filter(item =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -92,7 +95,18 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
           Market Data
         </CardTitle>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => setActiveFilters([])}>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={() => {
+              setActiveFilters([]);
+              toast({
+                title: "Filters Reset",
+                description: "All filters have been cleared",
+                duration: 2000,
+              });
+            }}
+          >
             <Filter className="w-4 h-4 mr-2" /> Filter
           </Button>
           <Dialog open={isAddItemDialogOpen} onOpenChange={setIsAddItemDialogOpen}>
