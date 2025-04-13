@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Alert, Watchlist } from '@/types/marketData';
+import { Alert, Watchlist, WatchlistItem } from '@/types/marketData';
 import { useToast } from "@/hooks/use-toast";
 
 // Mock data
@@ -25,7 +25,8 @@ const initialAlerts: Alert[] = [
     value: 400,
     currentValue: 429.90,
     status: "triggered",
-    triggered: "2025-03-14"
+    triggered: "2025-03-14",
+    created: "2025-03-10"
   },
   {
     id: 3,
@@ -55,7 +56,8 @@ const initialAlerts: Alert[] = [
     keyword: "acquisition",
     status: "triggered",
     triggered: "2025-03-10",
-    details: "News about potential acquisition detected"
+    details: "News about potential acquisition detected",
+    created: "2025-03-05"
   }
 ];
 
@@ -152,12 +154,11 @@ export const useAlertsData = () => {
     setAlerts(alerts.map(alert => {
       if (alert.id === id) {
         const newStatus = alert.status === "pending" ? "triggered" : "pending";
-        const updatedAlert = { 
+        return { 
           ...alert, 
           status: newStatus,
           triggered: newStatus === "triggered" ? new Date().toISOString().split('T')[0] : undefined
         };
-        return updatedAlert;
       }
       return alert;
     }));

@@ -1,366 +1,240 @@
-
-import React, { useState } from 'react';
+import { FC, useState } from "react";
+import { MarketDataItem } from "@/types/marketData";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { useToast } from "@/hooks/use-toast";
-import DetailView from "@/components/DetailView";
-import { addMarketDataItem } from "@/services/marketDataService";
-import { MarketDataItem } from '@/types/marketData';
+import { Textarea } from "@/components/ui/textarea";
+import { X, Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface AddMarketDataFormProps {
+  onAddData: (data: MarketDataItem) => void;
+  onCancel: () => void;
   darkMode: boolean;
-  isOpen: boolean;
-  onClose: () => void;
-  onSuccess?: (item: MarketDataItem) => void;
 }
 
-const formSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  symbol: z.string().min(1, "Symbol is required"),
-  type: z.string().min(1, "Type is required"),
-  value: z.coerce.number().positive("Value must be positive"),
-  change: z.coerce.number(),
-  percentChange: z.coerce.number(),
-  direction: z.enum(["up", "down"]),
-  description: z.string().optional(),
-  sector: z.string().optional(),
-  marketCap: z.coerce.number().optional(),
-  volume: z.coerce.number().optional()
-});
-
-type FormValues = z.infer<typeof formSchema>;
-
-const AddMarketDataForm: React.FC<AddMarketDataFormProps> = ({
-  darkMode,
-  isOpen,
-  onClose,
-  onSuccess
-}) => {
-  const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      symbol: "",
-      type: "Stock",
-      value: 0,
-      change: 0,
-      percentChange: 0,
-      direction: "up",
-      description: "",
-      sector: "Technology",
-      marketCap: 0,
-      volume: 0
-    },
+const AddMarketDataForm: FC<AddMarketDataFormProps> = ({ onAddData, onCancel, darkMode }) => {
+  const [formData, setFormData] = useState({
+    symbol: "",
+    name: "",
+    type: "stock",
+    value: 0,
+    volume: 0,
+    direction: "up" as "up" | "down",
+    description: "",
+    sector: "",
+    marketCap: 0
   });
 
-  const handleSubmit = (values: FormValues) => {
-    setIsSubmitting(true);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
     
-    try {
-      const newItem = addMarketDataItem(values);
-      
-      toast({
-        title: "Market Data Added",
-        description: `${values.name} (${values.symbol}) has been added successfully`,
-        duration: 3000,
+    if (name === "value" || name === "volume" || name === "marketCap") {
+      setFormData({
+        ...formData,
+        [name]: parseFloat(value) || 0
       });
-      
-      if (onSuccess) {
-        onSuccess(newItem);
-      }
-      
-      form.reset();
-      onClose();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to add market data",
-        variant: "destructive",
-        duration: 3000,
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Random change values
+    const change = (Math.random() * 5 * (Math.random() > 0.5 ? 1 : -1));
+    const percentChange = change / (formData.value / 100);
+    
+    // Required properties for MarketDataItem
+    const newData: MarketDataItem = {
+      id: formData.symbol, // Using symbol as a unique ID
+      symbol: formData.symbol,
+      type: formData.type,
+      name: formData.name,
+      value: formData.value,
+      change: parseFloat(change.toFixed(2)),
+      percentChange: parseFloat(percentChange.toFixed(2)),
+      direction: formData.direction,
+      lastUpdated: new Date().toISOString(),
+      description: formData.description,
+      sector: formData.sector,
+      marketCap: formData.marketCap,
+      volume: formData.volume
+    };
+    
+    onAddData(newData);
+  };
+
   return (
-    <DetailView
-      title="Add Market Data"
-      isOpen={isOpen}
-      onClose={onClose}
-      darkMode={darkMode}
-      footerContent={
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onClose} type="button">
-            Cancel
-          </Button>
-          <Button 
-            type="button" 
-            onClick={form.handleSubmit(handleSubmit)}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Adding..." : "Add Market Data"}
-          </Button>
-        </div>
-      }
-    >
-      <Form {...form}>
-        <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="e.g. Apple Inc" 
-                      {...field} 
-                      className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
+    <Card className={cn(
+      "border shadow-lg", 
+      darkMode ? "bg-zinc-800 border-zinc-700" : "bg-white border-gray-200"
+    )}>
+      <CardHeader className="pb-2 flex flex-row items-center justify-between">
+        <CardTitle className="text-lg font-medium flex items-center">
+          <Plus className="w-5 h-5 mr-2" />
+          Add Market Data
+        </CardTitle>
+        <Button variant="ghost" size="icon" onClick={onCancel}>
+          <X className="h-5 w-5" />
+        </Button>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label>Symbol</Label>
+            <Input 
               name="symbol"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Symbol</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="e.g. AAPL" 
-                      {...field} 
-                      className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+              value={formData.symbol} 
+              onChange={handleInputChange} 
+              placeholder="Enter symbol" 
+              className={cn(
+                darkMode ? "bg-zinc-700 border-zinc-600" : "bg-white border-gray-300"
               )}
             />
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Type</FormLabel>
-                  <FormControl>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <SelectTrigger className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
-                        <SelectItem value="Stock">Stock</SelectItem>
-                        <SelectItem value="Index">Index</SelectItem>
-                        <SelectItem value="ETF">ETF</SelectItem>
-                        <SelectItem value="Forex">Forex</SelectItem>
-                        <SelectItem value="Crypto">Crypto</SelectItem>
-                        <SelectItem value="Commodity">Commodity</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="sector"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Sector</FormLabel>
-                  <FormControl>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <SelectTrigger className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
-                        <SelectValue placeholder="Select sector" />
-                      </SelectTrigger>
-                      <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
-                        <SelectItem value="Technology">Technology</SelectItem>
-                        <SelectItem value="Healthcare">Healthcare</SelectItem>
-                        <SelectItem value="Financials">Financials</SelectItem>
-                        <SelectItem value="Energy">Energy</SelectItem>
-                        <SelectItem value="Consumer">Consumer</SelectItem>
-                        <SelectItem value="Industrials">Industrials</SelectItem>
-                        <SelectItem value="Utilities">Utilities</SelectItem>
-                        <SelectItem value="Materials">Materials</SelectItem>
-                        <SelectItem value="Real Estate">Real Estate</SelectItem>
-                        <SelectItem value="Cryptocurrency">Cryptocurrency</SelectItem>
-                        <SelectItem value="Multi-Sector">Multi-Sector</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+          
+          <div className="space-y-2">
+            <Label>Name</Label>
+            <Input 
+              name="name"
+              value={formData.name} 
+              onChange={handleInputChange} 
+              placeholder="Enter name" 
+              className={cn(
+                darkMode ? "bg-zinc-700 border-zinc-600" : "bg-white border-gray-300"
               )}
             />
           </div>
+          
+          <div className="space-y-2">
+            <Label>Type</Label>
+            <Select onValueChange={(value) => handleInputChange({ target: { name: 'type', value } } as any)}>
+              <SelectTrigger className={cn(
+                "w-full",
+                darkMode ? "bg-zinc-700 border-zinc-600" : "bg-white border-gray-300"
+              )}>
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="stock">Stock</SelectItem>
+                <SelectItem value="crypto">Crypto</SelectItem>
+                <SelectItem value="forex">Forex</SelectItem>
+                <SelectItem value="index">Index</SelectItem>
+                <SelectItem value="commodity">Commodity</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
+          <div className="space-y-2">
+            <Label>Value</Label>
+            <Input 
               name="value"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Value</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      step="0.01"
-                      placeholder="e.g. 150.25" 
-                      {...field} 
-                      className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="direction"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Direction</FormLabel>
-                  <FormControl>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <SelectTrigger className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
-                        <SelectValue placeholder="Select direction" />
-                      </SelectTrigger>
-                      <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
-                        <SelectItem value="up">Up</SelectItem>
-                        <SelectItem value="down">Down</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+              value={formData.value.toString()} 
+              onChange={handleInputChange} 
+              placeholder="Enter value" 
+              type="number"
+              step="0.01"
+              className={cn(
+                darkMode ? "bg-zinc-700 border-zinc-600" : "bg-white border-gray-300"
               )}
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="change"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Change</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      step="0.01"
-                      placeholder="e.g. 2.50" 
-                      {...field} 
-                      className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="percentChange"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Percent Change</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      step="0.01"
-                      placeholder="e.g. 1.25" 
-                      {...field} 
-                      className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="marketCap"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Market Cap</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      placeholder="e.g. 2000000000" 
-                      {...field} 
-                      className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
+          <div className="space-y-2">
+            <Label>Volume</Label>
+            <Input 
               name="volume"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Volume</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      placeholder="e.g. 5000000" 
-                      {...field} 
-                      className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+              value={formData.volume.toString()} 
+              onChange={handleInputChange} 
+              placeholder="Enter volume" 
+              type="number"
+              className={cn(
+                darkMode ? "bg-zinc-700 border-zinc-600" : "bg-white border-gray-300"
               )}
             />
           </div>
 
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Description</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="Description of the market data" 
-                    {...field} 
-                    className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="space-y-2">
+            <Label>Direction</Label>
+            <Select onValueChange={(value) => handleInputChange({ target: { name: 'direction', value } } as any)}>
+              <SelectTrigger className={cn(
+                "w-full",
+                darkMode ? "bg-zinc-700 border-zinc-600" : "bg-white border-gray-300"
+              )}>
+                <SelectValue placeholder="Select direction" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="up">Up</SelectItem>
+                <SelectItem value="down">Down</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <Label>Description</Label>
+            <Textarea
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              placeholder="Enter description"
+              className={cn(
+                darkMode ? "bg-zinc-700 border-zinc-600" : "bg-white border-gray-300"
+              )}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Sector</Label>
+            <Input
+              name="sector"
+              value={formData.sector}
+              onChange={handleInputChange}
+              placeholder="Enter sector"
+              className={cn(
+                darkMode ? "bg-zinc-700 border-zinc-600" : "bg-white border-gray-300"
+              )}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Market Cap</Label>
+            <Input
+              name="marketCap"
+              value={formData.marketCap.toString()}
+              onChange={handleInputChange}
+              placeholder="Enter market cap"
+              type="number"
+              className={cn(
+                darkMode ? "bg-zinc-700 border-zinc-600" : "bg-white border-gray-300"
+              )}
+            />
+          </div>
+          
+          <div className="flex justify-end gap-2 pt-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onCancel}
+              className={cn(
+                darkMode ? "border-zinc-600 hover:bg-zinc-700" : ""
+              )}
+            >
+              <X className="w-4 h-4 mr-2" /> Cancel
+            </Button>
+            <Button type="submit">
+              <Plus className="w-4 h-4 mr-2" /> Add Data
+            </Button>
+          </div>
         </form>
-      </Form>
-    </DetailView>
+      </CardContent>
+    </Card>
   );
 };
 

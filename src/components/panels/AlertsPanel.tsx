@@ -1,4 +1,3 @@
-
 import { FC, useState } from "react";
 import { 
   Bell, 
@@ -18,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
 import { 
   Dialog,
   DialogContent,
@@ -68,6 +68,7 @@ const AlertsPanel: FC<AlertsPanelProps> = ({ darkMode }) => {
     addWatchlist,
     addSymbolToWatchlist,
     removeSymbolFromWatchlist,
+    deleteWatchlist,
     activeFilters,
     toggleFilter,
     searchQuery,
@@ -165,7 +166,6 @@ const AlertsPanel: FC<AlertsPanelProps> = ({ darkMode }) => {
       )}
 
       <TabsContent value="alerts" className="space-y-4">
-        {/* Search and Filter */}
         <Card className={cn(
           "border", 
           darkMode ? "bg-zinc-800 border-zinc-700" : "bg-white border-gray-200"
@@ -233,7 +233,6 @@ const AlertsPanel: FC<AlertsPanelProps> = ({ darkMode }) => {
           </CardContent>
         </Card>
         
-        {/* Time Period Selector */}
         <TimeframeSelector
           darkMode={darkMode}
           activeTimeframe={timeframe}
@@ -241,7 +240,6 @@ const AlertsPanel: FC<AlertsPanelProps> = ({ darkMode }) => {
           className="mb-4"
         />
 
-        {/* Alerts List */}
         <Card className={cn(
           "border", 
           darkMode ? "bg-zinc-800 border-zinc-700" : "bg-white border-gray-200"
@@ -393,7 +391,6 @@ const AlertsPanel: FC<AlertsPanelProps> = ({ darkMode }) => {
       </TabsContent>
 
       <TabsContent value="watchlists" className="space-y-4">
-        {/* Watchlists */}
         {watchlists.length === 0 ? (
           <Card className={cn(
             "border", 
@@ -521,17 +518,15 @@ const AlertsPanel: FC<AlertsPanelProps> = ({ darkMode }) => {
                                 variant="ghost" 
                                 className="h-8 w-8 p-0"
                                 onClick={() => {
-                                  // Create a new price alert for this symbol
                                   addAlert({
                                     type: "price",
                                     symbol: symbol.symbol,
                                     name: symbol.name,
                                     condition: "above",
-                                    value: Math.round(symbol.price * 1.05 * 100) / 100, // 5% above current price
+                                    value: Math.round(symbol.price * 1.05 * 100) / 100,
                                     currentValue: symbol.price
                                   });
                                   
-                                  // Switch to alerts tab
                                   setActiveTab("alerts");
                                 }}
                               >
