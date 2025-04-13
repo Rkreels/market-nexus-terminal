@@ -50,7 +50,7 @@ const MarketDataDetail: React.FC<MarketDataDetailProps> = ({
       value: 4892.17, 
       change: 15.28, 
       percentChange: 0.31, 
-      direction: "up" 
+      direction: "up" as "up" | "down"
     },
     { 
       id: "dow",
@@ -60,7 +60,7 @@ const MarketDataDetail: React.FC<MarketDataDetailProps> = ({
       value: 38671.69, 
       change: 134.22, 
       percentChange: 0.35, 
-      direction: "up" 
+      direction: "up" as "up" | "down"
     },
     { 
       id: "nasdaq",
@@ -70,7 +70,7 @@ const MarketDataDetail: React.FC<MarketDataDetailProps> = ({
       value: 15461.84, 
       change: -3.25, 
       percentChange: -0.02, 
-      direction: "down" 
+      direction: "down" as "up" | "down"
     },
     { 
       id: "russell",
@@ -80,7 +80,7 @@ const MarketDataDetail: React.FC<MarketDataDetailProps> = ({
       value: 1998.32, 
       change: 12.07, 
       percentChange: 0.61, 
-      direction: "up" 
+      direction: "up" as "up" | "down"
     }
   ];
 
@@ -88,7 +88,7 @@ const MarketDataDetail: React.FC<MarketDataDetailProps> = ({
     if (selectedItemId && isOpen) {
       const selectedData = marketData.find(item => item.id === selectedItemId);
       if (selectedData) {
-        setData(selectedData);
+        setData(selectedData as MarketDataEntry);
         // Load chart data for the selected item
         const chartData = getChartData(selectedData.symbol, activeTimeframe);
         setChartData(chartData);

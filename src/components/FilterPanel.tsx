@@ -103,7 +103,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   {filterOptions.categories.map(category => (
                     <SelectItem key={category} value={category}>{category}</SelectItem>
                   ))}
@@ -120,7 +120,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
-                  <SelectItem value="">All Statuses</SelectItem>
+                  <SelectItem value="all">All Statuses</SelectItem>
                   {filterOptions.status.map(status => (
                     <SelectItem key={status} value={status}>{status}</SelectItem>
                   ))}
@@ -137,7 +137,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
-                  <SelectItem value="">All Types</SelectItem>
+                  <SelectItem value="all">All Types</SelectItem>
                   {filterOptions.types.map(type => (
                     <SelectItem key={type} value={type}>{type}</SelectItem>
                   ))}

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import ModulePageLayout from "@/components/ModulePageLayout";
 import { useDetailView } from "@/hooks/useDetailView";
 import { useToast } from "@/hooks/use-toast";
+import MarketDataPanel from "@/components/panels/MarketDataPanel";
 
 const MarketDataPage = () => {
   const [darkMode, setDarkMode] = useState<boolean>(true);
@@ -61,7 +62,9 @@ const MarketDataPage = () => {
       activeModule="market-data" 
       darkMode={darkMode} 
       toggleDarkMode={toggleDarkMode} 
-    />
+    >
+      <MarketDataPanel darkMode={darkMode} />
+    </ModulePageLayout>
   );
 };
 
