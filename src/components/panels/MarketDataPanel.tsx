@@ -1,6 +1,5 @@
-
 import { FC, useState, useEffect } from "react";
-import { LineChartIcon, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { LineChartIcon, ArrowUpRight, ArrowDownRight, Plus, Eye, Edit, Trash2, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { 
   LineChart, 
@@ -18,12 +17,15 @@ import { useUI } from "@/contexts/UIContext";
 import TimeframeSelector from "@/components/TimeframeSelector";
 import ActionButtons from "@/components/ActionButtons";
 import FilterPanel from "@/components/FilterPanel";
+import { useDetailView } from "@/hooks/useDetailView";
+import MarketDataDetail from "@/components/panels/MarketDataDetail";
+import AddMarketDataForm from "@/components/panels/AddMarketDataForm";
+import DeleteMarketDataDialog from "@/components/panels/DeleteMarketDataDialog";
 
 interface MarketDataPanelProps {
   darkMode: boolean;
 }
 
-// Mock stock market data
 const marketIndexes = [
   { 
     id: "sp500",
@@ -62,10 +64,44 @@ const marketIndexes = [
 const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
   const [chartData, setChartData] = useState(() => generateTimeframeData('1M'));
   const [selectedIndex, setSelectedIndex] = useState<string | null>(null);
+  const [selectedIndexName, setSelectedIndexName] = useState<string>("");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { toast } = useToast();
-  const { activeTimeframe, handleAction } = useUI();
+  const { activeTimeframe, handleAction, isFilterOpen, toggleFilter } = useUI();
 
-  // Update chart data when timeframe changes
+  const {
+    isDetailOpen,
+    isEditMode,
+    isDeleteDialogOpen,
+    selectedItemId,
+    viewItem,
+    editItem,
+    closeDetail,
+    confirmDelete,
+    cancelDelete,
+    handleDelete
+  } = useDetailView({
+    onViewItem: (id) => {
+      const index = marketIndexes.find(idx => idx.id === id);
+      if (index) {
+        setSelectedIndexName(index.name);
+      }
+    },
+    onEditItem: (id) => {
+      const index = marketIndexes.find(idx => idx.id === id);
+      if (index) {
+        setSelectedIndexName(index.name);
+      }
+    },
+    onDeleteItem: () => {
+      toast({
+        title: "Market Data Deleted",
+        description: `${selectedIndexName} has been deleted successfully`,
+        duration: 3000,
+      });
+    }
+  });
+
   useEffect(() => {
     setChartData(generateTimeframeData(activeTimeframe));
   }, [activeTimeframe]);
@@ -77,6 +113,25 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
       description: "View detailed information for this index",
       duration: 2000,
     });
+  };
+
+  const handleActionClick = (action: string, id: string) => {
+    switch (action) {
+      case 'view':
+        viewItem(id);
+        break;
+      case 'edit':
+        editItem(id);
+        break;
+      case 'delete':
+        confirmDelete(id);
+        break;
+      case 'add':
+        setIsAddDialogOpen(true);
+        break;
+      default:
+        break;
+    }
   };
 
   return (
@@ -94,13 +149,22 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
           )}>
             Live
           </div>
-          <ActionButtons itemType="Market Data" showFilter={true} itemId={selectedIndex || ""} />
-          <FilterPanel darkMode={darkMode} filterOptions={{
-            categories: ["Indexes", "Stocks", "ETFs", "Forex", "Crypto"],
-            types: ["Price", "Volume", "Volatility"],
-            dates: true,
-            search: true
-          }} />
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className={cn("h-8 w-8", isFilterOpen ? (darkMode ? "bg-blue-800/50" : "bg-blue-100") : "")} 
+            onClick={toggleFilter}
+          >
+            <Filter className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="h-8 w-8" 
+            onClick={() => handleActionClick('add', '')}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
         </div>
       </div>
       
@@ -115,7 +179,44 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
             )}
             onClick={() => handleIndexSelect(index)}
           >
-            <div className="text-sm font-medium mb-1">{index.name}</div>
+            <div className="flex justify-between items-start">
+              <div className="text-sm font-medium mb-1">{index.name}</div>
+              <div className="flex space-x-1">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-6 w-6" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleActionClick('view', index.id);
+                  }}
+                >
+                  <Eye className="h-3 w-3" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-6 w-6" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleActionClick('edit', index.id);
+                  }}
+                >
+                  <Edit className="h-3 w-3" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-6 w-6" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleActionClick('delete', index.id);
+                  }}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
             <div className="flex items-end justify-between">
               <div className="text-lg font-semibold">{index.value.toLocaleString()}</div>
               <div className={cn("flex items-center text-sm", 
@@ -168,6 +269,35 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
           </LineChart>
         </ResponsiveContainer>
       </div>
+
+      <MarketDataDetail
+        darkMode={darkMode}
+        selectedItemId={selectedItemId}
+        isOpen={isDetailOpen}
+        isEditMode={isEditMode}
+        onClose={closeDetail}
+      />
+
+      <AddMarketDataForm
+        darkMode={darkMode}
+        isOpen={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+      />
+
+      <DeleteMarketDataDialog
+        darkMode={darkMode}
+        isOpen={isDeleteDialogOpen}
+        onClose={cancelDelete}
+        onDelete={() => handleDelete(selectedItemId || "")}
+        itemName={selectedIndexName}
+      />
+
+      <FilterPanel darkMode={darkMode} filterOptions={{
+        categories: ["Indexes", "Stocks", "ETFs", "Forex", "Crypto"],
+        types: ["Price", "Volume", "Volatility"],
+        dates: true,
+        search: true
+      }} />
     </div>
   );
 };

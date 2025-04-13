@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
@@ -37,12 +37,14 @@ interface ModulePageLayoutProps {
   activeModule: string;
   darkMode: boolean;
   toggleDarkMode: () => void;
+  children?: ReactNode;
 }
 
 const ModulePageLayout: React.FC<ModulePageLayoutProps> = ({ 
   activeModule, 
   darkMode, 
-  toggleDarkMode 
+  toggleDarkMode,
+  children
 }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -241,6 +243,7 @@ const ModulePageLayout: React.FC<ModulePageLayoutProps> = ({
           </Sidebar>
           <SidebarInset>
             <DashboardView activeModule={activeModule} darkMode={darkMode} />
+            {children}
           </SidebarInset>
         </div>
       </SidebarProvider>
