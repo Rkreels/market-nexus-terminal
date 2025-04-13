@@ -7,7 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getChartData } from "@/services/mockDataService";
+import { 
+  getMarketDataById, 
+  getChartDataForSymbol, 
+  updateMarketDataItem 
+} from "@/services/marketDataService";
+import { MarketDataItem, TimeframeData } from "@/types/marketData";
+import { useTimeframeSelection } from "@/hooks/useTimeframeSelection";
+import { PieChart, Pie, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
 interface MarketDataDetailProps {
   darkMode: boolean;
@@ -15,17 +22,7 @@ interface MarketDataDetailProps {
   isOpen: boolean;
   isEditMode: boolean;
   onClose: () => void;
-}
-
-interface MarketDataEntry {
-  id: string;
-  name: string;
-  symbol: string;
-  type: string;
-  value: number;
-  change: number;
-  percentChange: number;
-  direction: "up" | "down";
+  onUpdate?: (item: MarketDataItem) => void;
 }
 
 const MarketDataDetail: React.FC<MarketDataDetailProps> = ({
@@ -34,80 +31,73 @@ const MarketDataDetail: React.FC<MarketDataDetailProps> = ({
   isOpen,
   isEditMode,
   onClose,
+  onUpdate
 }) => {
   const { toast } = useToast();
-  const { activeTimeframe } = useUI();
-  const [data, setData] = useState<MarketDataEntry | null>(null);
-  const [chartData, setChartData] = useState<any[]>([]);
-
-  // Mock market data list to find the selected item
-  const marketData = [
-    { 
-      id: "sp500",
-      name: "S&P 500", 
-      symbol: "SPX",
-      type: "Index",
-      value: 4892.17, 
-      change: 15.28, 
-      percentChange: 0.31, 
-      direction: "up" as "up" | "down"
-    },
-    { 
-      id: "dow",
-      name: "Dow Jones", 
-      symbol: "DJI",
-      type: "Index",
-      value: 38671.69, 
-      change: 134.22, 
-      percentChange: 0.35, 
-      direction: "up" as "up" | "down"
-    },
-    { 
-      id: "nasdaq",
-      name: "NASDAQ", 
-      symbol: "COMP",
-      type: "Index",
-      value: 15461.84, 
-      change: -3.25, 
-      percentChange: -0.02, 
-      direction: "down" as "up" | "down"
-    },
-    { 
-      id: "russell",
-      name: "Russell 2000", 
-      symbol: "RUT",
-      type: "Index",
-      value: 1998.32, 
-      change: 12.07, 
-      percentChange: 0.61, 
-      direction: "up" as "up" | "down"
-    }
-  ];
+  const { timeframe } = useTimeframeSelection();
+  const [data, setData] = useState<MarketDataItem | null>(null);
+  const [chartData, setChartData] = useState<TimeframeData[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (selectedItemId && isOpen) {
-      const selectedData = marketData.find(item => item.id === selectedItemId);
+      const selectedData = getMarketDataById(selectedItemId);
       if (selectedData) {
-        setData(selectedData as MarketDataEntry);
+        setData(selectedData);
+        
         // Load chart data for the selected item
-        const chartData = getChartData(selectedData.symbol, activeTimeframe);
+        const chartData = getChartDataForSymbol(selectedData.symbol, timeframe);
         setChartData(chartData);
       }
     }
-  }, [selectedItemId, isOpen, activeTimeframe]);
+  }, [selectedItemId, isOpen, timeframe]);
 
   const handleSave = () => {
-    if (data) {
+    if (!data) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      const updatedItem = updateMarketDataItem(data.id, data);
+      
+      if (updatedItem) {
+        toast({
+          title: "Market Data Updated",
+          description: `${data.name} has been updated successfully`,
+          duration: 3000,
+        });
+        
+        if (onUpdate) {
+          onUpdate(updatedItem);
+        }
+      } else {
+        throw new Error("Failed to update item");
+      }
+      
+      onClose();
+    } catch (error) {
       toast({
-        title: `${isEditMode ? "Updated" : "Viewed"} Market Data`,
-        description: `${data.name} has been ${isEditMode ? "updated" : "viewed"} successfully`,
+        title: "Error",
+        description: "Failed to update market data",
+        variant: "destructive",
         duration: 3000,
       });
-      onClose();
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   if (!data) return null;
+
+  // Colors for pie chart
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+
+  // Prepare data for the mini pie chart (sector comparison)
+  const pieData = [
+    { name: 'Value', value: data.value },
+    { name: 'Change', value: Math.abs(data.change) },
+    { name: 'Volume', value: data.volume ? data.volume / 1000000 : 0 }
+  ];
 
   return (
     <DetailView
@@ -121,8 +111,8 @@ const MarketDataDetail: React.FC<MarketDataDetailProps> = ({
             Cancel
           </Button>
           {isEditMode && (
-            <Button onClick={handleSave}>
-              Save Changes
+            <Button onClick={handleSave} disabled={isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save Changes"}
             </Button>
           )}
         </div>
@@ -169,6 +159,7 @@ const MarketDataDetail: React.FC<MarketDataDetailProps> = ({
                   <SelectItem value="ETF">ETF</SelectItem>
                   <SelectItem value="Crypto">Cryptocurrency</SelectItem>
                   <SelectItem value="Forex">Forex</SelectItem>
+                  <SelectItem value="Commodity">Commodity</SelectItem>
                 </SelectContent>
               </Select>
             ) : (
@@ -200,7 +191,15 @@ const MarketDataDetail: React.FC<MarketDataDetailProps> = ({
               id="change"
               type="number"
               value={data.change}
-              onChange={(e) => setData({ ...data, change: parseFloat(e.target.value) || 0 })}
+              onChange={(e) => {
+                const newChange = parseFloat(e.target.value) || 0;
+                const direction = newChange >= 0 ? "up" : "down";
+                setData({ 
+                  ...data, 
+                  change: newChange,
+                  direction
+                });
+              }}
               readOnly={!isEditMode}
               className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}
             />
@@ -242,14 +241,142 @@ const MarketDataDetail: React.FC<MarketDataDetailProps> = ({
           </div>
         </div>
 
-        <div className="pt-4">
-          <h3 className="text-sm font-medium mb-2">Historical Data ({activeTimeframe})</h3>
-          <div className={`p-4 rounded-md ${darkMode ? "bg-zinc-700" : "bg-gray-100"}`}>
-            <pre className="text-xs overflow-auto max-h-40">
-              {JSON.stringify(chartData, null, 2)}
-            </pre>
+        {isEditMode && (
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="marketCap">Market Cap</Label>
+              <Input
+                id="marketCap"
+                type="number"
+                value={data.marketCap || 0}
+                onChange={(e) => setData({ ...data, marketCap: parseFloat(e.target.value) || 0 })}
+                className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}
+              />
+            </div>
+            <div>
+              <Label htmlFor="volume">Volume</Label>
+              <Input
+                id="volume"
+                type="number"
+                value={data.volume || 0}
+                onChange={(e) => setData({ ...data, volume: parseFloat(e.target.value) || 0 })}
+                className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}
+              />
+            </div>
+          </div>
+        )}
+
+        {isEditMode && (
+          <div>
+            <Label htmlFor="description">Description</Label>
+            <Input
+              id="description"
+              value={data.description || ""}
+              onChange={(e) => setData({ ...data, description: e.target.value })}
+              className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}
+            />
+          </div>
+        )}
+
+        <div className="pt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="md:col-span-2">
+            <h3 className="text-sm font-medium mb-2">Historical Data ({timeframe})</h3>
+            <div className="h-40 md:h-60">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? "#444" : "#ccc"} />
+                  <XAxis dataKey="time" stroke={darkMode ? "#ccc" : "#666"} />
+                  <YAxis stroke={darkMode ? "#ccc" : "#666"} />
+                  <Tooltip
+                    contentStyle={{ 
+                      backgroundColor: darkMode ? '#333' : '#fff',
+                      borderColor: darkMode ? '#555' : '#ccc',
+                      color: darkMode ? '#fff' : '#333' 
+                    }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="value" 
+                    stroke="#3b82f6" 
+                    strokeWidth={2}
+                    dot={false}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium mb-2">Data Distribution</h3>
+            <div className="h-40 md:h-60">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={30}
+                    outerRadius={60}
+                    paddingAngle={5}
+                    dataKey="value"
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value: number) => value.toLocaleString()}
+                    contentStyle={{ 
+                      backgroundColor: darkMode ? '#333' : '#fff',
+                      borderColor: darkMode ? '#555' : '#ccc',
+                      color: darkMode ? '#fff' : '#333' 
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
+
+        {data.description && !isEditMode && (
+          <div className="pt-2">
+            <h3 className="text-sm font-medium mb-1">Description</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{data.description}</p>
+          </div>
+        )}
+
+        {!isEditMode && (
+          <div className="pt-2 grid grid-cols-2 gap-4">
+            {data.marketCap && (
+              <div>
+                <h3 className="text-sm font-medium mb-1">Market Cap</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  ${(data.marketCap / 1000000000).toFixed(2)} B
+                </p>
+              </div>
+            )}
+            {data.volume && (
+              <div>
+                <h3 className="text-sm font-medium mb-1">Volume</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {(data.volume / 1000000).toFixed(2)} M
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {!isEditMode && (
+          <div className="pt-2">
+            <h3 className="text-sm font-medium mb-1">Last Updated</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {data.lastUpdated 
+                ? new Date(data.lastUpdated).toLocaleString() 
+                : new Date().toLocaleString()}
+            </p>
+          </div>
+        )}
       </div>
     </DetailView>
   );

@@ -10,6 +10,8 @@ interface UIContextProps {
   isFilterOpen: boolean;
   toggleFilter: () => void;
   applyFilter: (filterData: any) => void;
+  isDarkMode: boolean;
+  toggleDarkMode: () => void;
 }
 
 const UIContext = createContext<UIContextProps | undefined>(undefined);
@@ -17,7 +19,21 @@ const UIContext = createContext<UIContextProps | undefined>(undefined);
 export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [activeTimeframe, setActiveTimeframe] = useState<Timeframe>('1M');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true);
   const { toast } = useToast();
+
+  // Initialize dark mode
+  React.useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [isDarkMode]);
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+  };
 
   const handleAction = (action: string, item: string, additionalInfo?: string) => {
     let message = '';
@@ -71,7 +87,9 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
       handleAction,
       isFilterOpen,
       toggleFilter,
-      applyFilter
+      applyFilter,
+      isDarkMode,
+      toggleDarkMode
     }}>
       {children}
     </UIContext.Provider>

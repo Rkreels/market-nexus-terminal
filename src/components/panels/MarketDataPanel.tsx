@@ -1,5 +1,16 @@
+
 import { FC, useState, useEffect } from "react";
-import { LineChartIcon, ArrowUpRight, ArrowDownRight, Plus, Eye, Edit, Trash2, Filter } from "lucide-react";
+import { 
+  LineChartIcon, 
+  ArrowUpRight, 
+  ArrowDownRight, 
+  Plus, 
+  Eye, 
+  Edit, 
+  Trash2, 
+  Filter, 
+  Search
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { 
   LineChart, 
@@ -11,64 +22,64 @@ import {
   ResponsiveContainer 
 } from "recharts";
 import { Button } from "@/components/ui/button";
-import { generateTimeframeData } from "@/utils/timeframeUtils";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useUI } from "@/contexts/UIContext";
 import TimeframeSelector from "@/components/TimeframeSelector";
-import ActionButtons from "@/components/ActionButtons";
+import { useTimeframeSelection } from "@/hooks/useTimeframeSelection";
 import FilterPanel from "@/components/FilterPanel";
 import { useDetailView } from "@/hooks/useDetailView";
 import MarketDataDetail from "@/components/panels/MarketDataDetail";
 import AddMarketDataForm from "@/components/panels/AddMarketDataForm";
 import DeleteMarketDataDialog from "@/components/panels/DeleteMarketDataDialog";
+import { 
+  getAllMarketData, 
+  getFilteredMarketData, 
+  getChartDataForSymbol,
+  deleteMarketDataItem
+} from "@/services/marketDataService";
+import { MarketDataItem } from "@/types/marketData";
 
 interface MarketDataPanelProps {
   darkMode: boolean;
 }
 
-const marketIndexes = [
-  { 
-    id: "sp500",
-    name: "S&P 500", 
-    value: 4892.17, 
-    change: 15.28, 
-    percentChange: 0.31, 
-    direction: "up" 
-  },
-  { 
-    id: "dow",
-    name: "Dow Jones", 
-    value: 38671.69, 
-    change: 134.22, 
-    percentChange: 0.35, 
-    direction: "up" 
-  },
-  { 
-    id: "nasdaq",
-    name: "NASDAQ", 
-    value: 15461.84, 
-    change: -3.25, 
-    percentChange: -0.02, 
-    direction: "down" 
-  },
-  { 
-    id: "russell",
-    name: "Russell 2000", 
-    value: 1998.32, 
-    change: 12.07, 
-    percentChange: 0.61, 
-    direction: "up" 
-  }
-];
-
 const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
-  const [chartData, setChartData] = useState(() => generateTimeframeData('1M'));
+  const [marketIndexes, setMarketIndexes] = useState<MarketDataItem[]>([]);
+  const [filteredData, setFilteredData] = useState<MarketDataItem[]>([]);
+  const [chartData, setChartData] = useState<any[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<string | null>(null);
   const [selectedIndexName, setSelectedIndexName] = useState<string>("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
-  const { activeTimeframe, handleAction, isFilterOpen, toggleFilter } = useUI();
+  const { handleAction } = useUI();
+  const { timeframe, handleTimeframeChange } = useTimeframeSelection();
 
+  // Load all market data
+  useEffect(() => {
+    const data = getAllMarketData();
+    setMarketIndexes(data);
+    setFilteredData(data);
+  }, []);
+
+  // Update chart data when timeframe or selected index changes
+  useEffect(() => {
+    if (selectedIndex) {
+      const selectedItem = marketIndexes.find(item => item.id === selectedIndex);
+      if (selectedItem) {
+        const data = getChartDataForSymbol(selectedItem.symbol, timeframe);
+        setChartData(data);
+      }
+    } else if (marketIndexes.length > 0) {
+      // Default to first item if none selected
+      const data = getChartDataForSymbol(marketIndexes[0].symbol, timeframe);
+      setChartData(data);
+    }
+  }, [timeframe, selectedIndex, marketIndexes]);
+
+  // Setup detail view hooks
   const {
     isDetailOpen,
     isEditMode,
@@ -79,7 +90,7 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
     closeDetail,
     confirmDelete,
     cancelDelete,
-    handleDelete
+    handleDelete: processDelete
   } = useDetailView({
     onViewItem: (id) => {
       const index = marketIndexes.find(idx => idx.id === id);
@@ -99,14 +110,20 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
         description: `${selectedIndexName} has been deleted successfully`,
         duration: 3000,
       });
+      
+      // Refresh the data after deletion
+      const updatedData = getAllMarketData();
+      setMarketIndexes(updatedData);
+      setFilteredData(updatedData);
+      
+      // Clear selection if the deleted item was selected
+      if (selectedIndex === selectedItemId) {
+        setSelectedIndex(null);
+      }
     }
   });
 
-  useEffect(() => {
-    setChartData(generateTimeframeData(activeTimeframe));
-  }, [activeTimeframe]);
-
-  const handleIndexSelect = (index: typeof marketIndexes[0]) => {
+  const handleIndexSelect = (index: MarketDataItem) => {
     setSelectedIndex(index.id);
     toast({
       title: `${index.name} Selected`,
@@ -133,6 +150,56 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
         break;
     }
   };
+  
+  const handleDeleteConfirm = (id: string) => {
+    deleteMarketDataItem(id);
+    processDelete(id);
+  };
+  
+  const handleAddSuccess = (newItem: MarketDataItem) => {
+    const updatedData = getAllMarketData();
+    setMarketIndexes(updatedData);
+    setFilteredData(updatedData);
+    toast({
+      title: "Market Data Added",
+      description: `${newItem.name} has been added successfully`,
+      duration: 3000,
+    });
+  };
+  
+  const handleUpdateSuccess = (updatedItem: MarketDataItem) => {
+    const updatedData = getAllMarketData();
+    setMarketIndexes(updatedData);
+    setFilteredData(updatedData);
+  };
+  
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    
+    if (query.trim() === '') {
+      setFilteredData(marketIndexes);
+    } else {
+      const filtered = getFilteredMarketData({ search: query });
+      setFilteredData(filtered);
+    }
+  };
+  
+  const handleApplyFilters = (filters: any) => {
+    const filtered = getFilteredMarketData({
+      search: filters.searchTerm,
+      type: filters.type,
+      category: filters.category
+    });
+    
+    setFilteredData(filtered);
+    
+    toast({
+      title: "Filters Applied",
+      description: `Found ${filtered.length} items matching your filters`,
+      duration: 3000,
+    });
+  };
 
   return (
     <div className={cn("rounded-lg overflow-hidden shadow-md", 
@@ -144,6 +211,18 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
           <h3 className="font-medium">Market Overview</h3>
         </div>
         <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500 dark:text-gray-400" />
+            <Input
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={handleSearch}
+              className={cn(
+                "pl-8 h-9 w-[150px] md:w-[200px]", 
+                darkMode ? "bg-zinc-700 border-zinc-600" : ""
+              )}
+            />
+          </div>
           <div className={cn("text-xs px-2 py-1 rounded", 
             darkMode ? "bg-zinc-700 text-zinc-300" : "bg-gray-100 text-gray-700"
           )}>
@@ -153,7 +232,7 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
             variant="outline" 
             size="icon" 
             className={cn("h-8 w-8", isFilterOpen ? (darkMode ? "bg-blue-800/50" : "bg-blue-100") : "")} 
-            onClick={toggleFilter}
+            onClick={() => setIsFilterOpen(!isFilterOpen)}
           >
             <Filter className="h-4 w-4" />
           </Button>
@@ -169,7 +248,7 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
       </div>
       
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4">
-        {marketIndexes.map((index) => (
+        {filteredData.map((index) => (
           <div 
             key={index.id} 
             className={cn("p-3 rounded-lg cursor-pointer hover:bg-opacity-80 transition-colors", 
@@ -234,7 +313,11 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
         ))}
       </div>
 
-      <TimeframeSelector darkMode={darkMode} />
+      <TimeframeSelector 
+        darkMode={darkMode} 
+        activeTimeframe={timeframe} 
+        onTimeframeChange={handleTimeframeChange} 
+      />
       
       <div className="p-4 h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
@@ -276,28 +359,37 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
         isOpen={isDetailOpen}
         isEditMode={isEditMode}
         onClose={closeDetail}
+        onUpdate={handleUpdateSuccess}
       />
 
       <AddMarketDataForm
         darkMode={darkMode}
         isOpen={isAddDialogOpen}
         onClose={() => setIsAddDialogOpen(false)}
+        onSuccess={handleAddSuccess}
       />
 
       <DeleteMarketDataDialog
         darkMode={darkMode}
         isOpen={isDeleteDialogOpen}
         onClose={cancelDelete}
-        onDelete={() => handleDelete(selectedItemId || "")}
+        onDelete={() => handleDeleteConfirm(selectedItemId || "")}
         itemName={selectedIndexName}
       />
 
-      <FilterPanel darkMode={darkMode} filterOptions={{
-        categories: ["Indexes", "Stocks", "ETFs", "Forex", "Crypto"],
-        types: ["Price", "Volume", "Volatility"],
-        dates: true,
-        search: true
-      }} />
+      <FilterPanel 
+        darkMode={darkMode} 
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        onApplyFilters={handleApplyFilters}
+        filterOptions={{
+          categories: ["Multi-Sector", "Technology", "Healthcare", "Financials", "Energy", "Consumer", "Cryptocurrency"],
+          types: ["Index", "Stock", "ETF", "Forex", "Crypto", "Commodity"],
+          dates: true,
+          search: true,
+          price: true
+        }} 
+      />
     </div>
   );
 };

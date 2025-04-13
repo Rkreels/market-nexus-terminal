@@ -1,196 +1,242 @@
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { useUI } from "@/contexts/UIContext";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { FilterOptions } from "@/types/marketData";
 
 interface FilterPanelProps {
   darkMode: boolean;
-  filterOptions?: {
-    categories?: string[];
-    status?: string[];
-    types?: string[];
-    dates?: boolean;
-    search?: boolean;
-  }
+  isOpen?: boolean;
+  onClose?: () => void;
+  onApplyFilters: (filters: any) => void;
+  filterOptions: FilterOptions & {
+    price?: boolean;
+    performance?: boolean;
+    dateRange?: boolean;
+    advanced?: boolean;
+  };
 }
 
 const FilterPanel: React.FC<FilterPanelProps> = ({ 
   darkMode, 
-  filterOptions = {
-    categories: ["Category 1", "Category 2", "Category 3"],
-    status: ["Active", "Pending", "Completed"],
-    types: ["Type A", "Type B", "Type C"],
-    dates: true,
-    search: true
-  }
+  isOpen = false,
+  onClose,
+  onApplyFilters,
+  filterOptions 
 }) => {
-  const { isFilterOpen, toggleFilter, applyFilter } = useUI();
-  const [filters, setFilters] = useState({
-    category: "",
-    status: "",
-    type: "",
-    dateFrom: "",
-    dateTo: "",
-    search: "",
-    showArchived: false
-  });
+  const [category, setCategory] = useState<string>("all");
+  const [type, setType] = useState<string>("all");
+  const [status, setStatus] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
+  const [showOnlyActive, setShowOnlyActive] = useState<boolean>(true);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
-  const handleChange = (field: string, value: string | boolean) => {
-    setFilters(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  const resetFilters = () => {
+    setCategory("all");
+    setType("all");
+    setStatus("all");
+    setSearchTerm("");
+    setDateFrom("");
+    setDateTo("");
+    setPriceRange([0, 1000]);
+    setShowOnlyActive(true);
+    setSelectedTags([]);
   };
 
-  const handleApply = () => {
-    applyFilter(filters);
-    toggleFilter();
+  const handleApplyFilters = () => {
+    const filters = {
+      category,
+      type,
+      status,
+      searchTerm,
+      dateRange: dateFrom && dateTo ? { from: dateFrom, to: dateTo } : null,
+      priceRange: filterOptions.price ? priceRange : null,
+      onlyActive: showOnlyActive,
+      tags: selectedTags.length > 0 ? selectedTags : null,
+    };
+    
+    onApplyFilters(filters);
+    
+    if (onClose) {
+      onClose();
+    }
   };
 
-  const handleReset = () => {
-    setFilters({
-      category: "",
-      status: "",
-      type: "",
-      dateFrom: "",
-      dateTo: "",
-      search: "",
-      showArchived: false
-    });
-  };
+  if (!isOpen) return null;
 
   return (
-    <Dialog open={isFilterOpen} onOpenChange={toggleFilter}>
-      <DialogContent className={cn(
-        "sm:max-w-[500px]",
-        darkMode ? "bg-zinc-800 text-white border-zinc-700" : "bg-white text-black border-gray-200"
-      )}>
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Filter Options</span>
-            <Button variant="ghost" size="icon" onClick={toggleFilter}>
-              <X className="h-4 w-4" />
-            </Button>
-          </DialogTitle>
-        </DialogHeader>
+    <div className={cn(
+      "absolute top-16 right-0 z-10 w-full md:w-80 p-4 shadow-lg rounded-lg border",
+      darkMode 
+        ? "bg-zinc-800 border-zinc-700 text-white" 
+        : "bg-white border-gray-200 text-black"
+    )}>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="font-medium text-lg">Filters</h3>
+        <Button
+          variant="ghost" 
+          size="icon"
+          onClick={onClose}
+          className="h-8 w-8"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+      
+      <div className="space-y-4">
+        {filterOptions.search && (
+          <div>
+            <Label htmlFor="search">Search</Label>
+            <Input
+              id="search"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}
+            />
+          </div>
+        )}
         
-        <div className="grid gap-4 py-4">
-          {filterOptions.search && (
-            <div className="grid gap-2">
-              <Label htmlFor="search">Search</Label>
-              <Input
-                id="search"
-                placeholder="Search..."
-                value={filters.search}
-                onChange={(e) => handleChange('search', e.target.value)}
-                className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}
-              />
-            </div>
-          )}
-          
-          {filterOptions.categories && filterOptions.categories.length > 0 && (
-            <div className="grid gap-2">
-              <Label htmlFor="category">Category</Label>
-              <Select value={filters.category} onValueChange={(value) => handleChange('category', value)}>
-                <SelectTrigger id="category" className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {filterOptions.categories.map(category => (
-                    <SelectItem key={category} value={category}>{category}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          
-          {filterOptions.status && filterOptions.status.length > 0 && (
-            <div className="grid gap-2">
-              <Label htmlFor="status">Status</Label>
-              <Select value={filters.status} onValueChange={(value) => handleChange('status', value)}>
-                <SelectTrigger id="status" className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  {filterOptions.status.map(status => (
-                    <SelectItem key={status} value={status}>{status}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          
-          {filterOptions.types && filterOptions.types.length > 0 && (
-            <div className="grid gap-2">
-              <Label htmlFor="type">Type</Label>
-              <Select value={filters.type} onValueChange={(value) => handleChange('type', value)}>
-                <SelectTrigger id="type" className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
-                  <SelectItem value="all">All Types</SelectItem>
-                  {filterOptions.types.map(type => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          
-          {filterOptions.dates && (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="dateFrom">From Date</Label>
+        {filterOptions.categories && filterOptions.categories.length > 0 && (
+          <div>
+            <Label htmlFor="category">Category</Label>
+            <Select
+              value={category}
+              onValueChange={setCategory}
+            >
+              <SelectTrigger id="category" className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
+                <SelectItem value="all">All Categories</SelectItem>
+                {filterOptions.categories.map(category => (
+                  <SelectItem key={category} value={category}>{category}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        
+        {filterOptions.status && filterOptions.status.length > 0 && (
+          <div>
+            <Label htmlFor="status">Status</Label>
+            <Select
+              value={status}
+              onValueChange={setStatus}
+            >
+              <SelectTrigger id="status" className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
+                <SelectItem value="all">All Statuses</SelectItem>
+                {filterOptions.status.map(status => (
+                  <SelectItem key={status} value={status}>{status}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        
+        {filterOptions.types && filterOptions.types.length > 0 && (
+          <div>
+            <Label htmlFor="type">Type</Label>
+            <Select
+              value={type}
+              onValueChange={setType}
+            >
+              <SelectTrigger id="type" className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
+                <SelectItem value="all">All Types</SelectItem>
+                {filterOptions.types.map(type => (
+                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        
+        {filterOptions.dates && (
+          <div className="space-y-2">
+            <Label>Date Range</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label htmlFor="dateFrom" className="text-xs">From</Label>
                 <Input
                   id="dateFrom"
                   type="date"
-                  value={filters.dateFrom}
-                  onChange={(e) => handleChange('dateFrom', e.target.value)}
-                  className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className={cn("mt-1", darkMode ? "bg-zinc-700 border-zinc-600" : "")}
                 />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="dateTo">To Date</Label>
+              <div>
+                <Label htmlFor="dateTo" className="text-xs">To</Label>
                 <Input
                   id="dateTo"
                   type="date"
-                  value={filters.dateTo}
-                  onChange={(e) => handleChange('dateTo', e.target.value)}
-                  className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className={cn("mt-1", darkMode ? "bg-zinc-700 border-zinc-600" : "")}
                 />
               </div>
             </div>
-          )}
-          
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="showArchived"
-              checked={filters.showArchived}
-              onCheckedChange={(checked) => handleChange('showArchived', checked === true)}
-            />
-            <Label htmlFor="showArchived">Show archived items</Label>
           </div>
-        </div>
+        )}
         
-        <DialogFooter className="flex justify-between">
-          <Button variant="outline" onClick={handleReset}>
+        {filterOptions.price && (
+          <div className="space-y-2">
+            <Label>Price Range</Label>
+            <Slider
+              defaultValue={priceRange}
+              max={1000}
+              step={1}
+              onValueChange={(value) => setPriceRange(value as [number, number])}
+              className="my-6"
+            />
+            <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
+              <span>${priceRange[0]}</span>
+              <span>${priceRange[1]}</span>
+            </div>
+          </div>
+        )}
+        
+        {filterOptions.advanced && (
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="active-only" 
+              checked={showOnlyActive} 
+              onCheckedChange={(checked) => setShowOnlyActive(checked as boolean)}
+            />
+            <Label htmlFor="active-only" className="text-sm cursor-pointer">Show only active items</Label>
+          </div>
+        )}
+        
+        <div className="pt-2 flex justify-between">
+          <Button 
+            variant="outline" 
+            onClick={resetFilters}
+            className={darkMode ? "border-zinc-600 hover:bg-zinc-700" : ""}
+          >
             Reset
           </Button>
-          <Button onClick={handleApply}>
+          <Button onClick={handleApplyFilters}>
             Apply Filters
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </div>
+    </div>
   );
 };
 

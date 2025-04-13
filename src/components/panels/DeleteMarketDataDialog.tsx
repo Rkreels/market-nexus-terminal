@@ -1,8 +1,15 @@
 
-import React from "react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import React from 'react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 
 interface DeleteMarketDataDialogProps {
@@ -18,42 +25,35 @@ const DeleteMarketDataDialog: React.FC<DeleteMarketDataDialogProps> = ({
   isOpen,
   onClose,
   onDelete,
-  itemName,
+  itemName
 }) => {
-  const { toast } = useToast();
-
-  const handleDelete = () => {
-    // In a real app, this would delete from the database
-    toast({
-      title: "Market Data Deleted",
-      description: `${itemName} has been deleted successfully`,
-      duration: 3000,
-    });
-    onDelete();
-  };
-
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={cn(
-        "sm:max-w-[425px]",
-        darkMode ? "bg-zinc-800 text-white border-zinc-700" : "bg-white text-black border-gray-200"
+    <AlertDialog open={isOpen} onOpenChange={onClose}>
+      <AlertDialogContent className={cn(
+        darkMode ? "bg-zinc-800 border-zinc-700 text-white" : ""
       )}>
-        <DialogHeader>
-          <DialogTitle>Delete Market Data</DialogTitle>
-          <DialogDescription className={darkMode ? "text-gray-300" : "text-gray-600"}>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete {itemName}</AlertDialogTitle>
+          <AlertDialogDescription className={darkMode ? "text-gray-300" : ""}>
             Are you sure you want to delete {itemName}? This action cannot be undone.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={onClose} className={darkMode ? "bg-zinc-700 hover:bg-zinc-600" : ""}>
             Cancel
-          </Button>
-          <Button variant="destructive" onClick={handleDelete}>
+          </AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={() => {
+              onDelete();
+              onClose();
+            }}
+            className="bg-red-600 hover:bg-red-700 text-white"
+          >
             Delete
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
 
