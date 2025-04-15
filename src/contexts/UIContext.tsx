@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Timeframe, timeframeOptions } from "@/utils/timeframeUtils";
