@@ -4,15 +4,11 @@ import {
   PlusCircle, 
   Filter,
   Bell,
-  Eye,
-  Edit,
-  Trash2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -21,19 +17,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { useUI } from "@/contexts/UIContext";
 import { MarketDataItem } from "@/types/marketData";
 import AddMarketDataForm from "@/components/AddMarketDataForm";
 import DataTable from "@/components/DataTable";
-import { useToast } from "@/hooks/use-toast";
 
 interface MarketDataPanelProps {
   darkMode: boolean;
@@ -41,10 +28,8 @@ interface MarketDataPanelProps {
 
 const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [isAddItemDialogOpen, setIsAddItemDialogOpen] = useState(false);
   const { marketData, addMarketDataItem, deleteMarketDataItem, editMarketDataItem } = useUI();
-  const { toast } = useToast();
 
   const filteredData = marketData.filter(item =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -72,13 +57,16 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
     {
       key: 'value',
       header: 'Value',
+      render: (value: number) => (
+        <span>${value.toFixed(2)}</span>
+      ),
     },
     {
       key: 'change',
       header: 'Change',
       render: (value: number, row: MarketDataItem) => (
         <span className={row.direction === "up" ? "text-green-500" : "text-red-500"}>
-          {value.toFixed(2)}
+          {row.direction === "up" ? "+" : ""}{value.toFixed(2)} ({row.percentChange.toFixed(2)}%)
         </span>
       ),
     },
@@ -99,12 +87,7 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
             size="sm" 
             variant="outline" 
             onClick={() => {
-              setActiveFilters([]);
-              toast({
-                title: "Filters Reset",
-                description: "All filters have been cleared",
-                duration: 2000,
-              });
+              // Reset filters functionality could be added here
             }}
           >
             <Filter className="w-4 h-4 mr-2" /> Filter
