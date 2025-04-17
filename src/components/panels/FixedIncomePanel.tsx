@@ -1,5 +1,4 @@
-
-import { FC } from "react";
+import { FC, useState, useEffect } from "react";
 import { 
   TrendingUp, 
   LineChart, 
@@ -17,6 +16,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import TimeframeSelector from "@/components/TimeframeSelector";
+import { useTimeframeSelection } from "@/hooks/useTimeframeSelection";
+import { Timeframe } from "@/utils/timeframeUtils";
+import FilterPanel from "@/components/FilterPanel";
+import { useUI } from "@/contexts/UIContext";
 import { 
   LineChart as RechartsLineChart, 
   Line, 
@@ -125,7 +130,94 @@ const keyRates = [
   { name: "Prime Rate", value: "8.50%", change: 0, lastChange: "2024-07-31" }
 ];
 
+const fedProjections = {
+  title: "Federal Reserve Projections (March 2025)",
+  summary: "The Federal Reserve's latest Summary of Economic Projections shows a median expectation of three 25 basis point rate cuts in 2025, with the first expected in June.",
+  dotPlot: [
+    { year: "2025", median: 4.6, range: [4.1, 5.1] },
+    { year: "2026", median: 3.9, range: [3.4, 4.4] },
+    { year: "2027", median: 3.6, range: [3.1, 4.1] },
+    { year: "LongRun", median: 2.5, range: [2.3, 2.8] }
+  ],
+  economicProjections: {
+    gdp: { current: 2.1, previous: 1.8 },
+    unemployment: { current: 4.0, previous: 4.1 },
+    inflation: { current: 2.4, previous: 2.6 }
+  },
+  lastUpdated: "2025-03-20"
+};
+
 const FixedIncomePanel: FC<FixedIncomePanelProps> = ({ darkMode }) => {
+  const { timeframe, handleTimeframeChange } = useTimeframeSelection("1M");
+  const [filteredBonds, setFilteredBonds] = useState(bondListings);
+  const [bondSearch, setBondSearch] = useState("");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [currentYieldView, setCurrentYieldView] = useState<"all" | "3M" | "6M" | "1Y" | "5Y" | "Max">("all");
+  const [showFedDialog, setShowFedDialog] = useState(false);
+  const { toast } = useToast();
+  const { handleAction } = useUI();
+
+  const getFilteredYieldData = () => {
+    if (currentYieldView === "all" || currentYieldView === "Max") {
+      return yieldCurveData;
+    }
+    
+    const termMap = {
+      "3M": ["1M", "3M", "6M"],
+      "6M": ["1M", "3M", "6M", "1Y"],
+      "1Y": ["1M", "3M", "6M", "1Y", "2Y"],
+      "5Y": ["1M", "3M", "6M", "1Y", "2Y", "3Y", "5Y"]
+    };
+    
+    return yieldCurveData.filter(data => termMap[currentYieldView as keyof typeof termMap].includes(data.term));
+  };
+
+  useEffect(() => {
+    if (bondSearch.trim() === "") {
+      setFilteredBonds(bondListings);
+    } else {
+      const searchLower = bondSearch.toLowerCase();
+      const filtered = bondListings.filter(bond => 
+        bond.issuer.toLowerCase().includes(searchLower) || 
+        bond.description.toLowerCase().includes(searchLower) ||
+        bond.rating.toLowerCase().includes(searchLower)
+      );
+      setFilteredBonds(filtered);
+    }
+  }, [bondSearch]);
+
+  const handleApplyFilters = (filters: any) => {
+    toast({
+      title: "Filters Applied",
+      description: `Applied filters to bond listings`,
+      duration: 3000
+    });
+    
+    let filtered = bondListings;
+    
+    if (filters.category && filters.category !== "all") {
+      filtered = filtered.filter(bond => bond.issuer.includes(filters.category));
+    }
+    
+    if (filters.type && filters.type !== "all") {
+      filtered = filtered.filter(bond => bond.description.includes(filters.type));
+    }
+    
+    if (filters.priceRange) {
+      const [min, max] = filters.priceRange;
+      filtered = filtered.filter(bond => bond.price >= min && bond.price <= max);
+    }
+    
+    setFilteredBonds(filtered);
+  };
+
+  const handleShowFedProjections = () => {
+    setShowFedDialog(true);
+    handleAction("view", "Fed Projections", "March 2025 FOMC Meeting");
+  };
+
+  const displayFilteredData = getFilteredYieldData();
+
   return (
     <div className="space-y-4">
       {/* Key Rates */}
@@ -195,7 +287,7 @@ const FixedIncomePanel: FC<FixedIncomePanelProps> = ({ darkMode }) => {
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <RechartsLineChart
-                data={yieldCurveData}
+                data={displayFilteredData}
                 margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? "#444" : "#ccc"} />
@@ -244,11 +336,41 @@ const FixedIncomePanel: FC<FixedIncomePanelProps> = ({ darkMode }) => {
               <Badge variant="outline">Previous Week</Badge>
             </div>
             <div className="flex gap-2">
-              <Button size="sm" variant="outline">3M</Button>
-              <Button size="sm" variant="outline">6M</Button>
-              <Button size="sm" variant="outline">1Y</Button>
-              <Button size="sm" variant="outline">5Y</Button>
-              <Button size="sm">Max</Button>
+              <Button 
+                size="sm" 
+                variant={currentYieldView === "3M" ? "default" : "outline"}
+                onClick={() => setCurrentYieldView("3M")}
+              >
+                3M
+              </Button>
+              <Button 
+                size="sm" 
+                variant={currentYieldView === "6M" ? "default" : "outline"}
+                onClick={() => setCurrentYieldView("6M")}
+              >
+                6M
+              </Button>
+              <Button 
+                size="sm" 
+                variant={currentYieldView === "1Y" ? "default" : "outline"}
+                onClick={() => setCurrentYieldView("1Y")}
+              >
+                1Y
+              </Button>
+              <Button 
+                size="sm" 
+                variant={currentYieldView === "5Y" ? "default" : "outline"}
+                onClick={() => setCurrentYieldView("5Y")}
+              >
+                5Y
+              </Button>
+              <Button 
+                size="sm" 
+                variant={currentYieldView === "Max" ? "default" : "outline"}
+                onClick={() => setCurrentYieldView("Max")}
+              >
+                Max
+              </Button>
             </div>
           </div>
         </CardContent>
@@ -266,24 +388,51 @@ const FixedIncomePanel: FC<FixedIncomePanelProps> = ({ darkMode }) => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col md:flex-row gap-3 mb-4">
+          <div className="flex flex-col md:flex-row gap-3 mb-4 relative">
             <Input 
               placeholder="Search by issuer, CUSIP, or description" 
               className={cn(
                 "flex-grow",
                 darkMode ? "bg-zinc-700 border-zinc-600" : "bg-white border-gray-300"
               )}
+              value={bondSearch}
+              onChange={(e) => setBondSearch(e.target.value)}
             />
             <div className="flex gap-2">
-              <Button>
+              <Button onClick={() => {
+                toast({
+                  title: "Search Executed",
+                  description: `Searching for: ${bondSearch || 'all bonds'}`,
+                  duration: 2000
+                });
+              }}>
                 <Search className="w-4 h-4 mr-2" />
                 Search
               </Button>
-              <Button variant="outline">
+              <Button 
+                variant="outline"
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+              >
                 <Filter className="w-4 h-4 mr-2" />
                 Filter
               </Button>
             </div>
+
+            {isFilterOpen && (
+              <FilterPanel
+                darkMode={darkMode}
+                isOpen={isFilterOpen}
+                onClose={() => setIsFilterOpen(false)}
+                onApplyFilters={handleApplyFilters}
+                filterOptions={{
+                  search: true,
+                  categories: ["US Treasury", "Corporate Bond", "Municipal Bond"],
+                  types: ["Treasury Note", "Treasury Bond", "Corporate Bond", "Municipal Bond"],
+                  dates: true,
+                  price: true
+                }}
+              />
+            )}
           </div>
 
           <div className="overflow-x-auto">
@@ -303,15 +452,18 @@ const FixedIncomePanel: FC<FixedIncomePanelProps> = ({ darkMode }) => {
                 </tr>
               </thead>
               <tbody>
-                {bondListings.map((bond, index) => (
+                {filteredBonds.map((bond, index) => (
                   <tr 
                     key={index}
                     className={cn(
-                      "border-b hover:bg-opacity-50",
+                      "border-b hover:bg-opacity-50 cursor-pointer",
                       darkMode 
                         ? "border-zinc-700 hover:bg-zinc-700" 
                         : "border-gray-200 hover:bg-gray-100"
                     )}
+                    onClick={() => {
+                      handleAction('view', 'Bond Details', `${bond.issuer} ${bond.coupon}% ${bond.maturity}`);
+                    }}
                   >
                     <td className="py-3 px-4">
                       <div className="font-medium">{bond.issuer}</div>
@@ -420,9 +572,152 @@ const FixedIncomePanel: FC<FixedIncomePanelProps> = ({ darkMode }) => {
               Futures markets are pricing in 75 bps of cuts in 2025, with the first cut anticipated in June.
               Watch for updated dot plot projections at the next FOMC meeting on March 20, 2025.
             </p>
-            <Button className="mt-3" size="sm">
+            <Button className="mt-3" size="sm" onClick={handleShowFedProjections}>
               <TrendingUp className="w-4 h-4 mr-2" /> View Fed Projections
             </Button>
+
+            {showFedDialog && (
+              <div className={cn(
+                "fixed inset-0 z-50 flex items-center justify-center bg-black/50",
+                "p-4"
+              )}>
+                <div className={cn(
+                  "relative w-full max-w-2xl p-6 rounded-lg shadow-lg",
+                  darkMode ? "bg-zinc-800 text-white" : "bg-white text-black"
+                )}>
+                  <Button 
+                    className="absolute right-3 top-3" 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => setShowFedDialog(false)}
+                  >
+                    ×
+                  </Button>
+                  <h2 className="text-xl font-semibold mb-4">{fedProjections.title}</h2>
+                  <p className="mb-4">{fedProjections.summary}</p>
+                  
+                  <div className="mb-4">
+                    <h3 className="font-medium mb-2">Dot Plot Summary</h3>
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr>
+                            <th className={cn(
+                              "text-left p-2 border-b",
+                              darkMode ? "border-zinc-600" : "border-gray-300"
+                            )}>
+                              Year
+                            </th>
+                            <th className={cn(
+                              "text-center p-2 border-b",
+                              darkMode ? "border-zinc-600" : "border-gray-300"
+                            )}>
+                              Median Rate (%)
+                            </th>
+                            <th className={cn(
+                              "text-right p-2 border-b",
+                              darkMode ? "border-zinc-600" : "border-gray-300"
+                            )}>
+                              Range (%)
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {fedProjections.dotPlot.map((item) => (
+                            <tr key={item.year}>
+                              <td className={cn(
+                                "p-2 border-b",
+                                darkMode ? "border-zinc-600" : "border-gray-300"
+                              )}>
+                                {item.year === "LongRun" ? "Longer Run" : item.year}
+                              </td>
+                              <td className={cn(
+                                "text-center p-2 border-b font-medium",
+                                darkMode ? "border-zinc-600" : "border-gray-300"
+                              )}>
+                                {item.median.toFixed(1)}
+                              </td>
+                              <td className={cn(
+                                "text-right p-2 border-b",
+                                darkMode ? "border-zinc-600" : "border-gray-300"
+                              )}>
+                                {item.range[0].toFixed(1)} - {item.range[1].toFixed(1)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <h3 className="font-medium mb-2">Economic Projections</h3>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className={cn(
+                        "p-3 rounded border",
+                        darkMode ? "border-zinc-600 bg-zinc-700" : "border-gray-300 bg-gray-50"
+                      )}>
+                        <div className="text-sm opacity-70">GDP Growth</div>
+                        <div className="text-xl font-medium">{fedProjections.economicProjections.gdp.current}%</div>
+                        <div className={cn(
+                          "text-sm mt-1",
+                          fedProjections.economicProjections.gdp.current > fedProjections.economicProjections.gdp.previous 
+                            ? "text-green-500" 
+                            : "text-red-500"
+                        )}>
+                          {fedProjections.economicProjections.gdp.current > fedProjections.economicProjections.gdp.previous 
+                            ? "↑" 
+                            : "↓"} 
+                          from {fedProjections.economicProjections.gdp.previous}%
+                        </div>
+                      </div>
+                      
+                      <div className={cn(
+                        "p-3 rounded border",
+                        darkMode ? "border-zinc-600 bg-zinc-700" : "border-gray-300 bg-gray-50"
+                      )}>
+                        <div className="text-sm opacity-70">Unemployment</div>
+                        <div className="text-xl font-medium">{fedProjections.economicProjections.unemployment.current}%</div>
+                        <div className={cn(
+                          "text-sm mt-1",
+                          fedProjections.economicProjections.unemployment.current < fedProjections.economicProjections.unemployment.previous 
+                            ? "text-green-500" 
+                            : "text-red-500"
+                        )}>
+                          {fedProjections.economicProjections.unemployment.current < fedProjections.economicProjections.unemployment.previous 
+                            ? "↓" 
+                            : "↑"} 
+                          from {fedProjections.economicProjections.unemployment.previous}%
+                        </div>
+                      </div>
+                      
+                      <div className={cn(
+                        "p-3 rounded border",
+                        darkMode ? "border-zinc-600 bg-zinc-700" : "border-gray-300 bg-gray-50"
+                      )}>
+                        <div className="text-sm opacity-70">PCE Inflation</div>
+                        <div className="text-xl font-medium">{fedProjections.economicProjections.inflation.current}%</div>
+                        <div className={cn(
+                          "text-sm mt-1",
+                          fedProjections.economicProjections.inflation.current < fedProjections.economicProjections.inflation.previous 
+                            ? "text-green-500" 
+                            : "text-red-500"
+                        )}>
+                          {fedProjections.economicProjections.inflation.current < fedProjections.economicProjections.inflation.previous 
+                            ? "↓" 
+                            : "↑"} 
+                          from {fedProjections.economicProjections.inflation.previous}%
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="text-sm opacity-70 mt-4">
+                    Last Updated: {fedProjections.lastUpdated}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

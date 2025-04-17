@@ -1,21 +1,22 @@
 
 import { useState } from "react";
 import ModulePageLayout from "@/components/ModulePageLayout";
+import FixedIncomePanel from "@/components/panels/FixedIncomePanel";
+import { useUI } from "@/contexts/UIContext";
 
 const FixedIncomePage = () => {
-  const [darkMode, setDarkMode] = useState<boolean>(true);
+  const { isDarkMode, toggleDarkMode } = useUI();
   
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    document.documentElement.classList.toggle("dark");
-  };
-
   return (
     <ModulePageLayout 
       activeModule="fixed-income" 
-      darkMode={darkMode} 
+      darkMode={isDarkMode} 
       toggleDarkMode={toggleDarkMode} 
-    />
+    >
+      <div className="p-6">
+        <FixedIncomePanel darkMode={isDarkMode} />
+      </div>
+    </ModulePageLayout>
   );
 };
 
