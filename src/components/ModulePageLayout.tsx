@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { 
@@ -32,6 +31,7 @@ import {
 import DashboardView from "@/components/DashboardView";
 import { useToast } from "@/hooks/use-toast";
 import FilterPanel from "@/components/FilterPanel";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ModulePageLayoutProps {
   activeModule: string;
@@ -51,7 +51,6 @@ const ModulePageLayout: React.FC<ModulePageLayoutProps> = ({
   const location = useLocation();
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Apply dark mode on first load
   useEffect(() => {
     if (!isInitialized) {
       if (darkMode) {
@@ -64,7 +63,6 @@ const ModulePageLayout: React.FC<ModulePageLayoutProps> = ({
   }, [darkMode, isInitialized]);
 
   const handleModuleChange = (moduleId: string) => {
-    // Map module IDs to their routes
     const routes: Record<string, string> = {
       "dashboard": "/",
       "market-data": "/market-data",
@@ -80,7 +78,6 @@ const ModulePageLayout: React.FC<ModulePageLayoutProps> = ({
       "terminal": "/terminal"
     };
 
-    // Prevent navigation if we're already on this page
     if (location.pathname === routes[moduleId]) {
       return;
     }
@@ -91,7 +88,6 @@ const ModulePageLayout: React.FC<ModulePageLayoutProps> = ({
       duration: 2000,
     });
 
-    // Navigate to the correct route
     navigate(routes[moduleId]);
   };
 
@@ -242,8 +238,10 @@ const ModulePageLayout: React.FC<ModulePageLayoutProps> = ({
             </SidebarFooter>
           </Sidebar>
           <SidebarInset>
-            <DashboardView activeModule={activeModule} darkMode={darkMode} />
-            {children}
+            <ScrollArea disableScrollBar={true} className="flex-1 overflow-y-auto">
+              <DashboardView activeModule={activeModule} darkMode={darkMode} />
+              {children}
+            </ScrollArea>
           </SidebarInset>
         </div>
       </SidebarProvider>

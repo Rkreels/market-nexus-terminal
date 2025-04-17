@@ -3,6 +3,7 @@ import { useState } from "react";
 import ModulePageLayout from "@/components/ModulePageLayout";
 import FixedIncomePanel from "@/components/panels/FixedIncomePanel";
 import { useUI } from "@/contexts/UIContext";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const FixedIncomePage = () => {
   const { isDarkMode, toggleDarkMode } = useUI();
@@ -13,9 +14,11 @@ const FixedIncomePage = () => {
       darkMode={isDarkMode} 
       toggleDarkMode={toggleDarkMode} 
     >
-      <div className="p-6">
-        <FixedIncomePanel darkMode={isDarkMode} />
-      </div>
+      <ScrollArea disableScrollBar={true} className="h-full">
+        <div className="p-6">
+          <FixedIncomePanel darkMode={isDarkMode} />
+        </div>
+      </ScrollArea>
     </ModulePageLayout>
   );
 };
