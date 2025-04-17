@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Timeframe, timeframeOptions } from "@/utils/timeframeUtils";
@@ -100,7 +101,7 @@ interface UIContextProps {
 
 const UIContext = createContext<UIContextProps | undefined>(undefined);
 
-export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const UIProvider = ({ children }: { children: ReactNode }) => {
   const [activeTimeframe, setActiveTimeframe] = useState<Timeframe>('1M');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
