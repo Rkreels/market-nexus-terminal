@@ -1,19 +1,24 @@
 
-import { useState } from "react";
+import { useEffect } from "react";
 import ModulePageLayout from "@/components/ModulePageLayout";
+import { useUI } from "@/contexts/UIContext";
 
 const MacroEconomyPage = () => {
-  const [darkMode, setDarkMode] = useState<boolean>(true);
+  const { isDarkMode, toggleDarkMode } = useUI();
   
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    document.documentElement.classList.toggle("dark");
-  };
+  // Add data attributes to elements when component mounts
+  useEffect(() => {
+    // Add data attributes to macro economy elements for voice guidance
+    const macroElements = document.querySelectorAll('.macro-indicator, .macro-chart, .macro-table');
+    macroElements.forEach(element => {
+      element.setAttribute('data-component', 'macro-panel');
+    });
+  }, []);
 
   return (
     <ModulePageLayout 
       activeModule="macro" 
-      darkMode={darkMode} 
+      darkMode={isDarkMode} 
       toggleDarkMode={toggleDarkMode} 
     />
   );

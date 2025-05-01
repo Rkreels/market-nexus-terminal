@@ -1,26 +1,26 @@
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import ModulePageLayout from "@/components/ModulePageLayout";
+import { useUI } from "@/contexts/UIContext";
 
 const Index = () => {
-  const [darkMode, setDarkMode] = useState<boolean>(true);
+  const { isDarkMode, toggleDarkMode } = useUI();
   
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    document.documentElement.classList.toggle("dark");
-  };
-
-  // Add dark mode class to root on initial load
+  // Add data attributes to elements when component mounts
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    }
+    // Add data attributes to dashboard elements for voice guidance
+    const dashboardElements = document.querySelectorAll('.dashboard-widget, .dashboard-summary, .dashboard-chart');
+    dashboardElements.forEach(element => {
+      if (element.getAttribute('data-component') === null) {
+        element.setAttribute('data-component', 'dashboard-panel');
+      }
+    });
   }, []);
 
   return (
     <ModulePageLayout 
       activeModule="dashboard" 
-      darkMode={darkMode} 
+      darkMode={isDarkMode} 
       toggleDarkMode={toggleDarkMode} 
     />
   );

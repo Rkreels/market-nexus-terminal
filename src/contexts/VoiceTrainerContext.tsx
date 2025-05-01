@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useRef, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useRef, ReactNode, useEffect } from 'react';
 
 interface VoiceTrainerContextProps {
   isMuted: boolean;
@@ -8,6 +8,7 @@ interface VoiceTrainerContextProps {
   stopSpeaking: () => void;
   isPaused: boolean;
   setPaused: (paused: boolean) => void;
+  speakingText: string | null;
 }
 
 const VoiceTrainerContext = createContext<VoiceTrainerContextProps | undefined>(undefined);
@@ -15,7 +16,32 @@ const VoiceTrainerContext = createContext<VoiceTrainerContextProps | undefined>(
 export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [isPaused, setPaused] = useState<boolean>(false);
+  const [speakingText, setSpeakingText] = useState<string | null>(null);
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  // Initialize voices when available
+  useEffect(() => {
+    // Chrome needs a manual trigger to load voices
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      const synth = window.speechSynthesis;
+      
+      // This event fires when voices are loaded
+      const handleVoicesChanged = () => {
+        const voices = synth.getVoices();
+        console.log(`Loaded ${voices.length} voices`);
+      };
+      
+      // Add the event listener
+      synth.onvoiceschanged = handleVoicesChanged;
+      
+      // Trigger voice loading
+      synth.getVoices();
+      
+      return () => {
+        synth.onvoiceschanged = null;
+      };
+    }
+  }, []);
 
   // Toggle mute state
   const toggleMute = () => {
@@ -87,9 +113,13 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
       }
     }
     
+    // Update state to show what we're speaking
+    setSpeakingText(text);
+    
     // Handle speech ending event
     utterance.onend = () => {
       speechSynthRef.current = null;
+      setSpeakingText(null);
     };
     
     // Store the utterance in ref for future cancellation
@@ -103,6 +133,7 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
   const stopSpeaking = () => {
     window.speechSynthesis.cancel();
     speechSynthRef.current = null;
+    setSpeakingText(null);
   };
   
   return (
@@ -113,7 +144,8 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
         speak, 
         stopSpeaking,
         isPaused,
-        setPaused
+        setPaused,
+        speakingText
       }}
     >
       {children}

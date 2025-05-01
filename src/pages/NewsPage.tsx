@@ -1,26 +1,24 @@
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import ModulePageLayout from "@/components/ModulePageLayout";
+import { useUI } from "@/contexts/UIContext";
 
 const NewsPage = () => {
-  const [darkMode, setDarkMode] = useState<boolean>(true);
+  const { isDarkMode, toggleDarkMode } = useUI();
   
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    document.documentElement.classList.toggle("dark");
-  };
-
-  // Add dark mode class to root on initial load
+  // Add data attributes to elements when component mounts
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    }
+    // Add data attributes to news elements for voice guidance
+    const newsElements = document.querySelectorAll('.news-item, .news-feed, .news-filter');
+    newsElements.forEach(element => {
+      element.setAttribute('data-component', 'news-panel');
+    });
   }, []);
 
   return (
     <ModulePageLayout 
       activeModule="news" 
-      darkMode={darkMode} 
+      darkMode={isDarkMode} 
       toggleDarkMode={toggleDarkMode} 
     />
   );

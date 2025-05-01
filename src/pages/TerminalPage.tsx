@@ -1,19 +1,24 @@
 
-import { useState } from "react";
+import { useEffect } from "react";
 import ModulePageLayout from "@/components/ModulePageLayout";
+import { useUI } from "@/contexts/UIContext";
 
 const TerminalPage = () => {
-  const [darkMode, setDarkMode] = useState<boolean>(true);
+  const { isDarkMode, toggleDarkMode } = useUI();
   
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    document.documentElement.classList.toggle("dark");
-  };
+  // Add data attributes to elements when component mounts
+  useEffect(() => {
+    // Add data attributes to terminal elements for voice guidance
+    const terminalElements = document.querySelectorAll('.terminal-command, .terminal-output, .terminal-history');
+    terminalElements.forEach(element => {
+      element.setAttribute('data-component', 'terminal-panel');
+    });
+  }, []);
 
   return (
     <ModulePageLayout 
       activeModule="terminal" 
-      darkMode={darkMode} 
+      darkMode={isDarkMode} 
       toggleDarkMode={toggleDarkMode} 
     />
   );

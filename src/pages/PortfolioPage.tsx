@@ -1,12 +1,13 @@
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import ModulePageLayout from "@/components/ModulePageLayout";
 import { useDetailView } from "@/hooks/useDetailView";
 import PortfolioDetail from "@/components/panels/PortfolioDetail";
+import { useUI } from "@/contexts/UIContext";
 import { useToast } from "@/hooks/use-toast";
 
 const PortfolioPage = () => {
-  const [darkMode, setDarkMode] = useState<boolean>(true);
+  const { isDarkMode, toggleDarkMode } = useUI();
   const { toast } = useToast();
   
   // Detail view hooks for portfolio items
@@ -45,27 +46,24 @@ const PortfolioPage = () => {
     }
   });
   
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    document.documentElement.classList.toggle("dark");
-  };
-
-  // Add dark mode class to root on initial load
+  // Add data attributes to elements when component mounts
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    }
+    // Add data attributes to portfolio-related elements for voice guidance
+    const portfolioElements = document.querySelectorAll('.portfolio-item, .portfolio-chart, .portfolio-summary');
+    portfolioElements.forEach(element => {
+      element.setAttribute('data-component', 'portfolio-panel');
+    });
   }, []);
 
   return (
     <ModulePageLayout 
       activeModule="portfolio" 
-      darkMode={darkMode} 
+      darkMode={isDarkMode} 
       toggleDarkMode={toggleDarkMode} 
     >
       {/* Detail view for portfolio items */}
       <PortfolioDetail
-        darkMode={darkMode}
+        darkMode={isDarkMode}
         selectedItemId={selectedItemId}
         isOpen={isDetailOpen}
         isEditMode={isEditMode}

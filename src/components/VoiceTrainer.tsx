@@ -2,14 +2,15 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useVoiceTrainer } from '@/contexts/VoiceTrainerContext';
-import { MicOff, Mic } from 'lucide-react';
+import { MicOff, Mic, PauseCircle, PlayCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUI } from '@/contexts/UIContext';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 
 // Map of component hints by their selectors - enhanced with more descriptive content
 const componentHints: Record<string, string> = {
   // Navigation
-  '.sidebar-icon': 'This is the navigation sidebar with quick access icons. Each icon represents a different module of the application. Hover over each icon to see its name, and click to navigate directly to that section. For example, clicking on the chart icon will take you to the Market Data section where you can analyze various financial instruments.',
+  '.sidebar-icon, .sidebar-menu-button': 'This is the navigation sidebar with quick access icons. Each icon represents a different module of the application. Hover over each icon to see its name, and click to navigate directly to that section. For example, clicking on the chart icon will take you to the Market Data section where you can analyze various financial instruments.',
   
   // Dashboard components
   '[data-component="market-data-panel"]': 'This is the market data panel displaying real-time financial information. You can track various assets like stocks, cryptocurrencies, and indices here. Try clicking on a specific asset to view detailed charts and historical performance. You can also customize the timeframe using the selector above the chart to view data from different periods.',
@@ -34,6 +35,10 @@ const componentHints: Record<string, string> = {
   
   // Tables
   'table': 'This data table presents information in an organized format with rows and columns. You can sort the data by clicking on column headers, and in many cases, filter the content using the filter button. To interact with a specific row, click on it to select it before using the action buttons above or below the table.',
+  
+  // Common components
+  'button': 'This is a clickable button that performs an action when pressed. The text on the button typically indicates what will happen when you click it. Some buttons may change color or provide visual feedback when hovered to indicate they are interactive.',
+  '.card': 'This card component contains related information grouped together for easy reading. Cards are used throughout the application to organize different types of content with a consistent visual style. Many cards have interactive elements like buttons or expandable sections.',
   
   // Module-specific guidance based on routes
   '/market-data': 'You\'re in the Market Data module where you can analyze various financial instruments and their performance. From here, you can explore price charts, compare different assets, and access technical indicators to inform your trading decisions. Try selecting different timeframes to view how assets have performed over various periods, from intraday to multi-year trends.',
@@ -70,10 +75,11 @@ const routeWelcomeMessages: Record<string, string> = {
 
 const VoiceTrainer: React.FC = () => {
   const location = useLocation();
-  const { speak, stopSpeaking, isMuted, toggleMute, isPaused, setPaused } = useVoiceTrainer();
+  const { speak, stopSpeaking, isMuted, toggleMute, isPaused, setPaused, speakingText } = useVoiceTrainer();
   const { isDarkMode } = useUI();
   const [currentElement, setCurrentElement] = useState<string | null>(null);
   const cursorTimeoutRef = useRef<number | null>(null);
+  const lastSpokenRef = useRef<string | null>(null);
   
   // Handle route changes - speak welcome message
   useEffect(() => {
@@ -84,6 +90,7 @@ const VoiceTrainer: React.FC = () => {
     // Small delay to let the page render
     const timer = setTimeout(() => {
       speak(welcomeMessage);
+      lastSpokenRef.current = welcomeMessage;
     }, 500);
     
     return () => clearTimeout(timer);
@@ -92,6 +99,8 @@ const VoiceTrainer: React.FC = () => {
   // Set up cursor tracking with enhanced intelligence
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
+      if (isPaused) return;
+      
       // Check if cursor has moved to a new element
       const element = document.elementFromPoint(e.clientX, e.clientY);
       if (!element) return;
@@ -99,6 +108,15 @@ const VoiceTrainer: React.FC = () => {
       // Find the closest matching element with guidance
       const findMatchingElement = (el: Element | null): string | null => {
         if (!el) return null;
+        
+        // Check data-component attribute first
+        if (el.getAttribute('data-component')) {
+          const dataComponentValue = el.getAttribute('data-component');
+          const selector = `[data-component="${dataComponentValue}"]`;
+          if (componentHints[selector]) {
+            return selector;
+          }
+        }
         
         // Check element against our selectors
         for (const selector in componentHints) {
@@ -108,6 +126,14 @@ const VoiceTrainer: React.FC = () => {
             }
           } catch (error) {
             // Skip invalid selectors
+          }
+        }
+        
+        // Check element class list for common components
+        const classList = Array.from(el.classList);
+        for (const className of classList) {
+          if (componentHints[`.${className}`]) {
+            return `.${className}`;
           }
         }
         
@@ -126,8 +152,13 @@ const VoiceTrainer: React.FC = () => {
         
         // Set a delay before speaking (to avoid speaking on rapid mouse movement)
         cursorTimeoutRef.current = window.setTimeout(() => {
-          stopSpeaking(); // Stop any current speech
-          speak(componentHints[matchedSelector]); // Speak new guidance
+          // Don't repeat the same guidance too quickly
+          const guidance = componentHints[matchedSelector];
+          if (guidance !== lastSpokenRef.current) {
+            stopSpeaking(); // Stop any current speech
+            speak(guidance); // Speak new guidance
+            lastSpokenRef.current = guidance;
+          }
           setCurrentElement(matchedSelector);
           cursorTimeoutRef.current = null;
         }, 700); // 700ms delay
@@ -143,19 +174,48 @@ const VoiceTrainer: React.FC = () => {
         window.clearTimeout(cursorTimeoutRef.current);
       }
     };
-  }, [speak, stopSpeaking, currentElement]);
+  }, [speak, stopSpeaking, currentElement, isPaused]);
   
   return (
-    <div className={`fixed bottom-4 right-4 z-50 ${isDarkMode ? 'text-white' : 'text-black'}`}>
+    <div className={`fixed bottom-4 right-4 z-50 flex gap-2 ${isDarkMode ? 'text-white' : 'text-black'}`}>
+      {/* Pause/Resume button */}
       <Button
         variant="outline"
         size="sm"
-        onClick={toggleMute}
+        onClick={() => setPaused(!isPaused)}
         className={`rounded-full p-2 ${isDarkMode ? 'bg-zinc-800 hover:bg-zinc-700' : 'bg-white hover:bg-gray-100'}`}
-        title={isMuted ? "Unmute voice assistant" : "Mute voice assistant"}
+        title={isPaused ? "Resume voice assistant" : "Pause voice assistant"}
       >
-        {isMuted ? <MicOff size={16} /> : <Mic size={16} />}
+        {isPaused ? <PlayCircle size={16} /> : <PauseCircle size={16} />}
       </Button>
+      
+      {/* Mute/Unmute button */}
+      <HoverCard>
+        <HoverCardTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleMute}
+            className={`rounded-full p-2 ${isDarkMode ? 'bg-zinc-800 hover:bg-zinc-700' : 'bg-white hover:bg-gray-100'}`}
+            title={isMuted ? "Unmute voice assistant" : "Mute voice assistant"}
+          >
+            {isMuted ? <MicOff size={16} /> : <Mic size={16} />}
+          </Button>
+        </HoverCardTrigger>
+        <HoverCardContent className={isDarkMode ? "bg-zinc-800 border-zinc-700" : "bg-white"}>
+          <div className="space-y-1">
+            <h4 className="text-sm font-semibold">Voice Assistant</h4>
+            <p className="text-xs">
+              {isMuted ? "Currently muted. Click to enable voice guidance." : "Voice guidance active. Hover over components for information."}
+            </p>
+            {speakingText && (
+              <div className="mt-2 pt-2 border-t border-dashed text-xs italic">
+                Currently saying: "{speakingText}"
+              </div>
+            )}
+          </div>
+        </HoverCardContent>
+      </HoverCard>
     </div>
   );
 };
