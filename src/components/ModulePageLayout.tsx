@@ -102,7 +102,7 @@ const ModulePageLayout: React.FC<ModulePageLayoutProps> = ({
               </h1>
               <button 
                 onClick={toggleDarkMode}
-                className={cn("p-2 rounded-md", 
+                className={cn("dark-mode-toggle p-2 rounded-md", 
                   darkMode ? "text-white hover:bg-zinc-800" : "text-black hover:bg-gray-200"
                 )}
               >
@@ -116,6 +116,7 @@ const ModulePageLayout: React.FC<ModulePageLayoutProps> = ({
                     isActive={activeModule === "dashboard"} 
                     onClick={() => handleModuleChange("dashboard")}
                     tooltip="Dashboard"
+                    className="sidebar-icon"
                   >
                     <LayoutDashboard className="w-5 h-5" />
                     <span>Dashboard</span>

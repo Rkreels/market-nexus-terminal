@@ -73,10 +73,13 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
   ];
 
   return (
-    <Card className={cn(
-      "border", 
-      darkMode ? "bg-zinc-800 border-zinc-700" : "bg-white border-gray-200"
-    )}>
+    <Card 
+      className={cn(
+        "border", 
+        darkMode ? "bg-zinc-800 border-zinc-700" : "bg-white border-gray-200"
+      )}
+      data-component="market-data-panel"
+    >
       <CardHeader className="flex items-center justify-between">
         <CardTitle className="text-lg font-medium flex items-center">
           <Bell className="w-5 h-5 mr-2" />
@@ -89,12 +92,13 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
             onClick={() => {
               // Reset filters functionality could be added here
             }}
+            className="filter-button"
           >
             <Filter className="w-4 h-4 mr-2" /> Filter
           </Button>
           <Dialog open={isAddItemDialogOpen} onOpenChange={setIsAddItemDialogOpen}>
             <DialogTrigger asChild>
-              <Button size="sm">
+              <Button size="sm" className="add-button">
                 <PlusCircle className="w-4 h-4 mr-2" /> Add Item
               </Button>
             </DialogTrigger>
@@ -126,7 +130,7 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
-        <div className="mt-4">
+        <div className="mt-4 chart-container">
           <DataTable 
             columns={columns} 
             data={filteredData} 

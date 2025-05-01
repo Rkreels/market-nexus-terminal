@@ -22,7 +22,12 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
   return (
     <div className="flex items-center gap-2">
       {showFilter && (
-        <Button variant="outline" size={size} className={size === "icon" ? "h-8 w-8" : ""} onClick={toggleFilter}>
+        <Button 
+          variant="outline" 
+          size={size} 
+          className={`filter-button ${size === "icon" ? "h-8 w-8" : ""}`} 
+          onClick={toggleFilter}
+        >
           <Filter className="h-4 w-4" />
           {size !== "icon" && <span className="ml-2">Filter</span>}
         </Button>
@@ -30,7 +35,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
       <Button 
         variant="outline" 
         size={size} 
-        className={size === "icon" ? "h-8 w-8" : ""} 
+        className={`add-button ${size === "icon" ? "h-8 w-8" : ""}`} 
         onClick={() => handleAction('add', itemType)}
       >
         <Plus className="h-4 w-4" />
@@ -41,7 +46,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
           <Button 
             variant="outline" 
             size={size} 
-            className={size === "icon" ? "h-8 w-8" : ""} 
+            className={`view-button ${size === "icon" ? "h-8 w-8" : ""}`} 
             onClick={() => handleAction('view', itemType, itemId)}
           >
             <Eye className="h-4 w-4" />
@@ -50,7 +55,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
           <Button 
             variant="outline" 
             size={size} 
-            className={size === "icon" ? "h-8 w-8" : ""} 
+            className={`edit-button ${size === "icon" ? "h-8 w-8" : ""}`} 
             onClick={() => handleAction('edit', itemType, itemId)}
           >
             <Edit className="h-4 w-4" />
@@ -59,7 +64,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
           <Button 
             variant="outline" 
             size={size} 
-            className={size === "icon" ? "h-8 w-8" : ""} 
+            className={`delete-button ${size === "icon" ? "h-8 w-8" : ""}`} 
             onClick={() => handleAction('delete', itemType, itemId)}
           >
             <Trash2 className="h-4 w-4" />
