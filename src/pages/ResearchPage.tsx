@@ -2,6 +2,8 @@
 import { useEffect } from "react";
 import ModulePageLayout from "@/components/ModulePageLayout";
 import { useUI } from "@/contexts/UIContext";
+import ResearchPanel from "@/components/panels/ResearchPanel";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const ResearchPage = () => {
   const { isDarkMode, toggleDarkMode } = useUI();
@@ -20,7 +22,13 @@ const ResearchPage = () => {
       activeModule="research" 
       darkMode={isDarkMode} 
       toggleDarkMode={toggleDarkMode} 
-    />
+    >
+      <ScrollArea disableScrollBar={true} className="h-full">
+        <div className="p-6">
+          <ResearchPanel darkMode={isDarkMode} />
+        </div>
+      </ScrollArea>
+    </ModulePageLayout>
   );
 };
 

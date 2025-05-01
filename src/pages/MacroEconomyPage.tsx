@@ -2,6 +2,8 @@
 import { useEffect } from "react";
 import ModulePageLayout from "@/components/ModulePageLayout";
 import { useUI } from "@/contexts/UIContext";
+import MacroEconomyPanel from "@/components/panels/MacroEconomyPanel";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const MacroEconomyPage = () => {
   const { isDarkMode, toggleDarkMode } = useUI();
@@ -20,7 +22,13 @@ const MacroEconomyPage = () => {
       activeModule="macro" 
       darkMode={isDarkMode} 
       toggleDarkMode={toggleDarkMode} 
-    />
+    >
+      <ScrollArea disableScrollBar={true} className="h-full">
+        <div className="p-6">
+          <MacroEconomyPanel darkMode={isDarkMode} />
+        </div>
+      </ScrollArea>
+    </ModulePageLayout>
   );
 };
 
