@@ -1,14 +1,26 @@
 
-import { FC } from "react";
-import { List, ArrowUpRight, ArrowDownRight, Star } from "lucide-react";
+import { FC, useState } from "react";
+import { List, ArrowUpRight, ArrowDownRight, Star, Edit2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface WatchlistPanelProps {
   darkMode: boolean;
 }
 
+interface WatchlistStock {
+  symbol: string;
+  name: string;
+  price: number;
+  change: number;
+  percentChange: number;
+  direction: "up" | "down";
+}
+
 // Mock watchlist data
-const watchlistStocks = [
+const initialWatchlistStocks: WatchlistStock[] = [
   { 
     symbol: "AAPL", 
     name: "Apple Inc.", 
@@ -52,6 +64,30 @@ const watchlistStocks = [
 ];
 
 const WatchlistPanel: FC<WatchlistPanelProps> = ({ darkMode }) => {
+  const [watchlistStocks, setWatchlistStocks] = useState<WatchlistStock[]>(initialWatchlistStocks);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [newSymbol, setNewSymbol] = useState("");
+
+  const handleAddSymbol = () => {
+    if (newSymbol.trim()) {
+      const newStock: WatchlistStock = {
+        symbol: newSymbol.toUpperCase(),
+        name: `${newSymbol.toUpperCase()} Company`,
+        price: Math.random() * 500 + 50,
+        change: (Math.random() - 0.5) * 10,
+        percentChange: (Math.random() - 0.5) * 5,
+        direction: Math.random() > 0.5 ? "up" : "down"
+      };
+      setWatchlistStocks(prev => [...prev, newStock]);
+      setNewSymbol("");
+      setIsEditDialogOpen(false);
+    }
+  };
+
+  const handleRemoveStock = (symbol: string) => {
+    setWatchlistStocks(prev => prev.filter(stock => stock.symbol !== symbol));
+  };
+
   return (
     <div className={cn("rounded-lg overflow-hidden shadow-md", 
       darkMode ? "bg-zinc-800 border border-zinc-700" : "bg-white border border-gray-200"
@@ -61,11 +97,60 @@ const WatchlistPanel: FC<WatchlistPanelProps> = ({ darkMode }) => {
           <List className={cn("w-5 h-5 mr-2", darkMode ? "text-yellow-400" : "text-yellow-600")} />
           <h3 className="font-medium">Watchlist</h3>
         </div>
-        <div className={cn("text-xs px-2 py-1 rounded hover:bg-opacity-80 cursor-pointer", 
-          darkMode ? "bg-zinc-700 text-zinc-300" : "bg-gray-100 text-gray-700"
-        )}>
-          Edit
-        </div>
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogTrigger asChild>
+            <Button 
+              size="sm" 
+              variant="outline"
+              className={cn("text-xs px-2 py-1 rounded hover:bg-opacity-80 cursor-pointer", 
+                darkMode ? "bg-zinc-700 text-zinc-300 hover:bg-zinc-600" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              )}
+            >
+              <Edit2 className="w-3 h-3 mr-1" />
+              Edit
+            </Button>
+          </DialogTrigger>
+          <DialogContent className={cn(
+            darkMode ? "bg-zinc-800 border-zinc-700" : "bg-white"
+          )}>
+            <DialogHeader>
+              <DialogTitle>Edit Watchlist</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Add Symbol</label>
+                <div className="flex gap-2">
+                  <Input
+                    value={newSymbol}
+                    onChange={(e) => setNewSymbol(e.target.value)}
+                    placeholder="Enter symbol (e.g., NVDA)"
+                    className={cn(
+                      darkMode ? "bg-zinc-700 border-zinc-600" : "bg-white border-gray-300"
+                    )}
+                  />
+                  <Button onClick={handleAddSymbol}>Add</Button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Current Symbols</label>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {watchlistStocks.map((stock) => (
+                    <div key={stock.symbol} className="flex justify-between items-center p-2 border rounded">
+                      <span>{stock.symbol} - {stock.name}</span>
+                      <Button 
+                        size="sm" 
+                        variant="destructive" 
+                        onClick={() => handleRemoveStock(stock.symbol)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
       
       <div className="overflow-hidden">

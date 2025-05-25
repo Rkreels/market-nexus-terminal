@@ -1,5 +1,5 @@
 
-import { FC } from "react";
+import { FC, useState, useMemo } from "react";
 import { LineChart, ChevronDown, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -17,23 +17,37 @@ interface StockDetailPanelProps {
   darkMode: boolean;
 }
 
-// Mock stock price data
-const stockPriceData = [
-  { date: "Apr 5", price: 182.5, volume: 15.2 },
-  { date: "Apr 6", price: 184.3, volume: 17.8 },
-  { date: "Apr 7", price: 185.7, volume: 12.1 },
-  { date: "Apr 8", price: 184.9, volume: 13.5 },
-  { date: "Apr 9", price: 186.2, volume: 16.3 },
-  { date: "Apr 10", price: 187.8, volume: 18.2 },
-  { date: "Apr 11", price: 188.5, volume: 19.5 },
-  { date: "Apr 12", price: 187.9, volume: 14.7 },
-  { date: "Apr 13", price: 189.3, volume: 16.9 },
-  { date: "Apr 14", price: 188.7, volume: 15.4 },
-  { date: "Apr 15", price: 190.1, volume: 17.3 },
-  { date: "Apr 16", price: 189.4, volume: 14.8 },
-  { date: "Apr 17", price: 188.2, volume: 13.2 },
-  { date: "Apr 18", price: 189.5, volume: 16.7 },
-];
+type TimeframePeriod = "1D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "5Y";
+
+// Mock stock price data for different timeframes
+const generateStockData = (timeframe: TimeframePeriod) => {
+  const basePrice = 189.0;
+  const dataPoints = {
+    "1D": { points: 24, interval: "hour", format: "HH:mm" },
+    "1W": { points: 7, interval: "day", format: "MMM dd" },
+    "1M": { points: 30, interval: "day", format: "MMM dd" },
+    "3M": { points: 90, interval: "day", format: "MMM dd" },
+    "6M": { points: 180, interval: "day", format: "MMM dd" },
+    "1Y": { points: 365, interval: "day", format: "MMM dd" },
+    "5Y": { points: 60, interval: "month", format: "MMM yyyy" }
+  };
+
+  const config = dataPoints[timeframe];
+  const data = [];
+  
+  for (let i = 0; i < config.points; i++) {
+    const variation = (Math.random() - 0.5) * 10;
+    const trend = timeframe === "5Y" ? i * 0.5 : timeframe === "1Y" ? i * 0.1 : 0;
+    
+    data.push({
+      date: `Point ${i + 1}`,
+      price: basePrice + variation + trend,
+      volume: Math.random() * 20 + 10
+    });
+  }
+  
+  return data;
+};
 
 // Mock key statistics
 const keyStats = [
@@ -52,6 +66,12 @@ const keyStats = [
 ];
 
 const StockDetailPanel: FC<StockDetailPanelProps> = ({ darkMode }) => {
+  const [selectedTimeframe, setSelectedTimeframe] = useState<TimeframePeriod>("1M");
+  
+  const stockPriceData = useMemo(() => generateStockData(selectedTimeframe), [selectedTimeframe]);
+  
+  const timeframePeriods: TimeframePeriod[] = ["1D", "1W", "1M", "3M", "6M", "1Y", "5Y"];
+
   return (
     <div className={cn("rounded-lg overflow-hidden shadow-md", 
       darkMode ? "bg-zinc-800 border border-zinc-700" : "bg-white border border-gray-200"
@@ -132,13 +152,14 @@ const StockDetailPanel: FC<StockDetailPanelProps> = ({ darkMode }) => {
           
           <div className="flex mt-2 justify-end">
             <div className="flex space-x-2">
-              {["1D", "1W", "1M", "3M", "6M", "1Y", "5Y"].map((period) => (
+              {timeframePeriods.map((period) => (
                 <button 
                   key={period}
-                  className={cn("px-3 py-1 rounded text-sm", 
-                    period === "1M" 
+                  onClick={() => setSelectedTimeframe(period)}
+                  className={cn("px-3 py-1 rounded text-sm transition-colors", 
+                    period === selectedTimeframe 
                       ? (darkMode ? "bg-green-800 text-green-200" : "bg-green-100 text-green-800") 
-                      : (darkMode ? "bg-zinc-700 text-zinc-300" : "bg-gray-100 text-gray-700")
+                      : (darkMode ? "bg-zinc-700 text-zinc-300 hover:bg-zinc-600" : "bg-gray-100 text-gray-700 hover:bg-gray-200")
                   )}
                 >
                   {period}
