@@ -19,7 +19,6 @@ interface WatchlistStock {
   direction: "up" | "down";
 }
 
-// Mock watchlist data
 const initialWatchlistStocks: WatchlistStock[] = [
   { 
     symbol: "AAPL", 
@@ -69,29 +68,37 @@ const WatchlistPanel: FC<WatchlistPanelProps> = ({ darkMode }) => {
   const [newSymbol, setNewSymbol] = useState("");
 
   const handleAddSymbol = () => {
-    if (newSymbol.trim()) {
+    if (newSymbol.trim() && !watchlistStocks.find(stock => stock.symbol === newSymbol.toUpperCase())) {
       const newStock: WatchlistStock = {
         symbol: newSymbol.toUpperCase(),
         name: `${newSymbol.toUpperCase()} Company`,
-        price: Math.random() * 500 + 50,
-        change: (Math.random() - 0.5) * 10,
-        percentChange: (Math.random() - 0.5) * 5,
+        price: Math.round((Math.random() * 500 + 50) * 100) / 100,
+        change: Math.round((Math.random() - 0.5) * 10 * 100) / 100,
+        percentChange: Math.round((Math.random() - 0.5) * 5 * 100) / 100,
         direction: Math.random() > 0.5 ? "up" : "down"
       };
+      
       setWatchlistStocks(prev => [...prev, newStock]);
       setNewSymbol("");
-      setIsEditDialogOpen(false);
+      console.log(`Added new stock: ${newStock.symbol}`);
     }
   };
 
   const handleRemoveStock = (symbol: string) => {
     setWatchlistStocks(prev => prev.filter(stock => stock.symbol !== symbol));
+    console.log(`Removed stock: ${symbol}`);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleAddSymbol();
+    }
   };
 
   return (
     <div className={cn("rounded-lg overflow-hidden shadow-md", 
       darkMode ? "bg-zinc-800 border border-zinc-700" : "bg-white border border-gray-200"
-    )}>
+    )} data-component="watchlist-panel">
       <div className="flex items-center justify-between p-4 border-b border-gray-700">
         <div className="flex items-center">
           <List className={cn("w-5 h-5 mr-2", darkMode ? "text-yellow-400" : "text-yellow-600")} />
@@ -102,7 +109,7 @@ const WatchlistPanel: FC<WatchlistPanelProps> = ({ darkMode }) => {
             <Button 
               size="sm" 
               variant="outline"
-              className={cn("text-xs px-2 py-1 rounded hover:bg-opacity-80 cursor-pointer", 
+              className={cn("edit-button text-xs px-2 py-1 rounded hover:bg-opacity-80 cursor-pointer", 
                 darkMode ? "bg-zinc-700 text-zinc-300 hover:bg-zinc-600" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               )}
             >
@@ -111,6 +118,7 @@ const WatchlistPanel: FC<WatchlistPanelProps> = ({ darkMode }) => {
             </Button>
           </DialogTrigger>
           <DialogContent className={cn(
+            "max-w-md",
             darkMode ? "bg-zinc-800 border-zinc-700" : "bg-white"
           )}>
             <DialogHeader>
@@ -123,24 +131,36 @@ const WatchlistPanel: FC<WatchlistPanelProps> = ({ darkMode }) => {
                   <Input
                     value={newSymbol}
                     onChange={(e) => setNewSymbol(e.target.value)}
+                    onKeyPress={handleKeyPress}
                     placeholder="Enter symbol (e.g., NVDA)"
                     className={cn(
+                      "flex-1",
                       darkMode ? "bg-zinc-700 border-zinc-600" : "bg-white border-gray-300"
                     )}
                   />
-                  <Button onClick={handleAddSymbol}>Add</Button>
+                  <Button 
+                    onClick={handleAddSymbol}
+                    disabled={!newSymbol.trim()}
+                    className="add-button"
+                  >
+                    Add
+                  </Button>
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Current Symbols</label>
+                <label className="block text-sm font-medium mb-2">Current Symbols ({watchlistStocks.length})</label>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {watchlistStocks.map((stock) => (
-                    <div key={stock.symbol} className="flex justify-between items-center p-2 border rounded">
-                      <span>{stock.symbol} - {stock.name}</span>
+                    <div key={stock.symbol} className={cn(
+                      "flex justify-between items-center p-2 border rounded",
+                      darkMode ? "border-zinc-600 bg-zinc-700" : "border-gray-300 bg-gray-50"
+                    )}>
+                      <span className="text-sm">{stock.symbol} - {stock.name}</span>
                       <Button 
                         size="sm" 
                         variant="destructive" 
                         onClick={() => handleRemoveStock(stock.symbol)}
+                        className="delete-button text-xs px-2 py-1"
                       >
                         Remove
                       </Button>
@@ -194,7 +214,7 @@ const WatchlistPanel: FC<WatchlistPanelProps> = ({ darkMode }) => {
                     ) : (
                       <ArrowDownRight className="w-3 h-3 mr-1" />
                     )}
-                    {stock.percentChange.toFixed(2)}%
+                    {stock.direction === "up" ? "+" : ""}{stock.change.toFixed(2)} ({stock.percentChange.toFixed(2)}%)
                   </div>
                 </td>
               </tr>

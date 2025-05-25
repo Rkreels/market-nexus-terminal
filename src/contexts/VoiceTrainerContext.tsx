@@ -4,11 +4,13 @@ import React, { createContext, useContext, useState, useRef, ReactNode, useEffec
 interface VoiceTrainerContextProps {
   isMuted: boolean;
   toggleMute: () => void;
-  speak: (text: string) => void;
+  speak: (text: string, priority?: 'low' | 'medium' | 'high') => void;
   stopSpeaking: () => void;
   isPaused: boolean;
   setPaused: (paused: boolean) => void;
   speakingText: string | null;
+  setCurrentContext: (context: string) => void;
+  currentContext: string | null;
 }
 
 const VoiceTrainerContext = createContext<VoiceTrainerContextProps | undefined>(undefined);
@@ -17,24 +19,21 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [isPaused, setPaused] = useState<boolean>(false);
   const [speakingText, setSpeakingText] = useState<string | null>(null);
+  const [currentContext, setCurrentContext] = useState<string | null>(null);
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const spokenContextsRef = useRef<Set<string>>(new Set());
 
   // Initialize voices when available
   useEffect(() => {
-    // Chrome needs a manual trigger to load voices
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       const synth = window.speechSynthesis;
       
-      // This event fires when voices are loaded
       const handleVoicesChanged = () => {
         const voices = synth.getVoices();
         console.log(`Loaded ${voices.length} voices`);
       };
       
-      // Add the event listener
       synth.onvoiceschanged = handleVoicesChanged;
-      
-      // Trigger voice loading
       synth.getVoices();
       
       return () => {
@@ -43,47 +42,51 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  // Toggle mute state
+  // Clear spoken contexts when context changes
+  useEffect(() => {
+    if (currentContext) {
+      spokenContextsRef.current.clear();
+    }
+  }, [currentContext]);
+
   const toggleMute = () => {
     setIsMuted((prev) => {
       if (!prev) {
-        stopSpeaking(); // Stop any ongoing speech when muting
+        stopSpeaking();
       }
       return !prev;
     });
   };
 
-  // Speak the given text with advanced natural language processing
-  const speak = (text: string) => {
+  const speak = (text: string, priority: 'low' | 'medium' | 'high' = 'medium') => {
     if (isMuted || isPaused || !text) return;
     
-    // Stop any ongoing speech
+    // Create unique key for this text and context
+    const contextKey = `${currentContext || 'global'}-${text.slice(0, 50)}`;
+    
+    // For non-high priority messages, check if already spoken in this context
+    if (priority !== 'high' && spokenContextsRef.current.has(contextKey)) {
+      return;
+    }
+    
+    // Always stop any ongoing speech immediately
     stopSpeaking();
     
-    // Create a new utterance
     const utterance = new SpeechSynthesisUtterance(text);
     
-    // Enhanced voice settings for more natural sound
-    utterance.rate = 0.95; // Slightly slower for better comprehension
-    utterance.pitch = 1.05; // Slightly higher pitch for female voice
+    // Enhanced voice settings
+    utterance.rate = 0.9;
+    utterance.pitch = 1.0;
     utterance.volume = 1.0;
     
-    // Try to find an ideal female voice with good articulation
+    // Find best voice
     const voices = window.speechSynthesis.getVoices();
-    
-    // Prioritized list of preferred voices
     const preferredVoices = [
-      // Apple voices
       'Samantha', 'Victoria', 'Moira', 'Tessa',
-      // Microsoft voices
       'Microsoft Zira', 'Microsoft Hazel', 'Microsoft Susan',
-      // Google voices 
-      'Google UK English Female', 'Google US English Female',
-      // General descriptors
-      'female', 'woman'
+      'Google UK English Female', 'Google US English Female'
     ];
     
-    // Find the best available voice from our preferences
     let selectedVoice = null;
     for (const preferredVoice of preferredVoices) {
       const found = voices.find(voice => 
@@ -96,42 +99,32 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
       }
     }
     
-    // If we found a preferred voice, use it
     if (selectedVoice) {
       utterance.voice = selectedVoice;
-    } else {
-      // Fallback to any female voice
-      const femaleVoice = voices.find(voice => 
-        voice.name.includes('female') || 
-        voice.name.includes('woman') || 
-        voice.name.toLowerCase().includes('female') ||
-        voice.name.toLowerCase().includes('woman')
-      );
-      
-      if (femaleVoice) {
-        utterance.voice = femaleVoice;
-      }
     }
     
-    // Update state to show what we're speaking
     setSpeakingText(text);
     
-    // Handle speech ending event
     utterance.onend = () => {
+      speechSynthRef.current = null;
+      setSpeakingText(null);
+      // Mark as spoken for this context
+      spokenContextsRef.current.add(contextKey);
+    };
+    
+    utterance.onerror = () => {
       speechSynthRef.current = null;
       setSpeakingText(null);
     };
     
-    // Store the utterance in ref for future cancellation
     speechSynthRef.current = utterance;
-    
-    // Speak
     window.speechSynthesis.speak(utterance);
   };
   
-  // Stop any ongoing speech
   const stopSpeaking = () => {
-    window.speechSynthesis.cancel();
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+    }
     speechSynthRef.current = null;
     setSpeakingText(null);
   };
@@ -145,7 +138,9 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
         stopSpeaking,
         isPaused,
         setPaused,
-        speakingText
+        speakingText,
+        setCurrentContext,
+        currentContext
       }}
     >
       {children}

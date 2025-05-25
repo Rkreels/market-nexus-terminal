@@ -19,7 +19,6 @@ interface StockDetailPanelProps {
 
 type TimeframePeriod = "1D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "5Y";
 
-// Mock stock price data for different timeframes
 const generateStockData = (timeframe: TimeframePeriod) => {
   const basePrice = 189.0;
   const dataPoints = {
@@ -40,8 +39,8 @@ const generateStockData = (timeframe: TimeframePeriod) => {
     const trend = timeframe === "5Y" ? i * 0.5 : timeframe === "1Y" ? i * 0.1 : 0;
     
     data.push({
-      date: `Point ${i + 1}`,
-      price: basePrice + variation + trend,
+      date: `${timeframe} Point ${i + 1}`,
+      price: Math.max(basePrice + variation + trend, 50),
       volume: Math.random() * 20 + 10
     });
   }
@@ -68,9 +67,17 @@ const keyStats = [
 const StockDetailPanel: FC<StockDetailPanelProps> = ({ darkMode }) => {
   const [selectedTimeframe, setSelectedTimeframe] = useState<TimeframePeriod>("1M");
   
-  const stockPriceData = useMemo(() => generateStockData(selectedTimeframe), [selectedTimeframe]);
+  const stockPriceData = useMemo(() => {
+    console.log(`Generating data for timeframe: ${selectedTimeframe}`);
+    return generateStockData(selectedTimeframe);
+  }, [selectedTimeframe]);
   
   const timeframePeriods: TimeframePeriod[] = ["1D", "1W", "1M", "3M", "6M", "1Y", "5Y"];
+
+  const handleTimeframeChange = (period: TimeframePeriod) => {
+    console.log(`Timeframe changed to: ${period}`);
+    setSelectedTimeframe(period);
+  };
 
   return (
     <div className={cn("rounded-lg overflow-hidden shadow-md", 
@@ -155,12 +162,13 @@ const StockDetailPanel: FC<StockDetailPanelProps> = ({ darkMode }) => {
               {timeframePeriods.map((period) => (
                 <button 
                   key={period}
-                  onClick={() => setSelectedTimeframe(period)}
-                  className={cn("px-3 py-1 rounded text-sm transition-colors", 
+                  onClick={() => handleTimeframeChange(period)}
+                  className={cn("timeframe-button px-3 py-1 rounded text-sm transition-colors", 
                     period === selectedTimeframe 
                       ? (darkMode ? "bg-green-800 text-green-200" : "bg-green-100 text-green-800") 
                       : (darkMode ? "bg-zinc-700 text-zinc-300 hover:bg-zinc-600" : "bg-gray-100 text-gray-700 hover:bg-gray-200")
                   )}
+                  data-timeframe={period}
                 >
                   {period}
                 </button>
