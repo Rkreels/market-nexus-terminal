@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useVoiceTrainer } from '@/contexts/VoiceTrainerContext';
@@ -144,7 +143,7 @@ const componentHints: Record<string, string> = {
   '.settings-panel, .preferences-panel': 'Settings and configuration panel for customizing application behavior. Adjust display options, notifications, and data preferences.',
   '.preference-toggle, .setting-switch': 'Toggle switch for enabling or disabling specific features. Changes take effect immediately and are saved automatically.',
   '.configuration-option, .config-item': 'Configuration option for customizing how data is displayed, calculated, or processed. Affects application behavior and presentation.',
-
+  
   // Portfolio specific elements
   '.portfolio-summary, .portfolio-overview': 'Portfolio summary displaying total value, daily change, allocation breakdown, and performance metrics. Shows overall investment performance.',
   '.holding-item, .position-row': 'Individual portfolio holding with quantity, current value, cost basis, and profit/loss. Click for detailed position analysis.',
@@ -283,7 +282,7 @@ const VoiceTrainer: React.FC = () => {
           if (button) {
             const svgIcon = button.querySelector('svg');
             if (svgIcon) {
-              const iconClasses = svgIcon.className || '';
+              const iconClasses = svgIcon.getAttribute('class') || '';
               if (iconClasses.includes('lucide-plus')) return '.add-button, button[aria-label*="add"], button[title*="add"], button:has(.lucide-plus)';
               if (iconClasses.includes('lucide-filter')) return '.filter-button, button[aria-label*="filter"], button[title*="filter"], button:has(.lucide-filter)';
               if (iconClasses.includes('lucide-eye')) return '.view-button, button[aria-label*="view"], button[title*="view"], button:has(.lucide-eye)';
@@ -331,8 +330,9 @@ const VoiceTrainer: React.FC = () => {
           const inputSelector = `input[type="${inputType}"]`;
           if (componentHints[inputSelector]) return inputSelector;
           
-          // Check for search inputs specifically
-          if (el.classList.contains('search-input') || el.placeholder?.toLowerCase().includes('search')) {
+          // Check for search inputs specifically - fix TypeScript error by casting to HTMLInputElement
+          const inputElement = el as HTMLInputElement;
+          if (el.classList.contains('search-input') || inputElement.placeholder?.toLowerCase().includes('search')) {
             return 'input[type="text"], input[type="search"], .search-input';
           }
         }
