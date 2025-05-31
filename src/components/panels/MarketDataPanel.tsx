@@ -22,6 +22,7 @@ import { MarketDataItem } from "@/types/marketData";
 import AddMarketDataForm from "@/components/AddMarketDataForm";
 import DataTable from "@/components/DataTable";
 import FilterPanel from "@/components/FilterPanel";
+import { useVoiceTrainer } from "@/contexts/VoiceTrainerContext";
 
 interface MarketDataPanelProps {
   darkMode: boolean;
@@ -33,6 +34,7 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState<any>({});
   const { marketData, addMarketDataItem, deleteMarketDataItem, editMarketDataItem } = useUI();
+  const { speak } = useVoiceTrainer();
 
   const applyFilters = (data: MarketDataItem[]) => {
     let filtered = [...data];
@@ -61,13 +63,37 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
   const filteredData = applyFilters(marketData);
 
   const handleAddItem = (item: MarketDataItem) => {
-    addMarketDataItem(item);
-    setIsAddItemDialogOpen(false);
+    try {
+      addMarketDataItem(item);
+      setIsAddItemDialogOpen(false);
+      speak(`Successfully added ${item.name} to market data`, 'medium');
+      console.log('Market Data: Successfully added new item', item);
+    } catch (error) {
+      console.error('Market Data: Error adding item', error);
+      speak('Error adding market data item', 'high');
+    }
   };
 
   const handleApplyFilters = (filters: any) => {
     setAppliedFilters(filters);
     setIsFilterOpen(false);
+    speak(`Applied filters to market data showing ${applyFilters(marketData).length} results`, 'medium');
+    console.log('Market Data: Applied filters', filters);
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    if (value) {
+      const results = applyFilters(marketData);
+      speak(`Search results: ${results.length} items found`, 'low');
+    }
+  };
+
+  const handleFilterToggle = () => {
+    const newState = !isFilterOpen;
+    setIsFilterOpen(newState);
+    speak(newState ? 'Filter panel opened' : 'Filter panel closed', 'medium');
   };
 
   const filterOptions = {
@@ -123,26 +149,34 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-lg font-medium flex items-center">
             <Bell className="w-5 h-5 mr-2" />
-            Market Data
+            Market Data ({filteredData.length} items)
           </CardTitle>
           <div className="flex gap-2">
             <Button 
               size="sm" 
               variant="outline" 
-              onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className="filter-button"
+              onClick={handleFilterToggle}
+              className={cn(
+                "filter-button",
+                isFilterOpen && "bg-blue-100 dark:bg-blue-900"
+              )}
+              title="Open filter options"
             >
               <Filter className="w-4 h-4 mr-2" /> Filter
             </Button>
             <Dialog open={isAddItemDialogOpen} onOpenChange={setIsAddItemDialogOpen}>
               <DialogTrigger asChild>
-                <Button size="sm" className="add-button">
+                <Button 
+                  size="sm" 
+                  className="add-button"
+                  title="Add new market data item"
+                >
                   <PlusCircle className="w-4 h-4 mr-2" /> Add Item
                 </Button>
               </DialogTrigger>
               <DialogContent className={cn(
-                "w-[95vw] max-w-[500px] max-h-[90vh] overflow-y-auto", 
-                darkMode ? "bg-zinc-800 border-zinc-700" : "bg-white"
+                "w-[95vw] max-w-[500px] max-h-[90vh] overflow-y-auto z-50", 
+                darkMode ? "bg-zinc-800 border-zinc-700" : "bg-white border-gray-200"
               )}>
                 <DialogHeader>
                   <DialogTitle>Add New Market Data</DialogTitle>
@@ -162,12 +196,13 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
         <CardContent>
           <Input 
             className={cn(
-              "mb-4",
+              "mb-4 search-input",
               darkMode ? "bg-zinc-700 border-zinc-600" : "bg-white border-gray-300"
             )}
-            placeholder="Search market data..." 
+            placeholder="Search symbols, company names, or asset types..." 
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={handleSearchChange}
+            title="Search market data by symbol or name"
           />
           <div className="chart-container">
             <DataTable 
@@ -175,6 +210,15 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
               data={filteredData} 
               darkMode={darkMode} 
               itemType="marketData"
+              onEdit={(item) => {
+                console.log('Market Data: Edit item', item);
+                speak(`Editing ${item.name}`, 'medium');
+              }}
+              onDelete={(item) => {
+                deleteMarketDataItem(item.id);
+                speak(`Deleted ${item.name} from market data`, 'medium');
+                console.log('Market Data: Deleted item', item);
+              }}
             />
           </div>
         </CardContent>
