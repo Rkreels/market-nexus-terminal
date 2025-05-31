@@ -28,6 +28,9 @@ const componentHints: Record<string, string> = {
   // Watchlist specific
   '[data-component="watchlist-panel"]': 'Personal watchlist for tracking favorite stocks and assets. Add symbols using the edit button, monitor real-time prices, and track percentage changes.',
   
+  // Stock Detail specific
+  '[data-component="stock-detail-panel"]': 'Comprehensive stock analysis with interactive charts, key statistics, financial metrics, and multiple timeframe options.',
+  
   // News specific
   '[data-component="news-panel"]': 'Financial news feed with market-relevant articles. Filter by source, sentiment, or keywords. Click articles to read full content and analysis.',
   
@@ -54,9 +57,6 @@ const componentHints: Record<string, string> = {
   
   // Terminal specific
   '[data-component="terminal-panel"]': 'Command-line interface for advanced operations. Execute queries, generate reports, and access API functions.',
-  
-  // Stock detail specific
-  '[data-component="stock-detail-panel"]': 'Comprehensive stock analysis with interactive charts, key statistics, financial metrics, and multiple timeframe options.',
   
   // Button types with specific functionality
   '.add-button': 'Add new items button. In Market Data, opens form to add stocks, crypto, indices, or commodities. In Portfolio, adds new holdings. In Watchlist, adds symbols to track.',
@@ -138,10 +138,18 @@ const VoiceTrainer: React.FC = () => {
   const cursorTimeoutRef = useRef<number | null>(null);
   const lastElementRef = useRef<string | null>(null);
   const routeTimeoutRef = useRef<number | null>(null);
+  const lastRouteRef = useRef<string>('');
   
-  // Handle route changes with immediate context switching
+  // Handle route changes with improved context switching
   useEffect(() => {
     const path = location.pathname;
+    
+    // Prevent duplicate route processing
+    if (path === lastRouteRef.current) {
+      return;
+    }
+    
+    lastRouteRef.current = path;
     
     console.log(`Voice Trainer: Route changed to ${path}`);
     
@@ -165,7 +173,7 @@ const VoiceTrainer: React.FC = () => {
     // Delay for route transition completion
     routeTimeoutRef.current = window.setTimeout(() => {
       speak(welcomeMessage, 'high');
-    }, 500);
+    }, 800);
     
     return () => {
       if (routeTimeoutRef.current) {
@@ -253,7 +261,7 @@ const VoiceTrainer: React.FC = () => {
         setCurrentElement(matchedSelector);
         lastElementRef.current = matchedSelector;
         
-        // Shorter delay for better responsiveness
+        // Improved delay for better responsiveness
         cursorTimeoutRef.current = window.setTimeout(() => {
           const guidance = componentHints[matchedSelector];
           if (guidance) {
@@ -261,7 +269,7 @@ const VoiceTrainer: React.FC = () => {
             speak(guidance, 'medium');
           }
           cursorTimeoutRef.current = null;
-        }, 600);
+        }, 700);
       }
     };
     
@@ -282,7 +290,7 @@ const VoiceTrainer: React.FC = () => {
       if (element.tagName === 'BUTTON' || element.closest('button')) {
         const buttonText = element.textContent?.trim() || '';
         if (buttonText && buttonText.length < 50) {
-          speak(`${buttonText} clicked`, 'high');
+          speak(`${buttonText} activated`, 'high');
         }
       }
     };

@@ -25,19 +25,27 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
   const spokenContextsRef = useRef<Set<string>>(new Set());
   const speechQueueRef = useRef<Array<{ text: string; priority: 'low' | 'medium' | 'high' }>>([]);
   const isProcessingRef = useRef<boolean>(false);
+  const voicesLoadedRef = useRef<boolean>(false);
+  const lastSpeechTimeRef = useRef<number>(0);
 
   // Initialize voices when available
   useEffect(() => {
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       const synth = window.speechSynthesis;
       
-      const handleVoicesChanged = () => {
+      const loadVoices = () => {
         const voices = synth.getVoices();
-        console.log(`Voice Trainer: Loaded ${voices.length} voices`);
+        if (voices.length > 0 && !voicesLoadedRef.current) {
+          voicesLoadedRef.current = true;
+          console.log(`Voice Trainer: Loaded ${voices.length} voices successfully`);
+        }
       };
       
-      synth.onvoiceschanged = handleVoicesChanged;
-      synth.getVoices();
+      // Load voices immediately if available
+      loadVoices();
+      
+      // Also listen for the event
+      synth.onvoiceschanged = loadVoices;
       
       return () => {
         synth.onvoiceschanged = null;
@@ -72,24 +80,37 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const processQueue = () => {
-    if (isProcessingRef.current || speechQueueRef.current.length === 0 || isMuted || isPaused) {
-      return;
-    }
-
-    isProcessingRef.current = true;
-    const nextItem = speechQueueRef.current.shift();
-    
-    if (nextItem) {
-      speakImmediate(nextItem.text, nextItem.priority);
+  const stopSpeaking = () => {
+    try {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      if (speechSynthRef.current) {
+        speechSynthRef.current.onend = null;
+        speechSynthRef.current.onerror = null;
+        speechSynthRef.current = null;
+      }
+      setSpeakingText(null);
+      isProcessingRef.current = false;
+      console.log('Voice Trainer: Speech stopped successfully');
+    } catch (error) {
+      console.error('Voice Trainer: Error stopping speech:', error);
     }
   };
 
   const speakImmediate = (text: string, priority: 'low' | 'medium' | 'high' = 'medium') => {
-    if (isMuted || isPaused || !text) {
+    if (isMuted || isPaused || !text || !voicesLoadedRef.current) {
       isProcessingRef.current = false;
       return;
     }
+
+    // Prevent rapid-fire speech attempts
+    const now = Date.now();
+    if (now - lastSpeechTimeRef.current < 100) {
+      isProcessingRef.current = false;
+      return;
+    }
+    lastSpeechTimeRef.current = now;
     
     // Create unique key for this text and context
     const contextKey = `${currentContext || 'global'}-${text.slice(0, 50)}`;
@@ -101,65 +122,92 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     
-    // Always stop any ongoing speech immediately
-    if (window.speechSynthesis.speaking) {
-      window.speechSynthesis.cancel();
-    }
+    // Stop any ongoing speech
+    stopSpeaking();
     
-    const utterance = new SpeechSynthesisUtterance(text);
-    
-    // Enhanced voice settings
-    utterance.rate = 0.85;
-    utterance.pitch = 1.0;
-    utterance.volume = 0.9;
-    
-    // Find best voice
-    const voices = window.speechSynthesis.getVoices();
-    const preferredVoices = [
-      'Samantha', 'Victoria', 'Moira', 'Tessa',
-      'Microsoft Zira', 'Microsoft Hazel', 'Microsoft Susan',
-      'Google UK English Female', 'Google US English Female'
-    ];
-    
-    let selectedVoice = null;
-    for (const preferredVoice of preferredVoices) {
-      const found = voices.find(voice => 
-        voice.name.includes(preferredVoice) ||
-        voice.name.toLowerCase().includes(preferredVoice.toLowerCase())
-      );
-      if (found) {
-        selectedVoice = found;
-        break;
+    try {
+      const utterance = new SpeechSynthesisUtterance(text);
+      
+      // Enhanced voice settings for better quality
+      utterance.rate = 0.9;
+      utterance.pitch = 1.0;
+      utterance.volume = 0.8;
+      
+      // Find the best available voice
+      const voices = window.speechSynthesis.getVoices();
+      const preferredVoices = [
+        'Microsoft Zira Desktop - English (United States)',
+        'Google US English',
+        'Samantha',
+        'Victoria',
+        'Alex'
+      ];
+      
+      let selectedVoice = null;
+      for (const preferredVoice of preferredVoices) {
+        const found = voices.find(voice => 
+          voice.name.includes(preferredVoice) || 
+          voice.name.toLowerCase().includes(preferredVoice.toLowerCase())
+        );
+        if (found) {
+          selectedVoice = found;
+          break;
+        }
       }
-    }
-    
-    if (selectedVoice) {
-      utterance.voice = selectedVoice;
-    }
-    
-    setSpeakingText(text);
-    console.log(`Voice Trainer: Speaking - ${text.slice(0, 100)}...`);
-    
-    utterance.onend = () => {
-      speechSynthRef.current = null;
-      setSpeakingText(null);
+      
+      // Fallback to first English voice
+      if (!selectedVoice) {
+        selectedVoice = voices.find(voice => 
+          voice.lang.startsWith('en') && voice.localService
+        ) || voices.find(voice => voice.lang.startsWith('en')) || voices[0];
+      }
+      
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
+      
+      setSpeakingText(text);
+      console.log(`Voice Trainer: Speaking (${priority}) - ${text.slice(0, 100)}...`);
+      
+      utterance.onend = () => {
+        speechSynthRef.current = null;
+        setSpeakingText(null);
+        isProcessingRef.current = false;
+        spokenContextsRef.current.add(contextKey);
+        setTimeout(processQueue, 200);
+      };
+      
+      utterance.onerror = (event) => {
+        console.error('Voice Trainer: Speech error:', event.error);
+        speechSynthRef.current = null;
+        setSpeakingText(null);
+        isProcessingRef.current = false;
+        setTimeout(processQueue, 300);
+      };
+      
+      speechSynthRef.current = utterance;
+      window.speechSynthesis.speak(utterance);
+      
+    } catch (error) {
+      console.error('Voice Trainer: Error creating speech:', error);
       isProcessingRef.current = false;
-      // Mark as spoken for this context
-      spokenContextsRef.current.add(contextKey);
-      // Process next item in queue
-      setTimeout(processQueue, 100);
-    };
-    
-    utterance.onerror = () => {
-      speechSynthRef.current = null;
       setSpeakingText(null);
-      isProcessingRef.current = false;
-      console.error('Voice Trainer: Speech error occurred');
-      setTimeout(processQueue, 100);
-    };
+    }
+  };
+
+  const processQueue = () => {
+    if (isProcessingRef.current || speechQueueRef.current.length === 0 || isMuted || isPaused) {
+      return;
+    }
+
+    isProcessingRef.current = true;
+    const nextItem = speechQueueRef.current.shift();
     
-    speechSynthRef.current = utterance;
-    window.speechSynthesis.speak(utterance);
+    if (nextItem) {
+      setTimeout(() => speakImmediate(nextItem.text, nextItem.priority), 100);
+    } else {
+      isProcessingRef.current = false;
+    }
   };
 
   const speak = (text: string, priority: 'low' | 'medium' | 'high' = 'medium') => {
@@ -169,24 +217,14 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
     if (priority === 'high') {
       speechQueueRef.current = [];
       stopSpeaking();
-      setTimeout(() => speakImmediate(text, priority), 50);
+      setTimeout(() => speakImmediate(text, priority), 150);
     } else {
       // Add to queue for lower priority items
       speechQueueRef.current.push({ text, priority });
       if (!isProcessingRef.current) {
-        setTimeout(processQueue, 100);
+        setTimeout(processQueue, 200);
       }
     }
-  };
-  
-  const stopSpeaking = () => {
-    if (window.speechSynthesis.speaking) {
-      window.speechSynthesis.cancel();
-    }
-    speechSynthRef.current = null;
-    setSpeakingText(null);
-    isProcessingRef.current = false;
-    console.log('Voice Trainer: Stopped speaking');
   };
   
   return (
