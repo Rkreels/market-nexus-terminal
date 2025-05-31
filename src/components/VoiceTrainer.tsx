@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useVoiceTrainer } from '@/contexts/VoiceTrainerContext';
@@ -58,19 +57,66 @@ const componentHints: Record<string, string> = {
   // Terminal specific
   '[data-component="terminal-panel"]': 'Command-line interface for advanced operations. Execute queries, generate reports, and access API functions.',
   
+  // Detailed UI Elements
+  'input[type="text"], input[type="search"]': 'Text input field for entering search terms, symbols, or text data. Click to focus and type your query.',
+  'input[type="number"]': 'Numeric input field for entering quantities, prices, percentages, or numerical values. Use arrow keys or type numbers directly.',
+  'input[type="email"]': 'Email input field for entering email addresses. Validation will check for proper email format.',
+  'input[type="password"]': 'Password input field for secure text entry. Characters are hidden for security.',
+  'input[type="date"]': 'Date picker input for selecting dates. Click to open calendar widget or type date directly.',
+  'select, .select-trigger': 'Dropdown selection menu with multiple options. Click to expand and choose from available items.',
+  'textarea': 'Multi-line text area for entering longer text, notes, or descriptions. Resize by dragging the corner handle.',
+  
   // Button types with specific functionality
-  '.add-button': 'Add new items button. In Market Data, opens form to add stocks, crypto, indices, or commodities. In Portfolio, adds new holdings. In Watchlist, adds symbols to track.',
-  '.filter-button': 'Advanced filtering options. Filter by asset type, categories, price ranges, performance metrics, and custom criteria for refined data views.',
-  '.view-button': 'View detailed information including comprehensive charts, technical indicators, fundamental analysis, and historical performance data.',
-  '.edit-button': 'Edit mode for modifying item details, quantities, notes, or configuration settings. Changes are saved automatically after confirmation.',
-  '.delete-button': 'Remove items permanently. You will be asked to confirm this irreversible action before deletion.',
-  '.dark-mode-toggle': 'Toggle between light and dark themes. Dark mode reduces eye strain and preferences are automatically saved.',
+  '.add-button, button[aria-label*="add"], button[title*="add"]': 'Add new item button. Creates new entries like stocks, portfolio holdings, alerts, or watchlist items.',
+  '.filter-button, button[aria-label*="filter"], button[title*="filter"]': 'Filter and search options. Narrow down data by criteria like asset type, date range, or performance metrics.',
+  '.view-button, button[aria-label*="view"], button[title*="view"]': 'View detailed information including charts, analytics, historical data, and comprehensive metrics.',
+  '.edit-button, button[aria-label*="edit"], button[title*="edit"]': 'Edit item properties like quantities, prices, alert conditions, or portfolio allocations.',
+  '.delete-button, button[aria-label*="delete"], button[title*="delete"]': 'Remove items permanently from your lists, portfolios, or alert settings.',
+  '.save-button, button[aria-label*="save"], button[title*="save"]': 'Save your changes and updates to the system. All modifications will be preserved.',
+  '.cancel-button, button[aria-label*="cancel"], button[title*="cancel"]': 'Cancel current operation and discard any unsaved changes.',
+  '.submit-button, button[type="submit"]': 'Submit form data and process your request. Validates input before submission.',
+  '.dark-mode-toggle': 'Toggle between light and dark themes. Dark mode reduces eye strain and preferences are saved automatically.',
   
-  // Charts and data visualization
-  '.chart-container': 'Interactive financial charts with zoom, pan, and technical indicator capabilities. Click and drag to zoom, right-click for options.',
+  // Chart and data visualization elements
+  '.chart-container, .recharts-wrapper': 'Interactive financial chart with zoom, pan, and analysis tools. Drag to zoom, hover for data points.',
+  '.chart-tooltip': 'Chart data tooltip showing precise values at cursor position. Displays time, price, volume, and technical indicators.',
+  '.chart-legend': 'Chart legend explaining line colors, indicators, and data series. Toggle visibility by clicking legend items.',
   
-  // Stock detail timeframe controls
-  'button[class*="timeframe"], .timeframe-button': 'Chart timeframe selector from 1 day to 5 years. Each shows different data granularity: 1D shows hourly, 1M shows daily, 1Y shows weekly data.',
+  // Table elements with enhanced descriptions
+  'table, .data-table': 'Data table with sortable columns and filtering. Click headers to sort, use filters to refine data.',
+  'th, .table-header': 'Table column header with sorting capability. Click to sort data ascending or descending by this column.',
+  'tr, .table-row': 'Data row containing item information. Click row for quick actions or detailed view of the item.',
+  'td, .table-cell': 'Table cell containing specific data point. May include links, buttons, or formatted values.',
+  
+  // Form elements
+  '.form-field, .form-item': 'Form input field with validation. Required fields are marked with asterisk.',
+  '.form-label': 'Field label describing the input requirement. Indicates data type and format expected.',
+  '.form-error, .error-message': 'Validation error message. Shows specific requirements or corrections needed.',
+  '.form-help, .help-text': 'Help text providing additional guidance or examples for proper input format.',
+  
+  // Card and panel elements
+  '.card, .panel': 'Information card containing related data and actions. Cards group related functionality together.',
+  '.card-header': 'Card title section with primary information and key metrics. Shows current status and main data.',
+  '.card-content': 'Main card content with detailed information, charts, or interactive elements.',
+  '.card-footer': 'Card action area with buttons for operations like edit, delete, or view details.',
+  
+  // Dialog and modal elements
+  '.dialog-trigger, .modal-trigger': 'Opens detailed dialog window with forms, settings, or additional information.',
+  '.dialog-content, .modal-content': 'Modal dialog containing forms, detailed views, or configuration options. Press Escape to close.',
+  '.dialog-close, .modal-close': 'Close dialog button. Discards unsaved changes and returns to previous view.',
+  
+  // Navigation elements
+  '.nav-link, .navigation-link': 'Navigation link to different sections or pages. Shows current location with active state.',
+  '.breadcrumb': 'Navigation breadcrumb showing current location path. Click any level to navigate back.',
+  '.tab': 'Tab navigation for switching between related content sections.',
+  '.pagination': 'Page navigation controls for browsing through large data sets.',
+  
+  // Status and indicator elements
+  '.status-indicator': 'Visual status indicator showing current state like active, inactive, loading, or error.',
+  '.progress-bar': 'Progress indicator showing completion status of operations or loading states.',
+  '.badge, .tag': 'Label or tag indicating category, status, or classification of items.',
+  
+  // Timeframe and chart controls
   'button[data-timeframe="1D"]': 'One day chart view showing hourly price movements and intraday trading patterns.',
   'button[data-timeframe="1W"]': 'One week chart view displaying daily price action and short-term trends.',
   'button[data-timeframe="1M"]': 'One month chart showing daily data points and medium-term price movements.',
@@ -78,27 +124,23 @@ const componentHints: Record<string, string> = {
   'button[data-timeframe="6M"]': 'Six month chart showing semi-annual performance and longer-term trends.',
   'button[data-timeframe="1Y"]': 'One year chart displaying annual performance and yearly trading patterns.',
   'button[data-timeframe="5Y"]': 'Five year chart showing long-term trends and major market cycles.',
+  '.timeframe-button': 'Chart timeframe selector. Changes chart resolution from hourly to monthly data.',
   
-  // Form elements
-  'input[type="text"], input[type="search"]': 'Text input field. Click to focus and type. Use Tab to navigate between fields or Enter to submit forms.',
-  'input[type="number"]': 'Numeric input for quantities, prices, or percentages. Use arrow keys or type numbers directly.',
-  'select, .select-trigger': 'Dropdown menu with options. Click to open and select from available choices. Some support multi-selection.',
-  'textarea': 'Multi-line text area for notes, comments, or detailed descriptions. Resize by dragging the corner.',
-  'button': 'Interactive button performing specific actions. Button text indicates the operation that will be executed.',
+  // Search and filter elements
+  '.search-input': 'Search field for finding specific items by name, symbol, or keywords.',
+  '.filter-dropdown': 'Filter dropdown for narrowing results by category, type, or criteria.',
+  '.sort-control': 'Sorting controls for ordering data by different columns or criteria.',
+  '.clear-filters': 'Clear all applied filters and show complete data set.',
   
-  // Dialog and modal elements
-  '.dialog-trigger': 'Opens detailed dialog or modal window with additional options and comprehensive forms.',
-  '.dialog-content': 'Modal dialog containing forms, detailed views, or configuration options. Press Escape to close.',
+  // Action menus and dropdowns
+  '.dropdown-menu': 'Dropdown menu with additional actions and options for the current item.',
+  '.context-menu': 'Right-click context menu with relevant actions for the selected item.',
+  '.action-menu': 'Action menu containing operations like edit, delete, duplicate, or share.',
   
-  // Table elements
-  'table, .data-table': 'Data table with sortable columns, filtering capabilities, and row selection for bulk operations.',
-  'th, .table-header': 'Table column header. Click to sort data by this column in ascending or descending order.',
-  'tr, .table-row': 'Data row containing item information. Click for quick actions or detailed view.',
-  
-  // Card components
-  '.card': 'Information card containing related data and actions. Cards can be expanded for more details.',
-  '.card-header': 'Card title and primary information section with key metrics and status indicators.',
-  '.card-content': 'Main card content area with detailed information, charts, or interactive elements.',
+  // Settings and preferences
+  '.settings-panel': 'Settings and preferences panel for customizing application behavior.',
+  '.preference-toggle': 'Toggle switch for enabling or disabling specific features or preferences.',
+  '.configuration-option': 'Configuration option for customizing how data is displayed or calculated.',
 };
 
 // Comprehensive route-specific welcome messages
@@ -139,6 +181,7 @@ const VoiceTrainer: React.FC = () => {
   const lastElementRef = useRef<string | null>(null);
   const routeTimeoutRef = useRef<number | null>(null);
   const lastRouteRef = useRef<string>('');
+  const mousePositionRef = useRef<{ x: number, y: number }>({ x: 0, y: 0 });
   
   // Handle route changes with improved context switching
   useEffect(() => {
@@ -182,59 +225,125 @@ const VoiceTrainer: React.FC = () => {
     };
   }, [location.pathname, speak, stopSpeaking, setCurrentContext, clearSpokenContexts]);
   
-  // Enhanced cursor tracking with improved element detection
+  // Enhanced cursor tracking with comprehensive element detection
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (isPaused || isMuted) return;
       
+      mousePositionRef.current = { x: e.clientX, y: e.clientY };
       const element = document.elementFromPoint(e.clientX, e.clientY);
       if (!element) return;
       
       const findMatchingElement = (el: Element | null): string | null => {
         if (!el) return null;
         
-        // Check data-component first (highest priority)
+        // Priority 1: Check data-component first (highest priority)
         const dataComponent = el.getAttribute('data-component');
         if (dataComponent) {
           const selector = `[data-component="${dataComponent}"]`;
           if (componentHints[selector]) return selector;
         }
         
-        // Check data-timeframe for specific timeframe buttons
+        // Priority 2: Check data-timeframe for specific timeframe buttons
         const dataTimeframe = el.getAttribute('data-timeframe');
         if (dataTimeframe) {
           const selector = `button[data-timeframe="${dataTimeframe}"]`;
           if (componentHints[selector]) return selector;
         }
         
-        // Check for timeframe buttons by class or content
-        if (el.classList.contains('timeframe-button') || 
-            (el.tagName === 'BUTTON' && el.textContent?.match(/^(1D|1W|1M|3M|6M|1Y|5Y)$/))) {
-          return 'button[class*="timeframe"], .timeframe-button';
-        }
-        
-        // Check specific button types by class
-        const buttonClasses = ['add-button', 'filter-button', 'view-button', 'edit-button', 'delete-button', 'dark-mode-toggle'];
+        // Priority 3: Check for specific button types by class names
+        const buttonClasses = [
+          'add-button', 'filter-button', 'view-button', 'edit-button', 
+          'delete-button', 'save-button', 'cancel-button', 'dark-mode-toggle'
+        ];
         for (const btnClass of buttonClasses) {
           if (el.classList.contains(btnClass)) {
             return `.${btnClass}`;
           }
         }
         
-        // Check generic element types
-        const elementSelectors = [
-          'input[type="text"]', 'input[type="search"]', 'input[type="number"]',
+        // Priority 4: Check for button types by aria-label or title attributes
+        const ariaLabel = el.getAttribute('aria-label')?.toLowerCase() || '';
+        const title = el.getAttribute('title')?.toLowerCase() || '';
+        if (el.tagName === 'BUTTON' && (ariaLabel || title)) {
+          for (const [selector, hint] of Object.entries(componentHints)) {
+            if (selector.includes('aria-label') || selector.includes('title')) {
+              const match = selector.match(/\[(aria-label|title)\*="([^"]+)"\]/);
+              if (match && (ariaLabel.includes(match[2]) || title.includes(match[2]))) {
+                return selector;
+              }
+            }
+          }
+        }
+        
+        // Priority 5: Check for timeframe buttons by class or content
+        if (el.classList.contains('timeframe-button') || 
+            (el.tagName === 'BUTTON' && el.textContent?.match(/^(1D|1W|1M|3M|6M|1Y|5Y)$/))) {
+          return '.timeframe-button';
+        }
+        
+        // Priority 6: Check specific input types
+        if (el.tagName === 'INPUT') {
+          const inputType = el.getAttribute('type') || 'text';
+          const inputSelector = `input[type="${inputType}"]`;
+          if (componentHints[inputSelector]) return inputSelector;
+        }
+        
+        // Priority 7: Check for form elements
+        const formClasses = ['form-field', 'form-item', 'form-label', 'form-error', 'form-help'];
+        for (const formClass of formClasses) {
+          if (el.classList.contains(formClass)) {
+            return `.${formClass}`;
+          }
+        }
+        
+        // Priority 8: Check for UI component classes
+        const uiClasses = [
+          'search-input', 'filter-dropdown', 'sort-control', 'clear-filters',
+          'dropdown-menu', 'context-menu', 'action-menu', 'settings-panel',
+          'preference-toggle', 'configuration-option', 'status-indicator',
+          'progress-bar', 'badge', 'tag', 'nav-link', 'navigation-link',
+          'breadcrumb', 'tab', 'pagination'
+        ];
+        for (const uiClass of uiClasses) {
+          if (el.classList.contains(uiClass)) {
+            return `.${uiClass}`;
+          }
+        }
+        
+        // Priority 9: Check generic element types and classes
+        const genericSelectors = [
           'select', '.select-trigger', 'textarea', 'button',
-          '.dialog-trigger', '.dialog-content', 'table', '.data-table',
-          'th', '.table-header', 'tr', '.table-row',
-          '.card', '.card-header', '.card-content',
-          '.chart-container', '.sidebar', '.sidebar-icon', '.sidebar-menu-button'
+          '.dialog-trigger', '.dialog-content', '.dialog-close',
+          '.modal-trigger', '.modal-content', '.modal-close',
+          'table', '.data-table', 'th', '.table-header', 
+          'tr', '.table-row', 'td', '.table-cell',
+          '.card', '.card-header', '.card-content', '.card-footer',
+          '.panel', '.chart-container', '.chart-tooltip', '.chart-legend',
+          '.recharts-wrapper', '.sidebar', '.sidebar-icon', '.sidebar-menu-button'
         ];
         
-        for (const selector of elementSelectors) {
+        for (const selector of genericSelectors) {
+          try {
+            if (selector.startsWith('.')) {
+              if (el.classList.contains(selector.substring(1))) {
+                if (componentHints[selector]) return selector;
+              }
+            } else {
+              if (el.matches(selector)) {
+                if (componentHints[selector]) return selector;
+              }
+            }
+          } catch (error) {
+            continue;
+          }
+        }
+        
+        // Priority 10: Check if element matches any selector directly
+        for (const selector of Object.keys(componentHints)) {
           try {
             if (el.matches(selector) || el.closest(selector)) {
-              if (componentHints[selector]) return selector;
+              return selector;
             }
           } catch (error) {
             continue;
@@ -261,7 +370,7 @@ const VoiceTrainer: React.FC = () => {
         setCurrentElement(matchedSelector);
         lastElementRef.current = matchedSelector;
         
-        // Improved delay for better responsiveness
+        // Reduced delay for better responsiveness
         cursorTimeoutRef.current = window.setTimeout(() => {
           const guidance = componentHints[matchedSelector];
           if (guidance) {
@@ -269,7 +378,7 @@ const VoiceTrainer: React.FC = () => {
             speak(guidance, 'medium');
           }
           cursorTimeoutRef.current = null;
-        }, 700);
+        }, 500);
       }
     };
     
@@ -281,18 +390,62 @@ const VoiceTrainer: React.FC = () => {
       }
     };
     
-    // Click handler to provide immediate feedback
+    // Click handler to provide immediate feedback with element context
     const handleClick = (e: MouseEvent) => {
       const element = e.target as Element;
       if (!element) return;
       
-      // Provide immediate feedback for button clicks
-      if (element.tagName === 'BUTTON' || element.closest('button')) {
-        const buttonText = element.textContent?.trim() || '';
-        if (buttonText && buttonText.length < 50) {
-          speak(`${buttonText} activated`, 'high');
+      // Stop any current speech immediately
+      stopSpeaking();
+      
+      // Get element context for more specific feedback
+      const getClickContext = (el: Element): string => {
+        const tagName = el.tagName.toLowerCase();
+        const className = el.className;
+        const textContent = el.textContent?.trim() || '';
+        const type = el.getAttribute('type');
+        const role = el.getAttribute('role');
+        
+        // Button specific feedback
+        if (tagName === 'button' || role === 'button') {
+          if (textContent && textContent.length < 50) {
+            return `${textContent} button activated`;
+          }
+          if (className.includes('add')) return 'Add button activated';
+          if (className.includes('edit')) return 'Edit button activated';
+          if (className.includes('delete')) return 'Delete button activated';
+          if (className.includes('save')) return 'Save button activated';
+          if (className.includes('cancel')) return 'Cancel button activated';
+          if (className.includes('filter')) return 'Filter button activated';
+          if (className.includes('view')) return 'View button activated';
+          return 'Button activated';
         }
-      }
+        
+        // Input specific feedback
+        if (tagName === 'input') {
+          if (type === 'text' || type === 'search') return 'Text input field focused';
+          if (type === 'number') return 'Number input field focused';
+          if (type === 'email') return 'Email input field focused';
+          if (type === 'password') return 'Password input field focused';
+          if (type === 'date') return 'Date input field focused';
+          if (type === 'checkbox') return 'Checkbox toggled';
+          if (type === 'radio') return 'Radio button selected';
+          return 'Input field focused';
+        }
+        
+        // Other element types
+        if (tagName === 'select') return 'Dropdown menu opened';
+        if (tagName === 'textarea') return 'Text area focused';
+        if (tagName === 'a') return 'Link activated';
+        if (tagName === 'td' || tagName === 'th') return 'Table cell selected';
+        if (className.includes('tab')) return 'Tab switched';
+        if (className.includes('card')) return 'Card selected';
+        
+        return 'Element activated';
+      };
+      
+      const contextMessage = getClickContext(element);
+      speak(contextMessage, 'high');
     };
     
     document.addEventListener('mousemove', handleMouseMove);
@@ -360,6 +513,11 @@ const VoiceTrainer: React.FC = () => {
               {speakingText && (
                 <div className="mt-2 pt-2 border-t text-xs italic max-w-xs">
                   <strong>Speaking:</strong> "{speakingText.slice(0, 60)}..."
+                </div>
+              )}
+              {currentElement && (
+                <div className="mt-1 text-xs text-gray-500">
+                  <strong>Current:</strong> {currentElement}
                 </div>
               )}
             </div>
