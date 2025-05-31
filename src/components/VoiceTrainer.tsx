@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useVoiceTrainer } from '@/contexts/VoiceTrainerContext';
@@ -57,95 +58,119 @@ const componentHints: Record<string, string> = {
   // Terminal specific
   '[data-component="terminal-panel"]': 'Command-line interface for advanced operations. Execute queries, generate reports, and access API functions.',
   
-  // Detailed UI Elements
-  'input[type="text"], input[type="search"]': 'Text input field for entering search terms, symbols, or text data. Click to focus and type your query.',
-  'input[type="number"]': 'Numeric input field for entering quantities, prices, percentages, or numerical values. Use arrow keys or type numbers directly.',
-  'input[type="email"]': 'Email input field for entering email addresses. Validation will check for proper email format.',
-  'input[type="password"]': 'Password input field for secure text entry. Characters are hidden for security.',
-  'input[type="date"]': 'Date picker input for selecting dates. Click to open calendar widget or type date directly.',
-  'select, .select-trigger': 'Dropdown selection menu with multiple options. Click to expand and choose from available items.',
-  'textarea': 'Multi-line text area for entering longer text, notes, or descriptions. Resize by dragging the corner handle.',
+  // Detailed UI Elements with extensive descriptions
+  'input[type="text"], input[type="search"], .search-input': 'Text search input field. Type stock symbols, company names, or keywords to find specific instruments. Use partial matches for suggestions. Clear with backspace or clear button.',
+  'input[type="number"], .number-input': 'Numeric input for quantities, prices, or percentages. Use arrow keys to increment values, or type directly. Supports decimal places for precise entries.',
+  'input[type="email"]': 'Email address input with automatic validation. Must include @ symbol and valid domain format. Used for notifications and account settings.',
+  'input[type="password"]': 'Secure password input with hidden characters. Use strong passwords with letters, numbers, and symbols for account security.',
+  'input[type="date"], .date-picker': 'Date selection input. Click to open calendar widget, or type date in MM/DD/YYYY format. Use for filtering data by time periods.',
+  'select, .select-trigger, .dropdown-menu': 'Dropdown selection menu with multiple options. Click to expand and choose from available categories, timeframes, or asset types.',
+  'textarea, .text-area': 'Multi-line text input for notes, descriptions, or comments. Resize by dragging corner handle. Supports formatted text entry.',
   
-  // Button types with specific functionality
-  '.add-button, button[aria-label*="add"], button[title*="add"]': 'Add new item button. Creates new entries like stocks, portfolio holdings, alerts, or watchlist items.',
-  '.filter-button, button[aria-label*="filter"], button[title*="filter"]': 'Filter and search options. Narrow down data by criteria like asset type, date range, or performance metrics.',
-  '.view-button, button[aria-label*="view"], button[title*="view"]': 'View detailed information including charts, analytics, historical data, and comprehensive metrics.',
-  '.edit-button, button[aria-label*="edit"], button[title*="edit"]': 'Edit item properties like quantities, prices, alert conditions, or portfolio allocations.',
-  '.delete-button, button[aria-label*="delete"], button[title*="delete"]': 'Remove items permanently from your lists, portfolios, or alert settings.',
-  '.save-button, button[aria-label*="save"], button[title*="save"]': 'Save your changes and updates to the system. All modifications will be preserved.',
-  '.cancel-button, button[aria-label*="cancel"], button[title*="cancel"]': 'Cancel current operation and discard any unsaved changes.',
-  '.submit-button, button[type="submit"]': 'Submit form data and process your request. Validates input before submission.',
-  '.dark-mode-toggle': 'Toggle between light and dark themes. Dark mode reduces eye strain and preferences are saved automatically.',
+  // Enhanced button descriptions with specific functionality
+  '.add-button, button[aria-label*="add"], button[title*="add"], button:has(.lucide-plus)': 'Add new item button. Creates new entries like stocks in watchlist, portfolio holdings, price alerts, or market data instruments. Opens form dialog for data entry.',
+  '.filter-button, button[aria-label*="filter"], button[title*="filter"], button:has(.lucide-filter)': 'Filter and search options. Opens filter panel to narrow data by asset type, date range, performance metrics, or custom criteria. Apply multiple filters simultaneously.',
+  '.view-button, button[aria-label*="view"], button[title*="view"], button:has(.lucide-eye)': 'View detailed information. Opens comprehensive view with charts, analytics, historical data, and key performance metrics. Access full analysis tools.',
+  '.edit-button, button[aria-label*="edit"], button[title*="edit"], button:has(.lucide-edit)': 'Edit item properties. Modify quantities, prices, alert conditions, portfolio allocations, or instrument settings. Changes are saved automatically.',
+  '.delete-button, button[aria-label*="delete"], button[title*="delete"], button:has(.lucide-trash)': 'Remove items permanently. Deletes entries from watchlists, portfolios, or alert settings. Confirmation dialog prevents accidental deletion.',
+  '.save-button, button[aria-label*="save"], button[title*="save"]': 'Save changes and updates to the system. All modifications are preserved and synchronized across modules.',
+  '.cancel-button, button[aria-label*="cancel"], button[title*="cancel"]': 'Cancel current operation and discard unsaved changes. Returns to previous view without applying modifications.',
+  '.submit-button, button[type="submit"]': 'Submit form data and process request. Validates all required fields before submission and shows confirmation.',
+  '.dark-mode-toggle, .theme-toggle': 'Toggle between light and dark themes. Dark mode reduces eye strain and saves battery. Theme preference is saved automatically.',
   
-  // Chart and data visualization elements
-  '.chart-container, .recharts-wrapper': 'Interactive financial chart with zoom, pan, and analysis tools. Drag to zoom, hover for data points.',
-  '.chart-tooltip': 'Chart data tooltip showing precise values at cursor position. Displays time, price, volume, and technical indicators.',
-  '.chart-legend': 'Chart legend explaining line colors, indicators, and data series. Toggle visibility by clicking legend items.',
+  // Chart and visualization elements with detailed explanations
+  '.chart-container, .recharts-wrapper, .chart-area': 'Interactive financial chart with comprehensive analysis tools. Drag to zoom into specific time periods, hover for precise data points, and use timeframe buttons for different views.',
+  '.chart-tooltip, .tooltip': 'Chart data tooltip displaying precise values at cursor position. Shows timestamp, price, volume, technical indicators, and percentage changes.',
+  '.chart-legend, .legend': 'Chart legend explaining line colors, indicators, and data series. Click legend items to toggle visibility of specific data sets or indicators.',
+  '.price-chart, .line-chart': 'Price movement chart showing historical trends. Supports multiple timeframes from intraday to multi-year views with technical analysis overlays.',
+  '.volume-chart, .bar-chart': 'Trading volume chart displaying market activity. Higher bars indicate increased trading activity and market interest.',
   
-  // Table elements with enhanced descriptions
-  'table, .data-table': 'Data table with sortable columns and filtering. Click headers to sort, use filters to refine data.',
-  'th, .table-header': 'Table column header with sorting capability. Click to sort data ascending or descending by this column.',
-  'tr, .table-row': 'Data row containing item information. Click row for quick actions or detailed view of the item.',
-  'td, .table-cell': 'Table cell containing specific data point. May include links, buttons, or formatted values.',
+  // Table elements with comprehensive functionality
+  'table, .data-table, .table-container': 'Sortable data table with filtering capabilities. Click column headers to sort ascending or descending. Use search and filters to refine displayed data.',
+  'th, .table-header, .column-header': 'Sortable table column header. Click to sort data by this column. Arrow indicators show current sort direction and active column.',
+  'tr, .table-row, .data-row': 'Data row containing item information. Click for quick actions menu or double-click for detailed view. Hover for row highlighting.',
+  'td, .table-cell, .data-cell': 'Table cell with specific data point. May contain formatted numbers, links, status indicators, or action buttons for item management.',
   
-  // Form elements
-  '.form-field, .form-item': 'Form input field with validation. Required fields are marked with asterisk.',
-  '.form-label': 'Field label describing the input requirement. Indicates data type and format expected.',
-  '.form-error, .error-message': 'Validation error message. Shows specific requirements or corrections needed.',
-  '.form-help, .help-text': 'Help text providing additional guidance or examples for proper input format.',
+  // Form elements with detailed usage instructions
+  '.form-field, .form-item, .input-field': 'Form input field with validation. Required fields marked with asterisk. Real-time validation shows errors and formatting requirements.',
+  '.form-label, .field-label': 'Field label describing input requirement. Indicates expected data type, format, and whether field is mandatory for form submission.',
+  '.form-error, .error-message, .validation-error': 'Validation error message showing specific requirements. Appears when input doesn\'t meet format or value constraints.',
+  '.form-help, .help-text, .field-description': 'Help text providing examples and guidance. Shows acceptable formats, ranges, or additional context for proper input.',
   
-  // Card and panel elements
-  '.card, .panel': 'Information card containing related data and actions. Cards group related functionality together.',
-  '.card-header': 'Card title section with primary information and key metrics. Shows current status and main data.',
-  '.card-content': 'Main card content with detailed information, charts, or interactive elements.',
-  '.card-footer': 'Card action area with buttons for operations like edit, delete, or view details.',
+  // Card and panel elements with specific purposes
+  '.card, .panel, .widget': 'Information card grouping related data and actions. Contains summary information, key metrics, and quick access buttons for detailed operations.',
+  '.card-header, .panel-header': 'Card title section with primary information. Shows current status, key metrics, and navigation breadcrumbs for context.',
+  '.card-content, .panel-content': 'Main card content area with detailed information, interactive charts, data tables, or configuration options.',
+  '.card-footer, .panel-footer': 'Card action area with operation buttons. Contains actions like edit, delete, view details, or export data functionality.',
   
-  // Dialog and modal elements
-  '.dialog-trigger, .modal-trigger': 'Opens detailed dialog window with forms, settings, or additional information.',
-  '.dialog-content, .modal-content': 'Modal dialog containing forms, detailed views, or configuration options. Press Escape to close.',
-  '.dialog-close, .modal-close': 'Close dialog button. Discards unsaved changes and returns to previous view.',
+  // Dialog and modal elements with interaction details
+  '.dialog-trigger, .modal-trigger, .popup-trigger': 'Opens detailed dialog window. Triggers modal with forms, settings, detailed views, or confirmation prompts for user interaction.',
+  '.dialog-content, .modal-content, .popup-content': 'Modal dialog containing forms, detailed views, or configuration options. Press Escape key or click outside to close.',
+  '.dialog-close, .modal-close, .close-button': 'Close dialog button. Discards any unsaved changes and returns to previous view. Keyboard shortcut: Escape key.',
   
-  // Navigation elements
-  '.nav-link, .navigation-link': 'Navigation link to different sections or pages. Shows current location with active state.',
-  '.breadcrumb': 'Navigation breadcrumb showing current location path. Click any level to navigate back.',
-  '.tab': 'Tab navigation for switching between related content sections.',
-  '.pagination': 'Page navigation controls for browsing through large data sets.',
+  // Navigation elements with routing information
+  '.nav-link, .navigation-link, .menu-item': 'Navigation link to different sections. Shows current location with active state highlighting. Provides access to specialized modules.',
+  '.breadcrumb, .breadcrumb-nav': 'Navigation breadcrumb showing current path. Click any level to navigate back to parent sections or modules.',
+  '.tab, .tab-button, .tab-item': 'Tab navigation for switching between related content sections. Active tab highlighted with different styling.',
+  '.pagination, .page-nav': 'Page navigation controls for browsing large data sets. Shows current page, total pages, and jump-to-page options.',
   
-  // Status and indicator elements
-  '.status-indicator': 'Visual status indicator showing current state like active, inactive, loading, or error.',
-  '.progress-bar': 'Progress indicator showing completion status of operations or loading states.',
-  '.badge, .tag': 'Label or tag indicating category, status, or classification of items.',
+  // Status and indicator elements with meanings
+  '.status-indicator, .indicator, .badge': 'Visual status indicator showing current state. Colors indicate active (green), inactive (gray), warning (yellow), or error (red) conditions.',
+  '.progress-bar, .progress-indicator': 'Progress indicator showing completion status of operations, loading states, or goal achievement percentages.',
+  '.tag, .label, .category-tag': 'Classification label indicating category, status, or type. Used for grouping and filtering items by characteristics.',
   
-  // Timeframe and chart controls
-  'button[data-timeframe="1D"]': 'One day chart view showing hourly price movements and intraday trading patterns.',
-  'button[data-timeframe="1W"]': 'One week chart view displaying daily price action and short-term trends.',
-  'button[data-timeframe="1M"]': 'One month chart showing daily data points and medium-term price movements.',
-  'button[data-timeframe="3M"]': 'Three month chart displaying quarterly trends and seasonal patterns.',
-  'button[data-timeframe="6M"]': 'Six month chart showing semi-annual performance and longer-term trends.',
-  'button[data-timeframe="1Y"]': 'One year chart displaying annual performance and yearly trading patterns.',
-  'button[data-timeframe="5Y"]': 'Five year chart showing long-term trends and major market cycles.',
-  '.timeframe-button': 'Chart timeframe selector. Changes chart resolution from hourly to monthly data.',
+  // Timeframe and chart controls with specific functions
+  'button[data-timeframe="1D"], .timeframe-1d': 'One day chart view showing hourly price movements. Best for intraday trading analysis and short-term price action patterns.',
+  'button[data-timeframe="1W"], .timeframe-1w': 'One week chart displaying daily price action. Useful for short-term trend analysis and weekly trading patterns.',
+  'button[data-timeframe="1M"], .timeframe-1m': 'One month chart showing daily data points. Good for medium-term analysis and monthly performance evaluation.',
+  'button[data-timeframe="3M"], .timeframe-3m': 'Three month chart displaying quarterly trends. Ideal for seasonal pattern analysis and quarterly performance review.',
+  'button[data-timeframe="6M"], .timeframe-6m': 'Six month chart showing semi-annual performance. Useful for medium-term trend analysis and half-yearly comparisons.',
+  'button[data-timeframe="1Y"], .timeframe-1y': 'One year chart displaying annual performance. Best for yearly trend analysis and annual return calculations.',
+  'button[data-timeframe="5Y"], .timeframe-5y': 'Five year chart showing long-term trends. Essential for long-term investment analysis and major market cycle identification.',
+  '.timeframe-button, .period-selector': 'Chart timeframe selector buttons. Changes chart resolution from minutes to years. Each timeframe offers different analytical perspectives.',
   
-  // Search and filter elements
-  '.search-input': 'Search field for finding specific items by name, symbol, or keywords.',
-  '.filter-dropdown': 'Filter dropdown for narrowing results by category, type, or criteria.',
-  '.sort-control': 'Sorting controls for ordering data by different columns or criteria.',
-  '.clear-filters': 'Clear all applied filters and show complete data set.',
+  // Search and filter elements with advanced options
+  '.search-bar, .search-container': 'Advanced search interface with filtering options. Supports symbol lookup, company name search, and keyword-based filtering.',
+  '.filter-dropdown, .filter-select': 'Filter dropdown for narrowing results by specific criteria. Multiple filters can be applied simultaneously for precise data selection.',
+  '.sort-control, .sort-selector': 'Data sorting controls for ordering by different columns. Choose ascending or descending order for numerical or alphabetical sorting.',
+  '.clear-filters, .reset-filters': 'Clear all applied filters and show complete data set. Resets search terms, category filters, and date ranges to default state.',
   
-  // Action menus and dropdowns
-  '.dropdown-menu': 'Dropdown menu with additional actions and options for the current item.',
-  '.context-menu': 'Right-click context menu with relevant actions for the selected item.',
-  '.action-menu': 'Action menu containing operations like edit, delete, duplicate, or share.',
+  // Action menus and dropdowns with available operations
+  '.context-menu, .right-click-menu': 'Right-click context menu with relevant actions for selected item. Available actions depend on item type and current permissions.',
+  '.action-menu, .operations-menu': 'Action menu containing operations like edit, delete, duplicate, share, or export. Provides quick access to common functions.',
+  '.more-options, .overflow-menu': 'Additional options menu for less common actions. Contains advanced features and specialized operations for power users.',
   
-  // Settings and preferences
-  '.settings-panel': 'Settings and preferences panel for customizing application behavior.',
-  '.preference-toggle': 'Toggle switch for enabling or disabling specific features or preferences.',
-  '.configuration-option': 'Configuration option for customizing how data is displayed or calculated.',
+  // Settings and preferences with configuration options
+  '.settings-panel, .preferences-panel': 'Settings and configuration panel for customizing application behavior. Adjust display options, notifications, and data preferences.',
+  '.preference-toggle, .setting-switch': 'Toggle switch for enabling or disabling specific features. Changes take effect immediately and are saved automatically.',
+  '.configuration-option, .config-item': 'Configuration option for customizing how data is displayed, calculated, or processed. Affects application behavior and presentation.',
+
+  // Portfolio specific elements
+  '.portfolio-summary, .portfolio-overview': 'Portfolio summary displaying total value, daily change, allocation breakdown, and performance metrics. Shows overall investment performance.',
+  '.holding-item, .position-row': 'Individual portfolio holding with quantity, current value, cost basis, and profit/loss. Click for detailed position analysis.',
+  '.allocation-chart, .portfolio-pie-chart': 'Portfolio allocation visualization showing asset distribution by sector, asset type, or geography. Interactive segments for detailed breakdown.',
+  '.performance-chart, .returns-chart': 'Portfolio performance chart showing returns over time. Compare against benchmarks and track investment strategy effectiveness.',
+  
+  // Market data specific elements
+  '.instrument-row, .symbol-row': 'Market instrument displaying current price, change, volume, and key metrics. Click for detailed analysis and charts.',
+  '.price-display, .current-price': 'Real-time price display with bid/ask spread, last trade information, and intraday high/low values.',
+  '.change-indicator, .price-change': 'Price change indicator showing absolute and percentage change. Color coding: green for gains, red for losses.',
+  '.volume-indicator, .trading-volume': 'Trading volume display showing current session volume, average volume, and volume ratio for market activity assessment.',
+  
+  // Technical analysis elements
+  '.technical-indicator, .indicator-overlay': 'Technical analysis indicator overlay on charts. Includes moving averages, RSI, MACD, Bollinger Bands, and other analytical tools.',
+  '.support-resistance, .price-level': 'Support and resistance level indicators on charts. Shows key price levels where reversals or breakouts may occur.',
+  '.trend-line, .chart-line': 'Trend line analysis tool for identifying price direction and momentum. Draw custom trend lines for technical analysis.',
+  
+  // Alert and notification elements
+  '.alert-item, .notification-item': 'Individual alert or notification with trigger conditions, current status, and action options. Set price, volume, or news-based alerts.',
+  '.alert-condition, .trigger-setting': 'Alert condition configuration showing trigger price, condition type, and notification preferences.',
+  '.notification-settings, .alert-preferences': 'Notification preferences for email, SMS, or in-app alerts. Customize frequency and delivery methods.',
 };
 
 // Comprehensive route-specific welcome messages
 const routeWelcomeMessages: Record<string, string> = {
-  '/': 'Welcome to Market Nexus Terminal dashboard. Your financial command center with real-time market overview, portfolio summary, watchlists, and news feed. Use the sidebar to navigate between specialized modules for detailed analysis and trading operations.',
+  '/': 'Welcome to Market Nexus Terminal dashboard. Your comprehensive financial command center with real-time market overview, portfolio summary, watchlists, and news feed. Use the sidebar to navigate between specialized modules for detailed analysis and trading operations.',
   
   '/market-data': 'Market Data module provides comprehensive financial instrument analysis. Search and filter stocks, cryptocurrencies, indices, and commodities. Add new instruments, view detailed charts with technical indicators, and analyze price movements across multiple timeframes.',
   
@@ -182,6 +207,7 @@ const VoiceTrainer: React.FC = () => {
   const routeTimeoutRef = useRef<number | null>(null);
   const lastRouteRef = useRef<string>('');
   const mousePositionRef = useRef<{ x: number, y: number }>({ x: 0, y: 0 });
+  const hoverTimeoutRef = useRef<number | null>(null);
   
   // Handle route changes with improved context switching
   useEffect(() => {
@@ -216,7 +242,7 @@ const VoiceTrainer: React.FC = () => {
     // Delay for route transition completion
     routeTimeoutRef.current = window.setTimeout(() => {
       speak(welcomeMessage, 'high');
-    }, 800);
+    }, 1200);
     
     return () => {
       if (routeTimeoutRef.current) {
@@ -250,11 +276,28 @@ const VoiceTrainer: React.FC = () => {
           const selector = `button[data-timeframe="${dataTimeframe}"]`;
           if (componentHints[selector]) return selector;
         }
+
+        // Priority 3: Check for Lucide React icons in buttons
+        if (el.tagName === 'BUTTON' || el.closest('button')) {
+          const button = el.tagName === 'BUTTON' ? el : el.closest('button');
+          if (button) {
+            const svgIcon = button.querySelector('svg');
+            if (svgIcon) {
+              const iconClasses = svgIcon.className || '';
+              if (iconClasses.includes('lucide-plus')) return '.add-button, button[aria-label*="add"], button[title*="add"], button:has(.lucide-plus)';
+              if (iconClasses.includes('lucide-filter')) return '.filter-button, button[aria-label*="filter"], button[title*="filter"], button:has(.lucide-filter)';
+              if (iconClasses.includes('lucide-eye')) return '.view-button, button[aria-label*="view"], button[title*="view"], button:has(.lucide-eye)';
+              if (iconClasses.includes('lucide-edit')) return '.edit-button, button[aria-label*="edit"], button[title*="edit"], button:has(.lucide-edit)';
+              if (iconClasses.includes('lucide-trash')) return '.delete-button, button[aria-label*="delete"], button[title*="delete"], button:has(.lucide-trash)';
+            }
+          }
+        }
         
-        // Priority 3: Check for specific button types by class names
+        // Priority 4: Check for specific button types by class names
         const buttonClasses = [
           'add-button', 'filter-button', 'view-button', 'edit-button', 
-          'delete-button', 'save-button', 'cancel-button', 'dark-mode-toggle'
+          'delete-button', 'save-button', 'cancel-button', 'dark-mode-toggle',
+          'search-button', 'submit-button', 'timeframe-button'
         ];
         for (const btnClass of buttonClasses) {
           if (el.classList.contains(btnClass)) {
@@ -262,7 +305,7 @@ const VoiceTrainer: React.FC = () => {
           }
         }
         
-        // Priority 4: Check for button types by aria-label or title attributes
+        // Priority 5: Check for button types by aria-label or title attributes
         const ariaLabel = el.getAttribute('aria-label')?.toLowerCase() || '';
         const title = el.getAttribute('title')?.toLowerCase() || '';
         if (el.tagName === 'BUTTON' && (ariaLabel || title)) {
@@ -276,34 +319,53 @@ const VoiceTrainer: React.FC = () => {
           }
         }
         
-        // Priority 5: Check for timeframe buttons by class or content
+        // Priority 6: Check for timeframe buttons by class or content
         if (el.classList.contains('timeframe-button') || 
             (el.tagName === 'BUTTON' && el.textContent?.match(/^(1D|1W|1M|3M|6M|1Y|5Y)$/))) {
-          return '.timeframe-button';
+          return '.timeframe-button, .period-selector';
         }
         
-        // Priority 6: Check specific input types
+        // Priority 7: Check specific input types
         if (el.tagName === 'INPUT') {
           const inputType = el.getAttribute('type') || 'text';
           const inputSelector = `input[type="${inputType}"]`;
           if (componentHints[inputSelector]) return inputSelector;
+          
+          // Check for search inputs specifically
+          if (el.classList.contains('search-input') || el.placeholder?.toLowerCase().includes('search')) {
+            return 'input[type="text"], input[type="search"], .search-input';
+          }
         }
         
-        // Priority 7: Check for form elements
-        const formClasses = ['form-field', 'form-item', 'form-label', 'form-error', 'form-help'];
+        // Priority 8: Check for form elements
+        const formClasses = ['form-field', 'form-item', 'form-label', 'form-error', 'form-help', 'input-field'];
         for (const formClass of formClasses) {
           if (el.classList.contains(formClass)) {
             return `.${formClass}`;
           }
         }
         
-        // Priority 8: Check for UI component classes
+        // Priority 9: Check for portfolio and financial specific elements
+        const portfolioClasses = [
+          'portfolio-summary', 'portfolio-overview', 'holding-item', 'position-row',
+          'allocation-chart', 'portfolio-pie-chart', 'performance-chart', 'returns-chart',
+          'instrument-row', 'symbol-row', 'price-display', 'current-price',
+          'change-indicator', 'price-change', 'volume-indicator', 'trading-volume'
+        ];
+        for (const portfolioClass of portfolioClasses) {
+          if (el.classList.contains(portfolioClass)) {
+            return `.${portfolioClass}`;
+          }
+        }
+        
+        // Priority 10: Check for UI component classes
         const uiClasses = [
           'search-input', 'filter-dropdown', 'sort-control', 'clear-filters',
           'dropdown-menu', 'context-menu', 'action-menu', 'settings-panel',
           'preference-toggle', 'configuration-option', 'status-indicator',
           'progress-bar', 'badge', 'tag', 'nav-link', 'navigation-link',
-          'breadcrumb', 'tab', 'pagination'
+          'breadcrumb', 'tab', 'pagination', 'chart-container', 'chart-tooltip',
+          'chart-legend', 'data-table', 'table-header', 'table-row', 'table-cell'
         ];
         for (const uiClass of uiClasses) {
           if (el.classList.contains(uiClass)) {
@@ -311,7 +373,7 @@ const VoiceTrainer: React.FC = () => {
           }
         }
         
-        // Priority 9: Check generic element types and classes
+        // Priority 11: Check generic element types and classes
         const genericSelectors = [
           'select', '.select-trigger', 'textarea', 'button',
           '.dialog-trigger', '.dialog-content', '.dialog-close',
@@ -319,8 +381,7 @@ const VoiceTrainer: React.FC = () => {
           'table', '.data-table', 'th', '.table-header', 
           'tr', '.table-row', 'td', '.table-cell',
           '.card', '.card-header', '.card-content', '.card-footer',
-          '.panel', '.chart-container', '.chart-tooltip', '.chart-legend',
-          '.recharts-wrapper', '.sidebar', '.sidebar-icon', '.sidebar-menu-button'
+          '.panel', '.recharts-wrapper', '.sidebar', '.sidebar-icon', '.sidebar-menu-button'
         ];
         
         for (const selector of genericSelectors) {
@@ -339,7 +400,7 @@ const VoiceTrainer: React.FC = () => {
           }
         }
         
-        // Priority 10: Check if element matches any selector directly
+        // Priority 12: Check if element matches any selector directly
         for (const selector of Object.keys(componentHints)) {
           try {
             if (el.matches(selector) || el.closest(selector)) {
@@ -358,106 +419,43 @@ const VoiceTrainer: React.FC = () => {
       
       if (matchedSelector && matchedSelector !== currentElement) {
         // Clear any pending timeout
-        if (cursorTimeoutRef.current) {
-          window.clearTimeout(cursorTimeoutRef.current);
-        }
-        
-        // Stop current speech for immediate response on new elements
-        if (matchedSelector !== lastElementRef.current) {
-          stopSpeaking();
+        if (hoverTimeoutRef.current) {
+          window.clearTimeout(hoverTimeoutRef.current);
         }
         
         setCurrentElement(matchedSelector);
-        lastElementRef.current = matchedSelector;
         
-        // Reduced delay for better responsiveness
-        cursorTimeoutRef.current = window.setTimeout(() => {
+        // Immediate guidance without delay for better responsiveness
+        hoverTimeoutRef.current = window.setTimeout(() => {
           const guidance = componentHints[matchedSelector];
-          if (guidance) {
+          if (guidance && matchedSelector !== lastElementRef.current) {
             console.log(`Voice Trainer: Providing guidance for ${matchedSelector}`);
+            // Stop any current speech and provide new guidance
+            stopSpeaking();
             speak(guidance, 'medium');
+            lastElementRef.current = matchedSelector;
           }
-          cursorTimeoutRef.current = null;
-        }, 500);
+          hoverTimeoutRef.current = null;
+        }, 300);
       }
     };
     
     // Mouse leave handler to clear timeouts
     const handleMouseLeave = () => {
-      if (cursorTimeoutRef.current) {
-        window.clearTimeout(cursorTimeoutRef.current);
-        cursorTimeoutRef.current = null;
+      if (hoverTimeoutRef.current) {
+        window.clearTimeout(hoverTimeoutRef.current);
+        hoverTimeoutRef.current = null;
       }
-    };
-    
-    // Click handler to provide immediate feedback with element context
-    const handleClick = (e: MouseEvent) => {
-      const element = e.target as Element;
-      if (!element) return;
-      
-      // Stop any current speech immediately
-      stopSpeaking();
-      
-      // Get element context for more specific feedback
-      const getClickContext = (el: Element): string => {
-        const tagName = el.tagName.toLowerCase();
-        const className = el.className;
-        const textContent = el.textContent?.trim() || '';
-        const type = el.getAttribute('type');
-        const role = el.getAttribute('role');
-        
-        // Button specific feedback
-        if (tagName === 'button' || role === 'button') {
-          if (textContent && textContent.length < 50) {
-            return `${textContent} button activated`;
-          }
-          if (className.includes('add')) return 'Add button activated';
-          if (className.includes('edit')) return 'Edit button activated';
-          if (className.includes('delete')) return 'Delete button activated';
-          if (className.includes('save')) return 'Save button activated';
-          if (className.includes('cancel')) return 'Cancel button activated';
-          if (className.includes('filter')) return 'Filter button activated';
-          if (className.includes('view')) return 'View button activated';
-          return 'Button activated';
-        }
-        
-        // Input specific feedback
-        if (tagName === 'input') {
-          if (type === 'text' || type === 'search') return 'Text input field focused';
-          if (type === 'number') return 'Number input field focused';
-          if (type === 'email') return 'Email input field focused';
-          if (type === 'password') return 'Password input field focused';
-          if (type === 'date') return 'Date input field focused';
-          if (type === 'checkbox') return 'Checkbox toggled';
-          if (type === 'radio') return 'Radio button selected';
-          return 'Input field focused';
-        }
-        
-        // Other element types
-        if (tagName === 'select') return 'Dropdown menu opened';
-        if (tagName === 'textarea') return 'Text area focused';
-        if (tagName === 'a') return 'Link activated';
-        if (tagName === 'td' || tagName === 'th') return 'Table cell selected';
-        if (className.includes('tab')) return 'Tab switched';
-        if (className.includes('card')) return 'Card selected';
-        
-        return 'Element activated';
-      };
-      
-      const contextMessage = getClickContext(element);
-      speak(contextMessage, 'high');
     };
     
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseleave', handleMouseLeave);
-    document.addEventListener('click', handleClick);
     
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseleave', handleMouseLeave);
-      document.removeEventListener('click', handleClick);
-      if (cursorTimeoutRef.current) {
-        window.clearTimeout(cursorTimeoutRef.current);
+      if (hoverTimeoutRef.current) {
+        window.clearTimeout(hoverTimeoutRef.current);
       }
     };
   }, [speak, stopSpeaking, currentElement, isPaused, isMuted]);
@@ -505,7 +503,7 @@ const VoiceTrainer: React.FC = () => {
             <h4 className="text-sm font-semibold">Voice Assistant Status</h4>
             <div className="text-xs space-y-1">
               <p className={`${isMuted ? 'text-red-500' : 'text-green-500'}`}>
-                {isMuted ? "🔇 Muted - Click to enable guidance" : "🎤 Active - Hover over elements for help"}
+                {isMuted ? "🔇 Muted - Click to enable detailed guidance" : "🎤 Active - Hover over elements for comprehensive help"}
               </p>
               <p className={`${isPaused ? 'text-yellow-500' : 'text-blue-500'}`}>
                 {isPaused ? "⏸️ Paused" : "▶️ Running"}
