@@ -63,6 +63,20 @@ const NewAlertForm: FC<NewAlertFormProps> = ({ onAddAlert, onCancel, darkMode })
     onAddAlert(newAlert);
   };
 
+  // Define valid options to ensure no empty strings
+  const alertTypeOptions = [
+    { value: 'price', label: 'Price Alert' },
+    { value: 'volume', label: 'Volume Alert' },
+    { value: 'news', label: 'News Alert' },
+    { value: 'earnings', label: 'Earnings Alert' }
+  ];
+
+  const conditionOptions = [
+    { value: 'above', label: 'Above' },
+    { value: 'below', label: 'Below' },
+    { value: 'equal', label: 'Equal to' }
+  ];
+
   return (
     <Card className={cn(
       "border shadow-lg", 
@@ -82,15 +96,16 @@ const NewAlertForm: FC<NewAlertFormProps> = ({ onAddAlert, onCancel, darkMode })
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Alert Type</Label>
-              <Select defaultValue={alertType} onValueChange={setAlertType}>
+              <Select value={alertType} onValueChange={setAlertType}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select alert type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="price">Price Alert</SelectItem>
-                  <SelectItem value="volume">Volume Alert</SelectItem>
-                  <SelectItem value="news">News Alert</SelectItem>
-                  <SelectItem value="earnings">Earnings Alert</SelectItem>
+                  {alertTypeOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -140,14 +155,16 @@ const NewAlertForm: FC<NewAlertFormProps> = ({ onAddAlert, onCancel, darkMode })
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Condition</Label>
-                <Select defaultValue={condition} onValueChange={setCondition}>
+                <Select value={condition} onValueChange={setCondition}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select condition" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="above">Above</SelectItem>
-                    <SelectItem value="below">Below</SelectItem>
-                    <SelectItem value="equal">Equal to</SelectItem>
+                    {conditionOptions.map(option => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

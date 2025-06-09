@@ -75,6 +75,20 @@ const AddMarketDataForm: React.FC<AddMarketDataFormProps> = ({
     }
   };
 
+  // Define valid options to ensure no empty strings
+  const typeOptions = [
+    { value: 'stock', label: 'Stock' },
+    { value: 'crypto', label: 'Cryptocurrency' },
+    { value: 'index', label: 'Index' },
+    { value: 'commodity', label: 'Commodity' },
+    { value: 'forex', label: 'Forex' }
+  ];
+
+  const directionOptions = [
+    { value: 'up', label: 'Up' },
+    { value: 'down', label: 'Down' }
+  ];
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
@@ -117,11 +131,11 @@ const AddMarketDataForm: React.FC<AddMarketDataFormProps> = ({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="stock">Stock</SelectItem>
-              <SelectItem value="crypto">Cryptocurrency</SelectItem>
-              <SelectItem value="index">Index</SelectItem>
-              <SelectItem value="commodity">Commodity</SelectItem>
-              <SelectItem value="forex">Forex</SelectItem>
+              {typeOptions.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -190,8 +204,11 @@ const AddMarketDataForm: React.FC<AddMarketDataFormProps> = ({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="up">Up</SelectItem>
-            <SelectItem value="down">Down</SelectItem>
+            {directionOptions.map(option => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
