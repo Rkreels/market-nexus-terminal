@@ -69,13 +69,16 @@ const NewAlertForm: FC<NewAlertFormProps> = ({ onAddAlert, onCancel, darkMode })
     { value: 'volume', label: 'Volume Alert' },
     { value: 'news', label: 'News Alert' },
     { value: 'earnings', label: 'Earnings Alert' }
-  ];
+  ].filter(option => option.value && option.value.trim() !== '');
 
   const conditionOptions = [
     { value: 'above', label: 'Above' },
     { value: 'below', label: 'Below' },
     { value: 'equal', label: 'Equal to' }
-  ];
+  ].filter(option => option.value && option.value.trim() !== '');
+
+  console.log('NewAlertForm: Alert type options', alertTypeOptions);
+  console.log('NewAlertForm: Condition options', conditionOptions);
 
   return (
     <Card className={cn(
