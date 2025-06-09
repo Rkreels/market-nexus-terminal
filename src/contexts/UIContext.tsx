@@ -1,6 +1,8 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { MarketDataItem } from '@/types/marketData';
+import { Timeframe } from '@/utils/timeframeUtils';
 
 interface UIContextProps {
   isDarkMode: boolean;
@@ -12,6 +14,13 @@ interface UIContextProps {
   setGlobalSearchQuery: (query: string) => void;
   selectedModule: string;
   setSelectedModule: (module: string) => void;
+  toggleFilter: () => void;
+  marketData: MarketDataItem[];
+  addMarketDataItem: (item: MarketDataItem) => void;
+  deleteMarketDataItem: (id: string) => void;
+  editMarketDataItem: (id: string, updatedItem: MarketDataItem) => void;
+  activeTimeframe: Timeframe;
+  setActiveTimeframe: (timeframe: Timeframe) => void;
 }
 
 const UIContext = createContext<UIContextProps | undefined>(undefined);
@@ -28,6 +37,33 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [globalSearchQuery, setGlobalSearchQuery] = useState<string>('');
   const [selectedModule, setSelectedModule] = useState<string>('dashboard');
+  const [marketData, setMarketData] = useState<MarketDataItem[]>([
+    {
+      id: '1',
+      symbol: 'AAPL',
+      name: 'Apple Inc.',
+      type: 'stock',
+      value: 150.25,
+      change: 2.5,
+      percentChange: 1.69,
+      direction: 'up',
+      sector: 'Technology',
+      lastUpdated: new Date().toISOString()
+    },
+    {
+      id: '2',
+      symbol: 'MSFT',
+      name: 'Microsoft Corporation',
+      type: 'stock',
+      value: 285.60,
+      change: -1.2,
+      percentChange: -0.42,
+      direction: 'down',
+      sector: 'Technology',
+      lastUpdated: new Date().toISOString()
+    }
+  ]);
+  const [activeTimeframe, setActiveTimeframe] = useState<Timeframe>('1M');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -48,6 +84,32 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
       description: `Switched to ${!isDarkMode ? 'dark' : 'light'} mode`,
       duration: 2000,
     });
+  };
+
+  const toggleFilter = () => {
+    console.log('Toggle filter clicked');
+    toast({
+      title: "Filter Toggled",
+      description: "Filter panel toggled",
+      duration: 2000,
+    });
+  };
+
+  const addMarketDataItem = (item: MarketDataItem) => {
+    setMarketData(prev => [...prev, item]);
+    console.log('Added market data item:', item);
+  };
+
+  const deleteMarketDataItem = (id: string) => {
+    setMarketData(prev => prev.filter(item => item.id !== id));
+    console.log('Deleted market data item:', id);
+  };
+
+  const editMarketDataItem = (id: string, updatedItem: MarketDataItem) => {
+    setMarketData(prev => prev.map(item => 
+      item.id === id ? { ...updatedItem, id } : item
+    ));
+    console.log('Updated market data item:', id, updatedItem);
   };
 
   const setLoading = (loading: boolean) => {
@@ -140,7 +202,14 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
       globalSearchQuery,
       setGlobalSearchQuery,
       selectedModule,
-      setSelectedModule
+      setSelectedModule,
+      toggleFilter,
+      marketData,
+      addMarketDataItem,
+      deleteMarketDataItem,
+      editMarketDataItem,
+      activeTimeframe,
+      setActiveTimeframe
     }}>
       {children}
     </UIContext.Provider>
