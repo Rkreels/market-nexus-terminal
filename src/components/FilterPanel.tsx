@@ -72,16 +72,25 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     }
   };
 
-  // Helper function to filter out empty/invalid options
+  // Enhanced helper function to filter out empty/invalid options
   const filterValidOptions = (options: string[] = []) => {
-    return options.filter(option => option && typeof option === 'string' && option.trim() !== "");
+    const filtered = options.filter(option => 
+      option && 
+      typeof option === 'string' && 
+      option.trim() !== "" &&
+      option.trim().length > 0
+    );
+    console.log('FilterPanel: Filtered options', { original: options, filtered });
+    return filtered;
   };
 
   if (!isOpen) return null;
 
-  const validCategories = filterValidOptions(filterOptions.categories);
-  const validStatus = filterValidOptions(filterOptions.status);
-  const validTypes = filterValidOptions(filterOptions.types);
+  const validCategories = filterValidOptions(filterOptions.categories || []);
+  const validStatus = filterValidOptions(filterOptions.status || []);
+  const validTypes = filterValidOptions(filterOptions.types || []);
+
+  console.log('FilterPanel: Valid options', { validCategories, validStatus, validTypes });
 
   return (
     <div className={cn(
