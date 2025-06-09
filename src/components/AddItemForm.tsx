@@ -69,13 +69,13 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
                   ) : field.type === 'select' ? (
                     <Select 
                       onValueChange={formField.onChange} 
-                      defaultValue={formField.value || field.options?.[0] || "defaultOption"}
+                      defaultValue={formField.value || (field.options && field.options.length > 0 ? field.options[0] : undefined)}
                     >
                       <SelectTrigger className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
                         <SelectValue placeholder={field.placeholder} />
                       </SelectTrigger>
                       <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
-                        {field.options?.map(option => (
+                        {field.options?.filter(option => option && option.trim() !== "").map(option => (
                           <SelectItem key={option} value={option}>{option}</SelectItem>
                         ))}
                       </SelectContent>
