@@ -12,6 +12,10 @@ interface VoiceTrainerContextProps {
   setCurrentContext: (context: string) => void;
   currentContext: string | null;
   clearSpokenContexts: () => void;
+  announceAction: (action: string, item?: string) => void;
+  announceNavigation: (from: string, to: string) => void;
+  announceError: (error: string) => void;
+  announceSuccess: (message: string) => void;
 }
 
 const VoiceTrainerContext = createContext<VoiceTrainerContextProps | undefined>(undefined);
@@ -41,10 +45,7 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
         }
       };
       
-      // Load voices immediately if available
       loadVoices();
-      
-      // Also listen for the event
       synth.onvoiceschanged = loadVoices;
       
       return () => {
@@ -104,7 +105,6 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    // Prevent rapid-fire speech attempts
     const now = Date.now();
     if (now - lastSpeechTimeRef.current < 100) {
       isProcessingRef.current = false;
@@ -112,28 +112,23 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
     }
     lastSpeechTimeRef.current = now;
     
-    // Create unique key for this text and context
     const contextKey = `${currentContext || 'global'}-${text.slice(0, 50)}`;
     
-    // For non-high priority messages, check if already spoken in this context
     if (priority !== 'high' && spokenContextsRef.current.has(contextKey)) {
       isProcessingRef.current = false;
       processQueue();
       return;
     }
     
-    // Stop any ongoing speech
     stopSpeaking();
     
     try {
       const utterance = new SpeechSynthesisUtterance(text);
       
-      // Enhanced voice settings for better quality
       utterance.rate = 0.9;
       utterance.pitch = 1.0;
       utterance.volume = 0.8;
       
-      // Find the best available voice
       const voices = window.speechSynthesis.getVoices();
       const preferredVoices = [
         'Microsoft Zira Desktop - English (United States)',
@@ -155,7 +150,6 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
         }
       }
       
-      // Fallback to first English voice
       if (!selectedVoice) {
         selectedVoice = voices.find(voice => 
           voice.lang.startsWith('en') && voice.localService
@@ -213,18 +207,33 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
   const speak = (text: string, priority: 'low' | 'medium' | 'high' = 'medium') => {
     if (isMuted || isPaused || !text) return;
     
-    // For high priority, clear queue and speak immediately
     if (priority === 'high') {
       speechQueueRef.current = [];
       stopSpeaking();
       setTimeout(() => speakImmediate(text, priority), 150);
     } else {
-      // Add to queue for lower priority items
       speechQueueRef.current.push({ text, priority });
       if (!isProcessingRef.current) {
         setTimeout(processQueue, 200);
       }
     }
+  };
+
+  const announceAction = (action: string, item?: string) => {
+    const message = item ? `${action} ${item}` : action;
+    speak(message, 'medium');
+  };
+
+  const announceNavigation = (from: string, to: string) => {
+    speak(`Navigating from ${from} to ${to}`, 'medium');
+  };
+
+  const announceError = (error: string) => {
+    speak(`Error: ${error}`, 'high');
+  };
+
+  const announceSuccess = (message: string) => {
+    speak(`Success: ${message}`, 'medium');
   };
   
   return (
@@ -239,7 +248,11 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
         speakingText,
         setCurrentContext,
         currentContext,
-        clearSpokenContexts
+        clearSpokenContexts,
+        announceAction,
+        announceNavigation,
+        announceError,
+        announceSuccess
       }}
     >
       {children}
