@@ -1,4 +1,3 @@
-
 import { FC, useState } from "react";
 import { 
   PlusCircle, 
@@ -210,15 +209,6 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
               data={filteredData} 
               darkMode={darkMode} 
               itemType="marketData"
-              onEdit={(item) => {
-                console.log('Market Data: Edit item', item);
-                speak(`Editing ${item.name}`, 'medium');
-              }}
-              onDelete={(item) => {
-                deleteMarketDataItem(item.id);
-                speak(`Deleted ${item.name} from market data`, 'medium');
-                console.log('Market Data: Deleted item', item);
-              }}
             />
           </div>
         </CardContent>
