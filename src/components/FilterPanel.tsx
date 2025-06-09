@@ -72,7 +72,16 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     }
   };
 
+  // Helper function to filter out empty/invalid options
+  const filterValidOptions = (options: string[] = []) => {
+    return options.filter(option => option && typeof option === 'string' && option.trim() !== "");
+  };
+
   if (!isOpen) return null;
+
+  const validCategories = filterValidOptions(filterOptions.categories);
+  const validStatus = filterValidOptions(filterOptions.status);
+  const validTypes = filterValidOptions(filterOptions.types);
 
   return (
     <div className={cn(
@@ -107,7 +116,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           </div>
         )}
         
-        {filterOptions.categories && filterOptions.categories.length > 0 && (
+        {filterOptions.categories && validCategories.length > 0 && (
           <div>
             <Label htmlFor="category">Category</Label>
             <Select
@@ -119,15 +128,15 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
               </SelectTrigger>
               <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
                 <SelectItem value="all">All Categories</SelectItem>
-                {filterOptions.categories.filter(cat => cat && cat.trim() !== "").map(category => (
-                  <SelectItem key={category} value={category}>{category}</SelectItem>
+                {validCategories.map(categoryOption => (
+                  <SelectItem key={categoryOption} value={categoryOption}>{categoryOption}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
         )}
         
-        {filterOptions.status && filterOptions.status.length > 0 && (
+        {filterOptions.status && validStatus.length > 0 && (
           <div>
             <Label htmlFor="status">Status</Label>
             <Select
@@ -139,15 +148,15 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
               </SelectTrigger>
               <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
                 <SelectItem value="all">All Statuses</SelectItem>
-                {filterOptions.status.filter(stat => stat && stat.trim() !== "").map(status => (
-                  <SelectItem key={status} value={status}>{status}</SelectItem>
+                {validStatus.map(statusOption => (
+                  <SelectItem key={statusOption} value={statusOption}>{statusOption}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
         )}
         
-        {filterOptions.types && filterOptions.types.length > 0 && (
+        {filterOptions.types && validTypes.length > 0 && (
           <div>
             <Label htmlFor="type">Type</Label>
             <Select
@@ -159,8 +168,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
               </SelectTrigger>
               <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
                 <SelectItem value="all">All Types</SelectItem>
-                {filterOptions.types.filter(typ => typ && typ.trim() !== "").map(type => (
-                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                {validTypes.map(typeOption => (
+                  <SelectItem key={typeOption} value={typeOption}>{typeOption}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

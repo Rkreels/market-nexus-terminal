@@ -250,6 +250,7 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
     announceSuccess('Market data exported successfully');
   };
 
+  // Fixed filter options to ensure no empty strings
   const filterOptions = {
     search: true,
     categories: ["Technology", "Healthcare", "Finance", "Energy", "Cryptocurrency"],
