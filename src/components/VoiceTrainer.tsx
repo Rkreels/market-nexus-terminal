@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useVoiceTrainer } from '@/contexts/VoiceTrainerContext';
@@ -6,194 +7,121 @@ import { Button } from '@/components/ui/button';
 import { useUI } from '@/contexts/UIContext';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 
-// Comprehensive component hints with detailed functionality descriptions
+// Enhanced micro-component hints with step-by-step instructions
 const componentHints: Record<string, string> = {
-  // Navigation and core elements
-  '.sidebar-icon, .sidebar-menu-button': 'Navigation sidebar with module access. Click any icon to switch between Market Data, Portfolio, News, Alerts, Research, Trading, Risk Analytics, Fixed Income, Macro Economy, AI Module, and Terminal sections.',
-  '.sidebar': 'Main navigation sidebar containing all module links. Each module provides specialized financial tools and analytics.',
+  // Navigation and core elements with detailed instructions
+  '.sidebar-icon, .sidebar-menu-button': 'Navigation sidebar for accessing different financial modules. Click any icon to switch between: Market Data for real-time prices and charts, Portfolio for investment tracking, News for market updates, Alerts for price notifications, Research for analysis tools, Trading for order execution, Risk Analytics for portfolio assessment, Fixed Income for bond analysis, Macro Economy for economic indicators, AI Module for machine learning insights, and Terminal for advanced commands. Each module opens specialized tools for that area.',
+  '.sidebar': 'Main navigation panel containing all financial module access points. This is your command center - each icon represents a complete financial workspace. Start with Market Data to explore real-time prices, then move to Portfolio to track your investments. The sidebar remains accessible from any module for quick navigation.',
   
-  // Dashboard specific
-  '[data-component="dashboard-summary-panel"]': 'Dashboard overview showing portfolio performance, market summary, and key metrics. Monitor your overall financial position and market conditions.',
-  '[data-component="dashboard-view"]': 'Main dashboard with comprehensive market overview, portfolio summary, recent news, and quick access to all modules.',
+  // Dashboard specific with actionable guidance
+  '[data-component="dashboard-summary-panel"]': 'Dashboard overview displaying your complete financial picture. View total portfolio value, daily performance changes, asset allocation breakdown, and market condition summary. Click on any metric for detailed analysis. Use this as your daily starting point to assess market conditions and portfolio health.',
+  '[data-component="dashboard-view"]': 'Main financial command center showing integrated market overview, portfolio performance, latest news, and quick access shortcuts. This is your financial cockpit - monitor everything at a glance, then drill down into specific modules for detailed analysis and trading actions.',
   
-  // Market Data specific
-  '[data-component="market-data-panel"]': 'Market Data panel showing real-time financial information. Search symbols, filter by asset type, add new instruments, and view detailed charts with technical indicators.',
-  '[data-component="market-data-detail"]': 'Detailed market data view with comprehensive charts, technical analysis, fundamental data, and historical performance metrics.',
+  // Market Data with step-by-step usage
+  '[data-component="market-data-panel"]': 'Real-time market data center. To add new instruments: click the Add Item button, enter symbol and details, then save. To search: type in the search box for stocks, ETFs, crypto, or indices. To filter: click Filter button and select asset type, sector, or price range. Charts show price movements with hover details. Click any instrument row for comprehensive analysis.',
+  '[data-component="market-data-detail"]': 'Comprehensive instrument analysis workspace. View real-time price with bid/ask spread, technical indicators, volume analysis, and historical performance. Use timeframe buttons (1D, 1W, 1M, etc.) to adjust chart period. Technical overlays include moving averages, RSI, and volume indicators. Access fundamental data, news, and analyst recommendations.',
   
-  // Portfolio specific
-  '[data-component="portfolio-panel"]': 'Portfolio management showing your holdings, asset allocation, performance metrics, and total portfolio value. Track positions and their contribution to overall returns.',
-  '[data-component="portfolio-detail"]': 'Detailed portfolio holding view with position details, performance analysis, cost basis, and individual asset charts.',
+  // Portfolio with actionable steps
+  '[data-component="portfolio-panel"]': 'Investment portfolio management center. View current holdings with real-time values, cost basis, and profit/loss calculations. To add positions: click Add Item, enter symbol, quantity, and purchase price. Monitor asset allocation pie chart for diversification. Track total portfolio value and daily performance changes.',
+  '[data-component="portfolio-detail"]': 'Individual position analysis showing detailed holding information. View quantity owned, current market value, cost basis, unrealized gains/losses, and percentage allocation. Access position history, dividend information, and performance analytics. Use edit function to adjust quantities or add to positions.',
   
-  // Watchlist specific
-  '[data-component="watchlist-panel"]': 'Personal watchlist for tracking favorite stocks and assets. Add symbols using the edit button, monitor real-time prices, and track percentage changes.',
+  // Watchlist with clear instructions
+  '[data-component="watchlist-panel"]': 'Personal stock monitoring center. Add symbols you are considering for investment or want to track. Click the edit button (pencil icon) to add new symbols - enter ticker symbols separated by commas. Monitor real-time prices, daily changes, and percentage moves. Remove symbols by clicking the trash icon.',
   
-  // Stock Detail specific
-  '[data-component="stock-detail-panel"]': 'Comprehensive stock analysis with interactive charts, key statistics, financial metrics, and multiple timeframe options.',
+  // Stock Detail with comprehensive guidance
+  '[data-component="stock-detail-panel"]': 'Advanced stock analysis workspace with interactive price charts, key financial statistics, and multiple timeframe views. Analyze price movements using 1D for intraday, 1W for short-term trends, 1M for monthly patterns, up to 5Y for long-term analysis. Key stats include P/E ratio, market cap, 52-week range, and trading volume.',
   
-  // News specific
-  '[data-component="news-panel"]': 'Financial news feed with market-relevant articles. Filter by source, sentiment, or keywords. Click articles to read full content and analysis.',
+  // Enhanced button descriptions with clear actions
+  '.add-button, button[aria-label*="add"], button[title*="add"], button:has([data-lucide="plus"])': 'Add new item button - creates new entries in the current module. In Market Data: adds new financial instruments to track. In Portfolio: adds new investment positions with quantity and price. In Watchlist: adds stocks to monitor. In Alerts: creates price or volume notifications. Click to open entry form, fill required fields, then save.',
+  '.filter-button, button[aria-label*="filter"], button[title*="filter"], button:has([data-lucide="filter"])': 'Advanced filtering system. Opens filter panel with multiple criteria options. In Market Data: filter by asset type (stocks, crypto, ETFs), sector (technology, healthcare, finance), price range, or volume. In Portfolio: filter by allocation percentage, performance, or asset class. Apply multiple filters simultaneously for precise data selection.',
+  '.view-button, button[aria-label*="view"], button[title*="view"], button:has([data-lucide="eye"])': 'Detailed view access - opens comprehensive analysis window. Shows complete information including price charts, financial metrics, news, and analytics. In Market Data: technical analysis with indicators. In Portfolio: position details with performance history. In Alerts: trigger conditions and notification history.',
+  '.edit-button, button[aria-label*="edit"], button[title*="edit"], button:has([data-lucide="edit"])': 'Modify item properties. In Portfolio: adjust position quantities, update cost basis, or change allocation targets. In Market Data: update instrument details or categories. In Alerts: modify trigger conditions, price levels, or notification preferences. Changes save automatically upon confirmation.',
+  '.delete-button, button[aria-label*="delete"], button[title*="delete"], button:has([data-lucide="trash"])': 'Permanent removal action. Removes items from lists, portfolios, or alert systems. In Watchlist: removes stocks from monitoring. In Portfolio: removes investment positions (use carefully). In Alerts: deletes notification rules. Confirmation dialog prevents accidental deletion.',
   
-  // Alerts specific
-  '[data-component="alerts-panel"]': 'Price and volume alerts management. Set custom alert conditions, manage notification preferences, and track triggered alerts.',
+  // Input fields with detailed usage
+  'input[type="text"], input[type="search"], .search-input': 'Universal search and text entry field. For symbol search: type stock ticker (AAPL), company name (Apple), or partial matches for suggestions. For general search: use keywords related to your query. Auto-complete provides suggestions as you type. Clear field with delete key or clear button.',
+  'input[type="number"], .number-input': 'Numeric data entry for quantities, prices, percentages, or financial values. Use decimal points for precise entries (e.g., 1.50 for $1.50). Arrow keys increment/decrement values. In Portfolio: enter share quantities or purchase prices. In Alerts: set trigger price levels.',
+  'input[type="date"], .date-picker': 'Date selection for time-based filtering and analysis. Click to open calendar picker or type MM/DD/YYYY format. Use for filtering historical data, setting alert expiration dates, or analyzing performance over specific periods.',
   
-  // Research specific
-  '[data-component="research-panel"]': 'Research module with analyst reports, insider transactions, and AI-powered market insights. Access comprehensive investment research.',
+  // Chart elements with interaction details
+  '.chart-container, .recharts-wrapper, .chart-area': 'Interactive financial chart with zoom and analysis capabilities. Hover over data points for precise values and timestamps. Drag to zoom into specific time periods. Use mouse wheel to zoom in/out. Chart displays price movements, volume data, and technical indicators with color-coded legend.',
+  '.timeframe-button, .period-selector, button[data-timeframe]': 'Chart timeframe selector for different analysis periods. 1D shows hourly intraday data for day trading. 1W displays daily data for weekly trends. 1M shows monthly patterns. 3M, 6M, 1Y for medium-term analysis. 5Y for long-term investment perspective. Each timeframe offers different insights.',
   
-  // Trading specific
-  '[data-component="trading-panel"]': 'Trading execution platform for placing orders, monitoring positions, and analyzing trading performance with detailed transaction history.',
+  // Table interaction with sorting and selection
+  'table, .data-table, .table-container': 'Interactive data table with sorting, filtering, and selection capabilities. Click column headers to sort data ascending or descending. Use search box above table to filter rows. Click table rows for quick actions or detailed view. Pagination controls at bottom for large datasets.',
+  'th, .table-header, .column-header': 'Sortable column header. Click to sort table data by this column. Arrow indicators show current sort direction. Double-click for reverse sort. Common sortable columns: price (high to low), change percentage, volume, market cap, or alphabetical by name.',
   
-  // Risk analytics specific
-  '[data-component="risk-panel"]': 'Risk management tools including Value at Risk calculations, stress testing, correlation analysis, and portfolio risk metrics.',
+  // Enhanced form guidance
+  '.form-field, .form-item, .input-field': 'Data entry form field with validation. Required fields marked with red asterisk (*). Green checkmark indicates valid input. Red border shows validation errors. Real-time validation provides immediate feedback. Tab key moves to next field.',
+  '.form-error, .error-message, .validation-error': 'Input validation error with specific correction guidance. Common errors: invalid symbol format (use ticker like AAPL), price must be positive number, quantity cannot be zero, date must be future for alerts. Correct the highlighted field to proceed.',
   
-  // Fixed income specific
-  '[data-component="fixed-income-panel"]': 'Fixed income analysis for bonds and debt instruments. Evaluate yield curves, credit ratings, duration, and interest rate sensitivity.',
+  // Dialog and modal interaction
+  '.dialog-trigger, .modal-trigger, .popup-trigger': 'Opens detailed configuration or information window. Modal overlays current view with focused task. Forms for adding items, settings panels, or detailed analytics. Click outside modal or press Escape key to close without saving.',
+  '.dialog-content, .modal-content, .popup-content': 'Modal window with focused task or detailed information. Contains forms for data entry, comprehensive charts, or settings panels. Use Tab key to navigate between fields. Save button applies changes, Cancel discards modifications.',
   
-  // Macro economy specific
-  '[data-component="macro-panel"]': 'Macro economic indicators and analysis. Monitor GDP, inflation, employment data, and central bank policies affecting markets.',
+  // Status indicators with meaning
+  '.status-indicator, .indicator, .badge': 'Visual status indicator showing current state or condition. Green: active, profitable, or positive. Red: inactive, loss, or error. Yellow: warning or neutral. Blue: informational. Gray: disabled or pending. Hover for detailed status information.',
+  '.change-indicator, .price-change': 'Price movement indicator with direction and magnitude. Green with up arrow: price increase. Red with down arrow: price decrease. Percentage shows magnitude of change. Dollar amount shows absolute change. Based on previous close or selected timeframe.',
   
-  // AI module specific
-  '[data-component="ai-panel"]': 'AI-powered market insights with machine learning forecasts, sentiment analysis, pattern recognition, and algorithmic recommendations.',
+  // News and alerts with actionable info
+  '[data-component="news-panel"]': 'Financial news aggregation with relevance filtering. Articles sorted by recency and market impact. Filter by sentiment (positive, negative, neutral), source credibility, or keyword relevance. Click articles for full text and related market analysis. Set news alerts for specific topics or companies.',
+  '[data-component="alerts-panel"]': 'Price and event notification management system. Create alerts for: price targets (above/below), percentage changes, volume spikes, or news events. Set notification methods: email, SMS, or in-app. Monitor triggered alerts and adjust conditions. Active alerts shown with green status.',
   
-  // Terminal specific
-  '[data-component="terminal-panel"]': 'Command-line interface for advanced operations. Execute queries, generate reports, and access API functions.',
+  // Research tools with analysis guidance
+  '[data-component="research-panel"]': 'Comprehensive investment research platform. Access analyst reports with buy/sell/hold recommendations. View insider trading activity, institutional ownership changes, and earnings estimates. Technical analysis tools include support/resistance levels, trend analysis, and momentum indicators.',
   
-  // Detailed UI Elements with extensive descriptions
-  'input[type="text"], input[type="search"], .search-input': 'Text search input field. Type stock symbols, company names, or keywords to find specific instruments. Use partial matches for suggestions. Clear with backspace or clear button.',
-  'input[type="number"], .number-input': 'Numeric input for quantities, prices, or percentages. Use arrow keys to increment values, or type directly. Supports decimal places for precise entries.',
-  'input[type="email"]': 'Email address input with automatic validation. Must include @ symbol and valid domain format. Used for notifications and account settings.',
-  'input[type="password"]': 'Secure password input with hidden characters. Use strong passwords with letters, numbers, and symbols for account security.',
-  'input[type="date"], .date-picker': 'Date selection input. Click to open calendar widget, or type date in MM/DD/YYYY format. Use for filtering data by time periods.',
-  'select, .select-trigger, .dropdown-menu': 'Dropdown selection menu with multiple options. Click to expand and choose from available categories, timeframes, or asset types.',
-  'textarea, .text-area': 'Multi-line text input for notes, descriptions, or comments. Resize by dragging corner handle. Supports formatted text entry.',
+  // Trading functionality
+  '[data-component="trading-panel"]': 'Order execution and trading management platform. Place market orders (immediate execution) or limit orders (specific price). Monitor order status: pending, filled, or cancelled. View trading history with profit/loss analysis. Set stop-loss orders for risk management.',
   
-  // Enhanced button descriptions with specific functionality
-  '.add-button, button[aria-label*="add"], button[title*="add"], button:has(.lucide-plus)': 'Add new item button. Creates new entries like stocks in watchlist, portfolio holdings, price alerts, or market data instruments. Opens form dialog for data entry.',
-  '.filter-button, button[aria-label*="filter"], button[title*="filter"], button:has(.lucide-filter)': 'Filter and search options. Opens filter panel to narrow data by asset type, date range, performance metrics, or custom criteria. Apply multiple filters simultaneously.',
-  '.view-button, button[aria-label*="view"], button[title*="view"], button:has(.lucide-eye)': 'View detailed information. Opens comprehensive view with charts, analytics, historical data, and key performance metrics. Access full analysis tools.',
-  '.edit-button, button[aria-label*="edit"], button[title*="edit"], button:has(.lucide-edit)': 'Edit item properties. Modify quantities, prices, alert conditions, portfolio allocations, or instrument settings. Changes are saved automatically.',
-  '.delete-button, button[aria-label*="delete"], button[title*="delete"], button:has(.lucide-trash)': 'Remove items permanently. Deletes entries from watchlists, portfolios, or alert settings. Confirmation dialog prevents accidental deletion.',
-  '.save-button, button[aria-label*="save"], button[title*="save"]': 'Save changes and updates to the system. All modifications are preserved and synchronized across modules.',
-  '.cancel-button, button[aria-label*="cancel"], button[title*="cancel"]': 'Cancel current operation and discard unsaved changes. Returns to previous view without applying modifications.',
-  '.submit-button, button[type="submit"]': 'Submit form data and process request. Validates all required fields before submission and shows confirmation.',
-  '.dark-mode-toggle, .theme-toggle': 'Toggle between light and dark themes. Dark mode reduces eye strain and saves battery. Theme preference is saved automatically.',
+  // Risk management tools
+  '[data-component="risk-panel"]': 'Portfolio risk assessment and management tools. Value at Risk (VaR) calculations show potential losses. Stress testing simulates market crash scenarios. Correlation analysis shows how holdings move together. Diversification metrics indicate concentration risk.',
   
-  // Chart and visualization elements with detailed explanations
-  '.chart-container, .recharts-wrapper, .chart-area': 'Interactive financial chart with comprehensive analysis tools. Drag to zoom into specific time periods, hover for precise data points, and use timeframe buttons for different views.',
-  '.chart-tooltip, .tooltip': 'Chart data tooltip displaying precise values at cursor position. Shows timestamp, price, volume, technical indicators, and percentage changes.',
-  '.chart-legend, .legend': 'Chart legend explaining line colors, indicators, and data series. Click legend items to toggle visibility of specific data sets or indicators.',
-  '.price-chart, .line-chart': 'Price movement chart showing historical trends. Supports multiple timeframes from intraday to multi-year views with technical analysis overlays.',
-  '.volume-chart, .bar-chart': 'Trading volume chart displaying market activity. Higher bars indicate increased trading activity and market interest.',
+  // Macro economic analysis
+  '[data-component="macro-panel"]': 'Economic indicator tracking and market impact analysis. Monitor GDP growth, inflation rates, employment data, and central bank policies. Understand how macro events affect different asset classes. Fed interest rate changes impact bond and stock valuations.',
   
-  // Table elements with comprehensive functionality
-  'table, .data-table, .table-container': 'Sortable data table with filtering capabilities. Click column headers to sort ascending or descending. Use search and filters to refine displayed data.',
-  'th, .table-header, .column-header': 'Sortable table column header. Click to sort data by this column. Arrow indicators show current sort direction and active column.',
-  'tr, .table-row, .data-row': 'Data row containing item information. Click for quick actions menu or double-click for detailed view. Hover for row highlighting.',
-  'td, .table-cell, .data-cell': 'Table cell with specific data point. May contain formatted numbers, links, status indicators, or action buttons for item management.',
+  // AI insights
+  '[data-component="ai-panel"]': 'Artificial intelligence market analysis and predictions. Machine learning algorithms identify patterns, predict price movements, and suggest portfolio optimizations. Sentiment analysis of news and social media. Risk assessment using big data analytics.',
   
-  // Form elements with detailed usage instructions
-  '.form-field, .form-item, .input-field': 'Form input field with validation. Required fields marked with asterisk. Real-time validation shows errors and formatting requirements.',
-  '.form-label, .field-label': 'Field label describing input requirement. Indicates expected data type, format, and whether field is mandatory for form submission.',
-  '.form-error, .error-message, .validation-error': 'Validation error message showing specific requirements. Appears when input doesn\'t meet format or value constraints.',
-  '.form-help, .help-text, .field-description': 'Help text providing examples and guidance. Shows acceptable formats, ranges, or additional context for proper input.',
+  // Terminal commands
+  '[data-component="terminal-panel"]': 'Advanced command-line interface for power users. Execute complex queries, generate custom reports, and access API functions. Commands include: portfolio analysis, bulk data imports, automated trading strategies, and system configuration.',
   
-  // Card and panel elements with specific purposes
-  '.card, .panel, .widget': 'Information card grouping related data and actions. Contains summary information, key metrics, and quick access buttons for detailed operations.',
-  '.card-header, .panel-header': 'Card title section with primary information. Shows current status, key metrics, and navigation breadcrumbs for context.',
-  '.card-content, .panel-content': 'Main card content area with detailed information, interactive charts, data tables, or configuration options.',
-  '.card-footer, .panel-footer': 'Card action area with operation buttons. Contains actions like edit, delete, view details, or export data functionality.',
-  
-  // Dialog and modal elements with interaction details
-  '.dialog-trigger, .modal-trigger, .popup-trigger': 'Opens detailed dialog window. Triggers modal with forms, settings, detailed views, or confirmation prompts for user interaction.',
-  '.dialog-content, .modal-content, .popup-content': 'Modal dialog containing forms, detailed views, or configuration options. Press Escape key or click outside to close.',
-  '.dialog-close, .modal-close, .close-button': 'Close dialog button. Discards any unsaved changes and returns to previous view. Keyboard shortcut: Escape key.',
-  
-  // Navigation elements with routing information
-  '.nav-link, .navigation-link, .menu-item': 'Navigation link to different sections. Shows current location with active state highlighting. Provides access to specialized modules.',
-  '.breadcrumb, .breadcrumb-nav': 'Navigation breadcrumb showing current path. Click any level to navigate back to parent sections or modules.',
-  '.tab, .tab-button, .tab-item': 'Tab navigation for switching between related content sections. Active tab highlighted with different styling.',
-  '.pagination, .page-nav': 'Page navigation controls for browsing large data sets. Shows current page, total pages, and jump-to-page options.',
-  
-  // Status and indicator elements with meanings
-  '.status-indicator, .indicator, .badge': 'Visual status indicator showing current state. Colors indicate active (green), inactive (gray), warning (yellow), or error (red) conditions.',
-  '.progress-bar, .progress-indicator': 'Progress indicator showing completion status of operations, loading states, or goal achievement percentages.',
-  '.tag, .label, .category-tag': 'Classification label indicating category, status, or type. Used for grouping and filtering items by characteristics.',
-  
-  // Timeframe and chart controls with specific functions
-  'button[data-timeframe="1D"], .timeframe-1d': 'One day chart view showing hourly price movements. Best for intraday trading analysis and short-term price action patterns.',
-  'button[data-timeframe="1W"], .timeframe-1w': 'One week chart displaying daily price action. Useful for short-term trend analysis and weekly trading patterns.',
-  'button[data-timeframe="1M"], .timeframe-1m': 'One month chart showing daily data points. Good for medium-term analysis and monthly performance evaluation.',
-  'button[data-timeframe="3M"], .timeframe-3m': 'Three month chart displaying quarterly trends. Ideal for seasonal pattern analysis and quarterly performance review.',
-  'button[data-timeframe="6M"], .timeframe-6m': 'Six month chart showing semi-annual performance. Useful for medium-term trend analysis and half-yearly comparisons.',
-  'button[data-timeframe="1Y"], .timeframe-1y': 'One year chart displaying annual performance. Best for yearly trend analysis and annual return calculations.',
-  'button[data-timeframe="5Y"], .timeframe-5y': 'Five year chart showing long-term trends. Essential for long-term investment analysis and major market cycle identification.',
-  '.timeframe-button, .period-selector': 'Chart timeframe selector buttons. Changes chart resolution from minutes to years. Each timeframe offers different analytical perspectives.',
-  
-  // Search and filter elements with advanced options
-  '.search-bar, .search-container': 'Advanced search interface with filtering options. Supports symbol lookup, company name search, and keyword-based filtering.',
-  '.filter-dropdown, .filter-select': 'Filter dropdown for narrowing results by specific criteria. Multiple filters can be applied simultaneously for precise data selection.',
-  '.sort-control, .sort-selector': 'Data sorting controls for ordering by different columns. Choose ascending or descending order for numerical or alphabetical sorting.',
-  '.clear-filters, .reset-filters': 'Clear all applied filters and show complete data set. Resets search terms, category filters, and date ranges to default state.',
-  
-  // Action menus and dropdowns with available operations
-  '.context-menu, .right-click-menu': 'Right-click context menu with relevant actions for selected item. Available actions depend on item type and current permissions.',
-  '.action-menu, .operations-menu': 'Action menu containing operations like edit, delete, duplicate, share, or export. Provides quick access to common functions.',
-  '.more-options, .overflow-menu': 'Additional options menu for less common actions. Contains advanced features and specialized operations for power users.',
-  
-  // Settings and preferences with configuration options
-  '.settings-panel, .preferences-panel': 'Settings and configuration panel for customizing application behavior. Adjust display options, notifications, and data preferences.',
-  '.preference-toggle, .setting-switch': 'Toggle switch for enabling or disabling specific features. Changes take effect immediately and are saved automatically.',
-  '.configuration-option, .config-item': 'Configuration option for customizing how data is displayed, calculated, or processed. Affects application behavior and presentation.',
-  
-  // Portfolio specific elements
-  '.portfolio-summary, .portfolio-overview': 'Portfolio summary displaying total value, daily change, allocation breakdown, and performance metrics. Shows overall investment performance.',
-  '.holding-item, .position-row': 'Individual portfolio holding with quantity, current value, cost basis, and profit/loss. Click for detailed position analysis.',
-  '.allocation-chart, .portfolio-pie-chart': 'Portfolio allocation visualization showing asset distribution by sector, asset type, or geography. Interactive segments for detailed breakdown.',
-  '.performance-chart, .returns-chart': 'Portfolio performance chart showing returns over time. Compare against benchmarks and track investment strategy effectiveness.',
-  
-  // Market data specific elements
-  '.instrument-row, .symbol-row': 'Market instrument displaying current price, change, volume, and key metrics. Click for detailed analysis and charts.',
-  '.price-display, .current-price': 'Real-time price display with bid/ask spread, last trade information, and intraday high/low values.',
-  '.change-indicator, .price-change': 'Price change indicator showing absolute and percentage change. Color coding: green for gains, red for losses.',
-  '.volume-indicator, .trading-volume': 'Trading volume display showing current session volume, average volume, and volume ratio for market activity assessment.',
-  
-  // Technical analysis elements
-  '.technical-indicator, .indicator-overlay': 'Technical analysis indicator overlay on charts. Includes moving averages, RSI, MACD, Bollinger Bands, and other analytical tools.',
-  '.support-resistance, .price-level': 'Support and resistance level indicators on charts. Shows key price levels where reversals or breakouts may occur.',
-  '.trend-line, .chart-line': 'Trend line analysis tool for identifying price direction and momentum. Draw custom trend lines for technical analysis.',
-  
-  // Alert and notification elements
-  '.alert-item, .notification-item': 'Individual alert or notification with trigger conditions, current status, and action options. Set price, volume, or news-based alerts.',
-  '.alert-condition, .trigger-setting': 'Alert condition configuration showing trigger price, condition type, and notification preferences.',
-  '.notification-settings, .alert-preferences': 'Notification preferences for email, SMS, or in-app alerts. Customize frequency and delivery methods.',
+  // Specific timeframe guidance
+  'button[data-timeframe="1D"], .timeframe-1d': 'One day intraday chart showing hourly price movements and volume. Perfect for day trading analysis, identifying entry/exit points, and monitoring real-time market sentiment. Shows opening gap, intraday highs/lows, and closing price action.',
+  'button[data-timeframe="1W"], .timeframe-1w': 'Weekly chart displaying five days of trading data. Ideal for swing trading strategies, identifying short-term trends, and analyzing weekly patterns. Shows Monday opening through Friday closing with daily price bars.',
+  'button[data-timeframe="1M"], .timeframe-1m': 'Monthly chart with daily price points for trend analysis. Best for identifying monthly patterns, earnings impact, and medium-term investment decisions. Shows approximately 22 trading days with daily resolution.',
+  'button[data-timeframe="3M"], .timeframe-3m': 'Quarterly chart for seasonal analysis and earnings cycle evaluation. Three months of daily data perfect for identifying quarterly trends, seasonal patterns, and earnings announcement impacts on stock price.',
+  'button[data-timeframe="6M"], .timeframe-6m': 'Semi-annual chart for medium-term investment analysis. Six months of data ideal for identifying intermediate trends, half-year performance evaluation, and medium-term technical pattern recognition.',
+  'button[data-timeframe="1Y"], .timeframe-1y': 'Annual chart for yearly performance analysis and long-term trend identification. Twelve months of data perfect for annual comparisons, long-term trend analysis, and identifying major support/resistance levels.',
+  'button[data-timeframe="5Y"], .timeframe-5y': 'Five-year chart for long-term investment perspective and major trend analysis. Multi-year view essential for identifying market cycles, long-term growth trends, and major economic impact periods.',
 };
 
-// Comprehensive route-specific welcome messages
+// Comprehensive route-specific welcome messages with actionable guidance
 const routeWelcomeMessages: Record<string, string> = {
-  '/': 'Welcome to Market Nexus Terminal dashboard. Your comprehensive financial command center with real-time market overview, portfolio summary, watchlists, and news feed. Use the sidebar to navigate between specialized modules for detailed analysis and trading operations.',
+  '/': 'Welcome to Market Nexus Terminal - your comprehensive financial command center. This dashboard provides real-time market overview, portfolio performance summary, latest financial news, and quick access to all specialized modules. Start by reviewing your portfolio performance in the summary panel, then check market conditions and recent news. Use the sidebar to navigate to specific modules: Market Data for price analysis, Portfolio for investment tracking, or Alerts for price notifications.',
   
-  '/market-data': 'Market Data module provides comprehensive financial instrument analysis. Search and filter stocks, cryptocurrencies, indices, and commodities. Add new instruments, view detailed charts with technical indicators, and analyze price movements across multiple timeframes.',
+  '/market-data': 'Market Data Center - your real-time financial information hub. Here you can search, filter, and analyze thousands of financial instruments including stocks, ETFs, cryptocurrencies, indices, and commodities. To get started: use the search box to find specific symbols, click Add Item to track new instruments, or use the Filter button to browse by categories. Click any instrument for detailed charts with technical analysis, volume data, and key financial metrics.',
   
-  '/portfolio': 'Portfolio Management module tracks your investments and performance. View current holdings, asset allocation, profit and loss calculations, and detailed portfolio analytics. Add new positions, edit quantities, and monitor investment strategy effectiveness.',
+  '/portfolio': 'Portfolio Management - track and analyze your investment holdings with comprehensive performance metrics. View your current positions with real-time values, profit/loss calculations, and asset allocation breakdown. To add new positions: click Add Item and enter symbol, quantity, and purchase price. Monitor your total portfolio value, daily changes, and allocation percentages. Use the charts to visualize your asset distribution and performance over time.',
   
-  '/watchlist': 'Watchlist module for monitoring favorite stocks and assets. Add symbols you are interested in tracking, monitor real-time price changes, and organize investments by categories. Use the edit function to customize your monitoring lists.',
+  '/watchlist': 'Personal Watchlist - monitor stocks and assets you are considering for investment or want to track closely. This is your personal monitoring center for market opportunities. To add symbols: click the edit button and enter ticker symbols separated by commas. Monitor real-time prices, daily percentage changes, and volume activity. Remove symbols using the delete button when no longer needed.',
   
-  '/news': 'News and Sentiment module aggregates financial news from multiple sources. Filter articles by relevance, sentiment analysis, and market impact. Stay informed about events affecting your investments and broader market trends.',
+  '/news': 'Financial News Center - stay informed with curated market news, earnings reports, and economic updates. Articles are filtered for market relevance and impact. Use the filter options to narrow news by sentiment analysis, source credibility, or specific topics. Click articles for full content and related market analysis. Set up news alerts for companies or topics you follow closely.',
   
-  '/alerts': 'Alerts and Notifications module for setting price alerts, volume thresholds, and news notifications. Create custom alert conditions with specific triggers and manage notification preferences to stay updated on important market movements.',
+  '/alerts': 'Alert Management System - create and manage price notifications, volume alerts, and news triggers. Set price targets above or below current levels, percentage change thresholds, or volume spike notifications. Choose notification methods: email, SMS, or in-app alerts. Monitor triggered alerts and adjust conditions as market conditions change. Active alerts are shown with status indicators.',
   
-  '/research': 'Research module provides in-depth market analysis, company reports, and investment research. Access fundamental data, analyst opinions, insider transactions, and comparative analysis tools for informed investment decision making.',
+  '/research': 'Investment Research Platform - access comprehensive analysis tools, analyst reports, and fundamental data. Review professional analyst recommendations with price targets and rating changes. Monitor insider trading activity and institutional ownership changes. Use fundamental analysis tools for earnings estimates, financial ratios, and peer comparisons.',
   
-  '/trading': 'Trading module for executing market orders and managing trading activities. Place buy and sell orders with various order types, monitor execution status, and analyze trading performance with detailed transaction history and metrics.',
+  '/trading': 'Trading Execution Platform - place and manage orders with comprehensive trading tools. Execute market orders for immediate fills or limit orders at specific prices. Monitor order status from pending to execution. Review trading history with profit/loss analysis. Set stop-loss orders for risk management and trailing stops for profit protection.',
   
-  '/risk': 'Risk Analytics module helps assess and manage investment risks. Calculate Value at Risk metrics, perform stress testing scenarios, analyze portfolio correlations, and evaluate risk exposure across different market conditions.',
+  '/risk': 'Risk Analytics Center - assess and manage portfolio risk with advanced metrics and stress testing. Calculate Value at Risk showing potential losses under normal market conditions. Run stress tests simulating market crash scenarios. Analyze correlations between holdings to identify concentration risks. Monitor diversification metrics and risk-adjusted returns.',
   
-  '/fixed-income': 'Fixed Income module specialized for bond and debt instrument analysis. Evaluate yield curves, credit ratings, duration calculations, and interest rate sensitivity for fixed income investment strategies.',
+  '/fixed-income': 'Fixed Income Analysis - specialized tools for bond and debt instrument evaluation. Analyze yield curves across different maturities and credit ratings. Monitor interest rate sensitivity with duration calculations. Evaluate credit risk with rating changes and spread analysis. Compare yields across government, corporate, and municipal bonds.',
   
-  '/macro': 'Macro Economy module tracks broader economic indicators and their market impact. Monitor GDP growth, inflation trends, employment data, and central bank policies to understand fundamental market-driving forces.',
+  '/macro': 'Macro Economic Center - track economic indicators and their market impact. Monitor GDP growth rates, inflation trends, employment statistics, and central bank policies. Understand how macro events affect different asset classes and market sectors. Federal Reserve interest rate decisions significantly impact bond yields and stock valuations.',
   
-  '/ai': 'AI Module leverages machine learning for advanced market insights and predictions. Access AI-generated forecasts, pattern recognition algorithms, sentiment analysis, and algorithmic trading recommendations based on market data.',
+  '/ai': 'AI Insights Module - leverage artificial intelligence for market analysis and investment recommendations. Machine learning algorithms identify price patterns, predict market movements, and suggest portfolio optimizations. Natural language processing analyzes news sentiment and social media trends. Risk assessment models use big data for comprehensive market analysis.',
   
-  '/terminal': 'Terminal module provides command-line interface for advanced operations. Execute complex queries, generate custom reports, and access API functions using professional-grade terminal commands and scripting capabilities.',
+  '/terminal': 'Advanced Terminal Interface - command-line access for power users and advanced operations. Execute complex queries for custom analysis, generate detailed reports, and access API functions. Available commands include portfolio analytics, bulk data operations, automated trading strategies, and system configuration. Type help for command reference.',
 };
 
 const VoiceTrainer: React.FC = () => {
@@ -207,41 +135,33 @@ const VoiceTrainer: React.FC = () => {
   const lastRouteRef = useRef<string>('');
   const mousePositionRef = useRef<{ x: number, y: number }>({ x: 0, y: 0 });
   const hoverTimeoutRef = useRef<number | null>(null);
+  const elementHoverStartRef = useRef<number>(0);
   
   // Handle route changes with improved context switching
   useEffect(() => {
     const path = location.pathname;
     
-    // Prevent duplicate route processing
     if (path === lastRouteRef.current) {
       return;
     }
     
     lastRouteRef.current = path;
-    
     console.log(`Voice Trainer: Route changed to ${path}`);
     
-    // Clear any pending timeouts
     if (routeTimeoutRef.current) {
       clearTimeout(routeTimeoutRef.current);
     }
     
-    // Stop any current speech immediately when route changes
     stopSpeaking();
-    
-    // Clear spoken contexts for new route
     clearSpokenContexts();
-    
-    // Set new context
     setCurrentContext(path);
     
     const welcomeMessage = routeWelcomeMessages[path] || 
-      `You are now in the ${path.substring(1).replace(/-/g, ' ')} section. This module provides specialized tools for ${path.substring(1).replace(/-/g, ' ')} operations. Explore the interface by hovering over different elements to learn about their specific functions and capabilities.`;
+      `You are now in the ${path.substring(1).replace(/-/g, ' ')} section. This specialized module provides tools and analytics for ${path.substring(1).replace(/-/g, ' ')} operations. Hover over interface elements to learn about their specific functions and how to use them effectively.`;
     
-    // Delay for route transition completion
     routeTimeoutRef.current = window.setTimeout(() => {
       speak(welcomeMessage, 'high');
-    }, 1200);
+    }, 1000);
     
     return () => {
       if (routeTimeoutRef.current) {
@@ -276,18 +196,18 @@ const VoiceTrainer: React.FC = () => {
           if (componentHints[selector]) return selector;
         }
 
-        // Priority 3: Check for Lucide React icons in buttons
+        // Priority 3: Check for Lucide React icons in buttons using data-lucide attribute
         if (el.tagName === 'BUTTON' || el.closest('button')) {
           const button = el.tagName === 'BUTTON' ? el : el.closest('button');
           if (button) {
-            const svgIcon = button.querySelector('svg');
+            const svgIcon = button.querySelector('svg[data-lucide]');
             if (svgIcon) {
-              const iconClasses = svgIcon.getAttribute('class') || '';
-              if (iconClasses.includes('lucide-plus')) return '.add-button, button[aria-label*="add"], button[title*="add"], button:has(.lucide-plus)';
-              if (iconClasses.includes('lucide-filter')) return '.filter-button, button[aria-label*="filter"], button[title*="filter"], button:has(.lucide-filter)';
-              if (iconClasses.includes('lucide-eye')) return '.view-button, button[aria-label*="view"], button[title*="view"], button:has(.lucide-eye)';
-              if (iconClasses.includes('lucide-edit')) return '.edit-button, button[aria-label*="edit"], button[title*="edit"], button:has(.lucide-edit)';
-              if (iconClasses.includes('lucide-trash')) return '.delete-button, button[aria-label*="delete"], button[title*="delete"], button:has(.lucide-trash)';
+              const iconName = svgIcon.getAttribute('data-lucide');
+              if (iconName === 'plus') return '.add-button, button[aria-label*="add"], button[title*="add"], button:has([data-lucide="plus"])';
+              if (iconName === 'filter') return '.filter-button, button[aria-label*="filter"], button[title*="filter"], button:has([data-lucide="filter"])';
+              if (iconName === 'eye') return '.view-button, button[aria-label*="view"], button[title*="view"], button:has([data-lucide="eye"])';
+              if (iconName === 'edit') return '.edit-button, button[aria-label*="edit"], button[title*="edit"], button:has([data-lucide="edit"])';
+              if (iconName === 'trash-2') return '.delete-button, button[aria-label*="delete"], button[title*="delete"], button:has([data-lucide="trash"])';
             }
           }
         }
@@ -321,7 +241,7 @@ const VoiceTrainer: React.FC = () => {
         // Priority 6: Check for timeframe buttons by class or content
         if (el.classList.contains('timeframe-button') || 
             (el.tagName === 'BUTTON' && el.textContent?.match(/^(1D|1W|1M|3M|6M|1Y|5Y)$/))) {
-          return '.timeframe-button, .period-selector';
+          return '.timeframe-button, .period-selector, button[data-timeframe]';
         }
         
         // Priority 7: Check specific input types
@@ -330,14 +250,14 @@ const VoiceTrainer: React.FC = () => {
           const inputSelector = `input[type="${inputType}"]`;
           if (componentHints[inputSelector]) return inputSelector;
           
-          // Check for search inputs specifically - fix TypeScript error by casting to HTMLInputElement
+          // Check for search inputs specifically
           const inputElement = el as HTMLInputElement;
           if (el.classList.contains('search-input') || inputElement.placeholder?.toLowerCase().includes('search')) {
             return 'input[type="text"], input[type="search"], .search-input';
           }
         }
         
-        // Priority 8: Check for form elements
+        // Continue with remaining priorities...
         const formClasses = ['form-field', 'form-item', 'form-label', 'form-error', 'form-help', 'input-field'];
         for (const formClass of formClasses) {
           if (el.classList.contains(formClass)) {
@@ -345,20 +265,20 @@ const VoiceTrainer: React.FC = () => {
           }
         }
         
-        // Priority 9: Check for portfolio and financial specific elements
-        const portfolioClasses = [
+        // Check for financial specific elements
+        const financialClasses = [
           'portfolio-summary', 'portfolio-overview', 'holding-item', 'position-row',
           'allocation-chart', 'portfolio-pie-chart', 'performance-chart', 'returns-chart',
           'instrument-row', 'symbol-row', 'price-display', 'current-price',
           'change-indicator', 'price-change', 'volume-indicator', 'trading-volume'
         ];
-        for (const portfolioClass of portfolioClasses) {
-          if (el.classList.contains(portfolioClass)) {
-            return `.${portfolioClass}`;
+        for (const financialClass of financialClasses) {
+          if (el.classList.contains(financialClass)) {
+            return `.${financialClass}`;
           }
         }
         
-        // Priority 10: Check for UI component classes
+        // Check for UI component classes
         const uiClasses = [
           'search-input', 'filter-dropdown', 'sort-control', 'clear-filters',
           'dropdown-menu', 'context-menu', 'action-menu', 'settings-panel',
@@ -373,7 +293,7 @@ const VoiceTrainer: React.FC = () => {
           }
         }
         
-        // Priority 11: Check generic element types and classes
+        // Check generic element types and classes
         const genericSelectors = [
           'select', '.select-trigger', 'textarea', 'button',
           '.dialog-trigger', '.dialog-content', '.dialog-close',
@@ -400,7 +320,7 @@ const VoiceTrainer: React.FC = () => {
           }
         }
         
-        // Priority 12: Check if element matches any selector directly
+        // Check if element matches any selector directly
         for (const selector of Object.keys(componentHints)) {
           try {
             if (el.matches(selector) || el.closest(selector)) {
@@ -411,36 +331,34 @@ const VoiceTrainer: React.FC = () => {
           }
         }
         
-        // Recursively check parent elements
         return findMatchingElement(el.parentElement);
       };
       
       const matchedSelector = findMatchingElement(element);
       
       if (matchedSelector && matchedSelector !== currentElement) {
-        // Clear any pending timeout
         if (hoverTimeoutRef.current) {
           window.clearTimeout(hoverTimeoutRef.current);
         }
         
         setCurrentElement(matchedSelector);
+        elementHoverStartRef.current = Date.now();
         
-        // Immediate guidance without delay for better responsiveness
+        // Provide guidance with appropriate delay
         hoverTimeoutRef.current = window.setTimeout(() => {
           const guidance = componentHints[matchedSelector];
           if (guidance && matchedSelector !== lastElementRef.current) {
-            console.log(`Voice Trainer: Providing guidance for ${matchedSelector}`);
-            // Stop any current speech and provide new guidance
+            const hoverDuration = Date.now() - elementHoverStartRef.current;
+            console.log(`Voice Trainer: Providing detailed guidance for ${matchedSelector} (hovered for ${hoverDuration}ms)`);
             stopSpeaking();
             speak(guidance, 'medium');
             lastElementRef.current = matchedSelector;
           }
           hoverTimeoutRef.current = null;
-        }, 300);
+        }, 400);
       }
     };
     
-    // Mouse leave handler to clear timeouts
     const handleMouseLeave = () => {
       if (hoverTimeoutRef.current) {
         window.clearTimeout(hoverTimeoutRef.current);
@@ -464,9 +382,9 @@ const VoiceTrainer: React.FC = () => {
   useEffect(() => {
     if (isPaused) {
       stopSpeaking();
-      console.log('Voice Trainer: Paused');
+      console.log('Voice Trainer: Paused - guidance temporarily disabled');
     } else {
-      console.log('Voice Trainer: Resumed');
+      console.log('Voice Trainer: Resumed - detailed guidance active');
     }
   }, [isPaused, stopSpeaking]);
   
@@ -477,7 +395,7 @@ const VoiceTrainer: React.FC = () => {
         size="sm"
         onClick={() => setPaused(!isPaused)}
         className={`rounded-full p-2 ${isDarkMode ? 'bg-zinc-800 hover:bg-zinc-700 border-zinc-600' : 'bg-white hover:bg-gray-100 border-gray-300'}`}
-        title={isPaused ? "Resume voice assistant" : "Pause voice assistant"}
+        title={isPaused ? "Resume detailed voice guidance" : "Pause voice guidance"}
       >
         {isPaused ? <PlayCircle size={16} /> : <PauseCircle size={16} />}
       </Button>
@@ -493,31 +411,34 @@ const VoiceTrainer: React.FC = () => {
                 ? 'bg-zinc-800 hover:bg-zinc-700 border-zinc-600' 
                 : 'bg-white hover:bg-gray-100 border-gray-300'
             } ${isMuted ? 'border-red-500' : ''}`}
-            title={isMuted ? "Unmute voice assistant" : "Mute voice assistant"}
+            title={isMuted ? "Enable detailed voice guidance" : "Disable voice guidance"}
           >
             {isMuted ? <MicOff size={16} className="text-red-500" /> : <Mic size={16} className="text-green-500" />}
           </Button>
         </HoverCardTrigger>
         <HoverCardContent className={isDarkMode ? "bg-zinc-800 border-zinc-700" : "bg-white border-gray-200"}>
           <div className="space-y-2">
-            <h4 className="text-sm font-semibold">Voice Assistant Status</h4>
+            <h4 className="text-sm font-semibold">Enhanced Voice Assistant</h4>
             <div className="text-xs space-y-1">
               <p className={`${isMuted ? 'text-red-500' : 'text-green-500'}`}>
-                {isMuted ? "🔇 Muted - Click to enable detailed guidance" : "🎤 Active - Hover over elements for comprehensive help"}
+                {isMuted ? "🔇 Disabled - Click to enable comprehensive guidance" : "🎤 Active - Providing detailed micro-component guidance"}
               </p>
               <p className={`${isPaused ? 'text-yellow-500' : 'text-blue-500'}`}>
-                {isPaused ? "⏸️ Paused" : "▶️ Running"}
+                {isPaused ? "⏸️ Paused - Guidance temporarily disabled" : "▶️ Running - Hover elements for step-by-step instructions"}
               </p>
               {speakingText && (
                 <div className="mt-2 pt-2 border-t text-xs italic max-w-xs">
-                  <strong>Speaking:</strong> "{speakingText.slice(0, 60)}..."
+                  <strong>Current Guidance:</strong> "{speakingText.slice(0, 80)}..."
                 </div>
               )}
               {currentElement && (
                 <div className="mt-1 text-xs text-gray-500">
-                  <strong>Current:</strong> {currentElement}
+                  <strong>Element:</strong> {currentElement.split(',')[0]}
                 </div>
               )}
+              <div className="mt-2 pt-2 border-t text-xs">
+                <strong>Features:</strong> Step-by-step instructions, detailed component explanations, actionable guidance for all interface elements
+              </div>
             </div>
           </div>
         </HoverCardContent>
