@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell, TableCaption } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -16,7 +15,7 @@ import {
   ChevronRight,
   Search,
   Filter,
-  Export
+  Download
 } from "lucide-react";
 import { useUI } from "@/contexts/UIContext";
 import { useVoiceTrainer } from "@/contexts/VoiceTrainerContext";
@@ -260,7 +259,7 @@ const DataTable: React.FC<DataTableProps> = ({
                 onClick={handleExport}
                 className="export-button"
               >
-                <Export className="h-4 w-4 mr-2" />
+                <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
             )}

@@ -1,6 +1,5 @@
-
 import { FC, useState } from "react";
-import { List, ArrowUpRight, ArrowDownRight, Star, Edit2, Plus, Trash2, Settings, Refresh } from "lucide-react";
+import { List, ArrowUpRight, ArrowDownRight, Star, Edit2, Plus, Trash2, Settings, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -289,7 +288,7 @@ const WatchlistPanel: FC<WatchlistPanelProps> = ({ darkMode }) => {
             disabled={isRefreshing}
             title="Refresh prices"
           >
-            <Refresh className={cn("w-3 h-3 mr-1", isRefreshing && "animate-spin")} />
+            <RefreshCw className={cn("w-3 h-3 mr-1", isRefreshing && "animate-spin")} />
             Refresh
           </Button>
           
@@ -468,7 +467,7 @@ const WatchlistPanel: FC<WatchlistPanelProps> = ({ darkMode }) => {
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap text-right">
+                <td className="px-4 py-3 whitespace-nowrap">
                   <div className="font-medium">${stock.price.toFixed(2)}</div>
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-right">

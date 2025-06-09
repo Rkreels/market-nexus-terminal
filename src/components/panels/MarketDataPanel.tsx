@@ -1,12 +1,11 @@
-
 import { FC, useState } from "react";
 import { 
   PlusCircle, 
   Filter,
   Bell,
-  Refresh,
+  RefreshCw,
   Settings,
-  Export,
+  Download,
   Search
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -324,7 +323,7 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
               disabled={isRefreshing}
               title="Refresh data"
             >
-              <Refresh className={cn("w-4 h-4 mr-2", isRefreshing && "animate-spin")} />
+              <RefreshCw className={cn("w-4 h-4 mr-2", isRefreshing && "animate-spin")} />
               Refresh
             </Button>
             
@@ -408,7 +407,7 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
                     size="sm"
                     onClick={() => handleExport(selectedItems)}
                   >
-                    <Export className="w-4 h-4 mr-2" />
+                    <Download className="w-4 h-4 mr-2" />
                     Export Selected
                   </Button>
                   <Button
