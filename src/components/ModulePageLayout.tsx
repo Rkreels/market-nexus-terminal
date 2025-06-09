@@ -14,7 +14,8 @@ import {
   Bot, 
   Terminal,
   MoonStar,
-  Sun
+  Sun,
+  Search
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { 
@@ -28,9 +29,10 @@ import {
   SidebarFooter,
   SidebarInset
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 import DashboardView from "@/components/DashboardView";
+import GlobalSearch from "@/components/GlobalSearch";
 import { useToast } from "@/hooks/use-toast";
-import FilterPanel from "@/components/FilterPanel";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ModulePageLayoutProps {
@@ -50,6 +52,7 @@ const ModulePageLayout: React.FC<ModulePageLayoutProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   useEffect(() => {
     if (!isInitialized) {
@@ -61,6 +64,19 @@ const ModulePageLayout: React.FC<ModulePageLayoutProps> = ({
       setIsInitialized(true);
     }
   }, [darkMode, isInitialized]);
+
+  // Global keyboard shortcut for search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleModuleChange = (moduleId: string) => {
     const routes: Record<string, string> = {
@@ -100,14 +116,28 @@ const ModulePageLayout: React.FC<ModulePageLayoutProps> = ({
               <h1 className={cn("text-lg font-bold truncate", darkMode ? "text-white" : "text-black")}>
                 Market Nexus
               </h1>
-              <button 
-                onClick={toggleDarkMode}
-                className={cn("dark-mode-toggle p-2 rounded-md", 
-                  darkMode ? "text-white hover:bg-zinc-800" : "text-black hover:bg-gray-200"
-                )}
-              >
-                {darkMode ? <Sun size={18} /> : <MoonStar size={18} />}
-              </button>
+              <div className="flex items-center space-x-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsSearchOpen(true)}
+                  className={cn("p-2", darkMode ? "text-white hover:bg-zinc-800" : "text-black hover:bg-gray-200")}
+                  title="Global Search (Ctrl+K)"
+                >
+                  <Search size={16} />
+                </Button>
+                <Button 
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleDarkMode}
+                  className={cn("dark-mode-toggle p-2", 
+                    darkMode ? "text-white hover:bg-zinc-800" : "text-black hover:bg-gray-200"
+                  )}
+                  title="Toggle theme"
+                >
+                  {darkMode ? <Sun size={16} /> : <MoonStar size={16} />}
+                </Button>
+              </div>
             </SidebarHeader>
             <SidebarContent>
               <SidebarMenu>
@@ -246,6 +276,12 @@ const ModulePageLayout: React.FC<ModulePageLayoutProps> = ({
           </SidebarInset>
         </div>
       </SidebarProvider>
+      
+      <GlobalSearch 
+        darkMode={darkMode}
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+      />
     </div>
   );
 };

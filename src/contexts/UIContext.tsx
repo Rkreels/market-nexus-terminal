@@ -1,241 +1,146 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { useToast } from "@/hooks/use-toast";
-import { Timeframe, timeframeOptions } from "@/utils/timeframeUtils";
-import { MarketDataItem } from "@/types/marketData";
-import { v4 as uuidv4 } from 'uuid';
-
-// Mock market data
-const initialMarketData: MarketDataItem[] = [
-  {
-    id: "AAPL",
-    name: "Apple Inc.",
-    symbol: "AAPL",
-    type: "stock",
-    value: 172.82,
-    change: 3.78,
-    percentChange: 2.24,
-    direction: "up",
-    lastUpdated: new Date().toISOString(),
-    description: "Consumer electronics and software company",
-    sector: "Technology",
-    marketCap: 2820000000000,
-    volume: 58690000
-  },
-  {
-    id: "MSFT",
-    name: "Microsoft Corporation",
-    symbol: "MSFT",
-    type: "stock",
-    value: 415.42,
-    change: -1.26,
-    percentChange: -0.30,
-    direction: "down",
-    lastUpdated: new Date().toISOString(),
-    description: "Software and cloud computing company",
-    sector: "Technology",
-    marketCap: 3090000000000,
-    volume: 24500000
-  },
-  {
-    id: "GOOGL",
-    name: "Alphabet Inc.",
-    symbol: "GOOGL",
-    type: "stock",
-    value: 172.45,
-    change: 2.18,
-    percentChange: 1.28,
-    direction: "up",
-    lastUpdated: new Date().toISOString(),
-    description: "Internet services and products company",
-    sector: "Technology",
-    marketCap: 2750000000000,
-    volume: 26300000
-  },
-  {
-    id: "BTC",
-    name: "Bitcoin",
-    symbol: "BTC",
-    type: "crypto",
-    value: 68421.31,
-    change: 1531.24,
-    percentChange: 2.29,
-    direction: "up",
-    lastUpdated: new Date().toISOString(),
-    description: "Cryptocurrency and digital payment system",
-    sector: "Cryptocurrency",
-    marketCap: 1340000000000,
-    volume: 32400000000
-  },
-  {
-    id: "SPY",
-    name: "SPDR S&P 500 ETF",
-    symbol: "SPY",
-    type: "index",
-    value: 518.75,
-    change: -1.32,
-    percentChange: -0.25,
-    direction: "down",
-    lastUpdated: new Date().toISOString(),
-    description: "ETF tracking the S&P 500 Index",
-    sector: "Index Fund",
-    marketCap: null,
-    volume: 67500000
-  }
-];
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 interface UIContextProps {
-  activeTimeframe: Timeframe;
-  setActiveTimeframe: (timeframe: Timeframe) => void;
-  handleAction: (action: string, item: string, additionalInfo?: string) => void;
-  isFilterOpen: boolean;
-  toggleFilter: () => void;
-  applyFilter: (filterData: any) => void;
   isDarkMode: boolean;
   toggleDarkMode: () => void;
-  marketData: MarketDataItem[];
-  addMarketDataItem: (item: MarketDataItem) => void;
-  deleteMarketDataItem: (id: string) => void;
-  editMarketDataItem: (id: string, updatedItem: Partial<MarketDataItem>) => void;
+  handleAction: (action: string, type: string, id?: string, data?: any) => void;
+  isLoading: boolean;
+  setLoading: (loading: boolean) => void;
+  globalSearchQuery: string;
+  setGlobalSearchQuery: (query: string) => void;
+  selectedModule: string;
+  setSelectedModule: (module: string) => void;
 }
 
 const UIContext = createContext<UIContextProps | undefined>(undefined);
 
 export const UIProvider = ({ children }: { children: ReactNode }) => {
-  const [activeTimeframe, setActiveTimeframe] = useState<Timeframe>('1M');
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true);
-  const [marketData, setMarketData] = useState<MarketDataItem[]>(initialMarketData);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('darkMode');
+      return saved ? JSON.parse(saved) : false;
+    }
+    return false;
+  });
+  
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [globalSearchQuery, setGlobalSearchQuery] = useState<string>('');
+  const [selectedModule, setSelectedModule] = useState<string>('dashboard');
   const { toast } = useToast();
 
-  // Initialize dark mode
-  React.useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
+      if (isDarkMode) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
     }
   }, [isDarkMode]);
 
   const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-  };
-
-  const addMarketDataItem = (item: MarketDataItem) => {
-    const newItem = {
-      ...item,
-      id: item.id || uuidv4(),
-      lastUpdated: new Date().toISOString()
-    };
-    
-    setMarketData(prev => [...prev, newItem]);
-    
+    setIsDarkMode(prev => !prev);
     toast({
-      title: "Market Data Added",
-      description: `${item.name} (${item.symbol}) has been added to market data`,
-      duration: 3000,
+      title: "Theme Changed",
+      description: `Switched to ${!isDarkMode ? 'dark' : 'light'} mode`,
+      duration: 2000,
     });
   };
 
-  const deleteMarketDataItem = (id: string) => {
-    setMarketData(prev => {
-      const itemToDelete = prev.find(item => item.id === id);
-      const newData = prev.filter(item => item.id !== id);
-      
-      if (itemToDelete) {
-        toast({
-          title: "Market Data Deleted",
-          description: `${itemToDelete.name} (${itemToDelete.symbol}) has been removed`,
-          duration: 3000,
-        });
-      }
-      
-      return newData;
-    });
+  const setLoading = (loading: boolean) => {
+    setIsLoading(loading);
   };
 
-  const editMarketDataItem = (id: string, updatedItem: Partial<MarketDataItem>) => {
-    setMarketData(prev => {
-      return prev.map(item => {
-        if (item.id === id) {
-          const updated = { 
-            ...item, 
-            ...updatedItem,
-            lastUpdated: new Date().toISOString() 
-          };
-          
+  const handleAction = (action: string, type: string, id?: string, data?: any) => {
+    console.log(`UI Action: ${action} ${type}${id ? ` (ID: ${id})` : ''}`, data);
+    
+    try {
+      setLoading(true);
+      
+      switch (action) {
+        case 'add':
           toast({
-            title: "Market Data Updated",
-            description: `${updated.name} (${updated.symbol}) has been updated`,
+            title: "Item Added",
+            description: `New ${type} has been added successfully`,
             duration: 3000,
           });
-          
-          return updated;
-        }
-        return item;
+          break;
+        case 'edit':
+          toast({
+            title: "Item Updated",
+            description: `${type} has been updated successfully`,
+            duration: 3000,
+          });
+          break;
+        case 'delete':
+          toast({
+            title: "Item Deleted",
+            description: `${type} has been deleted successfully`,
+            duration: 3000,
+          });
+          break;
+        case 'view':
+          toast({
+            title: "Viewing Details",
+            description: `Opening ${type} details`,
+            duration: 2000,
+          });
+          break;
+        case 'export':
+          toast({
+            title: "Export Started",
+            description: `Exporting ${type} data`,
+            duration: 2000,
+          });
+          break;
+        case 'filter':
+          toast({
+            title: "Filter Applied",
+            description: `Filtering ${type} data`,
+            duration: 2000,
+          });
+          break;
+        case 'search':
+          toast({
+            title: "Search Executed",
+            description: `Searching ${type}`,
+            duration: 2000,
+          });
+          break;
+        default:
+          toast({
+            title: "Action Executed",
+            description: `${action} performed on ${type}`,
+            duration: 2000,
+          });
+      }
+    } catch (error) {
+      console.error('UI Action Error:', error);
+      toast({
+        title: "Action Failed",
+        description: `Failed to ${action} ${type}`,
+        variant: "destructive",
+        duration: 3000,
       });
-    });
-  };
-
-  const handleAction = (action: string, item: string, additionalInfo?: string) => {
-    let message = '';
-    let description = '';
-    
-    switch (action) {
-      case 'add':
-        message = `Add ${item}`;
-        description = `Adding new ${item.toLowerCase()}`;
-        break;
-      case 'edit':
-        message = `Edit ${item}`;
-        description = `Editing ${item.toLowerCase()} ${additionalInfo ? additionalInfo : ''}`;
-        break;
-      case 'view':
-        message = `View ${item}`;
-        description = `Viewing ${item.toLowerCase()} details ${additionalInfo ? additionalInfo : ''}`;
-        break;
-      case 'delete':
-        message = `Delete ${item}`;
-        description = `${item} has been deleted ${additionalInfo ? additionalInfo : ''}`;
-        break;
-      default:
-        message = action;
-        description = additionalInfo || '';
+    } finally {
+      setTimeout(() => setLoading(false), 500);
     }
-
-    toast({
-      title: message,
-      description: description,
-      duration: 3000,
-    });
-  };
-
-  const toggleFilter = () => {
-    setIsFilterOpen(!isFilterOpen);
-  };
-
-  const applyFilter = (filterData: any) => {
-    toast({
-      title: "Filters Applied",
-      description: `Applied filters: ${Object.keys(filterData).join(', ')}`,
-      duration: 3000,
-    });
   };
 
   return (
     <UIContext.Provider value={{
-      activeTimeframe,
-      setActiveTimeframe,
-      handleAction,
-      isFilterOpen,
-      toggleFilter,
-      applyFilter,
       isDarkMode,
       toggleDarkMode,
-      marketData,
-      addMarketDataItem,
-      deleteMarketDataItem,
-      editMarketDataItem
+      handleAction,
+      isLoading,
+      setLoading,
+      globalSearchQuery,
+      setGlobalSearchQuery,
+      selectedModule,
+      setSelectedModule
     }}>
       {children}
     </UIContext.Provider>
