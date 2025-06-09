@@ -39,6 +39,11 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
     }, {} as Record<string, string>)
   });
 
+  // Helper function to filter out empty/invalid options
+  const filterValidOptions = (options: string[] = []) => {
+    return options.filter(option => option && typeof option === 'string' && option.trim() !== "");
+  };
+
   const handleSubmit = (data: any) => {
     onSubmit(data);
     toast({
@@ -51,49 +56,53 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        {fields.map((field) => (
-          <FormField
-            key={field.name}
-            control={form.control}
-            name={field.name}
-            render={({ field: formField }) => (
-              <FormItem>
-                <FormLabel>{field.label}</FormLabel>
-                <FormControl>
-                  {field.type === 'textarea' ? (
-                    <Textarea 
-                      placeholder={field.placeholder} 
-                      {...formField} 
-                      className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}
-                    />
-                  ) : field.type === 'select' ? (
-                    <Select 
-                      onValueChange={formField.onChange} 
-                      defaultValue={formField.value || (field.options && field.options.length > 0 ? field.options[0] : undefined)}
-                    >
-                      <SelectTrigger className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
-                        <SelectValue placeholder={field.placeholder} />
-                      </SelectTrigger>
-                      <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
-                        {field.options?.filter(option => option && option.trim() !== "").map(option => (
-                          <SelectItem key={option} value={option}>{option}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Input 
-                      type={field.type} 
-                      placeholder={field.placeholder} 
-                      {...formField} 
-                      className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}
-                    />
-                  )}
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        ))}
+        {fields.map((field) => {
+          const validOptions = field.type === 'select' ? filterValidOptions(field.options) : [];
+          
+          return (
+            <FormField
+              key={field.name}
+              control={form.control}
+              name={field.name}
+              render={({ field: formField }) => (
+                <FormItem>
+                  <FormLabel>{field.label}</FormLabel>
+                  <FormControl>
+                    {field.type === 'textarea' ? (
+                      <Textarea 
+                        placeholder={field.placeholder} 
+                        {...formField} 
+                        className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}
+                      />
+                    ) : field.type === 'select' ? (
+                      <Select 
+                        onValueChange={formField.onChange} 
+                        defaultValue={formField.value || (validOptions.length > 0 ? validOptions[0] : undefined)}
+                      >
+                        <SelectTrigger className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
+                          <SelectValue placeholder={field.placeholder} />
+                        </SelectTrigger>
+                        <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
+                          {validOptions.map(option => (
+                            <SelectItem key={option} value={option}>{option}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input 
+                        type={field.type} 
+                        placeholder={field.placeholder} 
+                        {...formField} 
+                        className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}
+                      />
+                    )}
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          );
+        })}
         
         <div className="flex justify-end space-x-2 pt-4">
           <Button type="button" variant="outline" onClick={onCancel}>
