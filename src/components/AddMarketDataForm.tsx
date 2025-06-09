@@ -33,6 +33,8 @@ const AddMarketDataForm: React.FC<AddMarketDataFormProps> = ({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  console.log('AddMarketDataForm: Form data', formData);
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     
@@ -69,6 +71,7 @@ const AddMarketDataForm: React.FC<AddMarketDataFormProps> = ({
   };
 
   const handleInputChange = (field: string, value: any) => {
+    console.log('AddMarketDataForm: Input change', field, value);
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
@@ -82,12 +85,15 @@ const AddMarketDataForm: React.FC<AddMarketDataFormProps> = ({
     { value: 'index', label: 'Index' },
     { value: 'commodity', label: 'Commodity' },
     { value: 'forex', label: 'Forex' }
-  ];
+  ].filter(option => option.value && option.value.trim() !== '');
 
   const directionOptions = [
     { value: 'up', label: 'Up' },
     { value: 'down', label: 'Down' }
-  ];
+  ].filter(option => option.value && option.value.trim() !== '');
+
+  console.log('AddMarketDataForm: Type options', typeOptions);
+  console.log('AddMarketDataForm: Direction options', directionOptions);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">

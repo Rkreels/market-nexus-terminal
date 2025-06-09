@@ -58,6 +58,9 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
   const { announceAction, announceSuccess, announceError } = useVoiceTrainer();
   const { toast } = useToast();
 
+  console.log('MarketDataPanel: Market data', marketData);
+  console.log('MarketDataPanel: Applied filters', appliedFilters);
+
   const applyFilters = (data: MarketDataItem[]) => {
     let filtered = [...data];
     
@@ -253,13 +256,15 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
   // Fixed filter options to ensure no empty strings
   const filterOptions = {
     search: true,
-    categories: ["Technology", "Healthcare", "Finance", "Energy", "Cryptocurrency"],
-    types: ["stock", "crypto", "index", "commodity", "forex"],
-    status: ["active", "inactive"],
+    categories: ["Technology", "Healthcare", "Finance", "Energy", "Cryptocurrency"].filter(cat => cat && cat.trim() !== ""),
+    types: ["stock", "crypto", "index", "commodity", "forex"].filter(type => type && type.trim() !== ""),
+    status: ["active", "inactive"].filter(status => status && status.trim() !== ""),
     dates: true,
     price: true,
     advanced: true
   };
+
+  console.log('MarketDataPanel: Filter options', filterOptions);
 
   const columns = [
     {
@@ -301,6 +306,9 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
       sortable: true,
     }
   ];
+
+  console.log('MarketDataPanel: Columns', columns);
+  console.log('MarketDataPanel: Filtered data', filteredData);
 
   return (
     <div className="relative">
