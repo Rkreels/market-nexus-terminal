@@ -48,18 +48,35 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
     });
   };
 
+  // Enhanced validation function for select options
+  const getValidOptions = (options: string[] = []) => {
+    if (!Array.isArray(options)) {
+      console.warn(`AddItemForm: Options is not an array for field:`, options);
+      return [];
+    }
+
+    const validOptions = options
+      .filter(option => {
+        const isValid = option && 
+                        typeof option === 'string' && 
+                        option.trim() !== "" &&
+                        option.trim().length > 0 &&
+                        option !== null &&
+                        option !== undefined;
+        console.log(`AddItemForm: Option "${option}" is valid:`, isValid);
+        return isValid;
+      })
+      .map(option => option.trim());
+    
+    console.log(`AddItemForm: Processed valid options:`, validOptions);
+    return validOptions;
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         {fields.map((field) => {
-          // Ensure we only show valid non-empty options for select fields
-          const validOptions = field.type === 'select' && field.options 
-            ? field.options
-                .filter(option => option && typeof option === 'string' && option.trim() !== "")
-                .map(option => option.trim())
-            : [];
-          
-          console.log(`AddItemForm: Field ${field.name} valid options:`, validOptions);
+          const validOptions = field.type === 'select' ? getValidOptions(field.options) : [];
           
           return (
             <FormField
@@ -86,11 +103,14 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
                         </SelectTrigger>
                         <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
                           {validOptions.length > 0 ? (
-                            validOptions.map((option, index) => (
-                              <SelectItem key={`${option}-${index}`} value={option}>
-                                {option}
-                              </SelectItem>
-                            ))
+                            validOptions.map((option, index) => {
+                              console.log(`AddItemForm: Rendering select option "${option}" with key "${field.name}-${option}-${index}"`);
+                              return (
+                                <SelectItem key={`${field.name}-${option}-${index}`} value={option}>
+                                  {option}
+                                </SelectItem>
+                              );
+                            })
                           ) : (
                             <SelectItem value="no-options-available" disabled>
                               No options available
