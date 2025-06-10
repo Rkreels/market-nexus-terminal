@@ -97,7 +97,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
                               <SelectItem key={option} value={option}>{option}</SelectItem>
                             ))
                           ) : (
-                            <SelectItem value="no-options" disabled>No options available</SelectItem>
+                            <SelectItem value="no-options-available" disabled>No options available</SelectItem>
                           )}
                         </SelectContent>
                       </Select>

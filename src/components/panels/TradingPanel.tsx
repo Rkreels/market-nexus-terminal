@@ -1,3 +1,4 @@
+
 import { FC, useState } from "react";
 import { 
   CircleDollarSign, 
@@ -103,19 +104,21 @@ const TradingPanel: FC<TradingPanelProps> = ({ darkMode }) => {
   // Helper function to filter out empty/invalid options
   const filterValidOptions = (options: Array<{value: string, label: string}>) => {
     const filtered = options.filter(option => 
+      option && 
       option.value && 
       typeof option.value === 'string' && 
       option.value.trim() !== "" &&
       option.value.trim().length > 0 &&
       option.label &&
       typeof option.label === 'string' &&
-      option.label.trim() !== ""
+      option.label.trim() !== "" &&
+      option.label.trim().length > 0
     );
     console.log('TradingPanel: Filtered options', { original: options, filtered });
     return filtered;
   };
 
-  // Define valid options
+  // Define valid options - ensuring no empty strings
   const orderTypeOptions = filterValidOptions([
     { value: "market", label: "Market" },
     { value: "limit", label: "Limit" },
@@ -299,11 +302,15 @@ const TradingPanel: FC<TradingPanelProps> = ({ darkMode }) => {
                         <SelectValue placeholder="Order Type" />
                       </SelectTrigger>
                       <SelectContent>
-                        {orderTypeOptions.map(option => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
+                        {orderTypeOptions.length > 0 ? (
+                          orderTypeOptions.map(option => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="market" disabled>No options available</SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -362,11 +369,15 @@ const TradingPanel: FC<TradingPanelProps> = ({ darkMode }) => {
                           <SelectValue placeholder="Time in Force" />
                         </SelectTrigger>
                         <SelectContent>
-                          {timeInForceOptions.map(option => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
+                          {timeInForceOptions.length > 0 ? (
+                            timeInForceOptions.map(option => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="day" disabled>No options available</SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
@@ -533,5 +544,3 @@ const TradingPanel: FC<TradingPanelProps> = ({ darkMode }) => {
 };
 
 export default TradingPanel;
-
-</edits_to_apply>
