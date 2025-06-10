@@ -1,4 +1,3 @@
-
 import { FC, useState } from "react";
 import { 
   CircleDollarSign, 
@@ -100,6 +99,38 @@ const TradingPanel: FC<TradingPanelProps> = ({ darkMode }) => {
   const [orderTab, setOrderTab] = useState("market");
   const [tradeTab, setTradeTab] = useState("stocks");
   const [buyOrSell, setBuyOrSell] = useState("buy");
+  
+  // Helper function to filter out empty/invalid options
+  const filterValidOptions = (options: Array<{value: string, label: string}>) => {
+    const filtered = options.filter(option => 
+      option.value && 
+      typeof option.value === 'string' && 
+      option.value.trim() !== "" &&
+      option.value.trim().length > 0 &&
+      option.label &&
+      typeof option.label === 'string' &&
+      option.label.trim() !== ""
+    );
+    console.log('TradingPanel: Filtered options', { original: options, filtered });
+    return filtered;
+  };
+
+  // Define valid options
+  const orderTypeOptions = filterValidOptions([
+    { value: "market", label: "Market" },
+    { value: "limit", label: "Limit" },
+    { value: "stop", label: "Stop" },
+    { value: "stopLimit", label: "Stop Limit" }
+  ]);
+
+  const timeInForceOptions = filterValidOptions([
+    { value: "day", label: "Day" },
+    { value: "gtc", label: "Good Till Canceled" },
+    { value: "ext", label: "Extended Hours" }
+  ]);
+
+  console.log('TradingPanel: Order type options', orderTypeOptions);
+  console.log('TradingPanel: Time in force options', timeInForceOptions);
   
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -268,12 +299,11 @@ const TradingPanel: FC<TradingPanelProps> = ({ darkMode }) => {
                         <SelectValue placeholder="Order Type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="market">Market</SelectItem>
-                          <SelectItem value="limit">Limit</SelectItem>
-                          <SelectItem value="stop">Stop</SelectItem>
-                          <SelectItem value="stopLimit">Stop Limit</SelectItem>
-                        </SelectGroup>
+                        {orderTypeOptions.map(option => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -332,11 +362,11 @@ const TradingPanel: FC<TradingPanelProps> = ({ darkMode }) => {
                           <SelectValue placeholder="Time in Force" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectGroup>
-                            <SelectItem value="day">Day</SelectItem>
-                            <SelectItem value="gtc">Good Till Canceled</SelectItem>
-                            <SelectItem value="ext">Extended Hours</SelectItem>
-                          </SelectGroup>
+                          {timeInForceOptions.map(option => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -503,3 +533,5 @@ const TradingPanel: FC<TradingPanelProps> = ({ darkMode }) => {
 };
 
 export default TradingPanel;
+
+</edits_to_apply>
