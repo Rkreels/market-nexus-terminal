@@ -39,18 +39,6 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
     }, {} as Record<string, string>)
   });
 
-  // Enhanced helper function to filter out empty/invalid options
-  const filterValidOptions = (options: string[] = []) => {
-    const filtered = options.filter(option => 
-      option && 
-      typeof option === 'string' && 
-      option.trim() !== "" &&
-      option.trim().length > 0
-    );
-    console.log('AddItemForm: Filtered options', { original: options, filtered });
-    return filtered;
-  };
-
   const handleSubmit = (data: any) => {
     onSubmit(data);
     toast({
@@ -64,9 +52,10 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         {fields.map((field) => {
-          const validOptions = field.type === 'select' ? filterValidOptions(field.options || []) : [];
-          
-          console.log(`AddItemForm: Field ${field.name} valid options`, validOptions);
+          // Ensure we only show valid options for select fields
+          const validOptions = field.type === 'select' && field.options 
+            ? field.options.filter(option => option && option.trim() !== "")
+            : [];
           
           return (
             <FormField
@@ -86,7 +75,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
                     ) : field.type === 'select' ? (
                       <Select 
                         onValueChange={formField.onChange} 
-                        defaultValue={formField.value || (validOptions.length > 0 ? validOptions[0] : undefined)}
+                        defaultValue={formField.value || undefined}
                       >
                         <SelectTrigger className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
                           <SelectValue placeholder={field.placeholder} />
@@ -97,7 +86,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
                               <SelectItem key={option} value={option}>{option}</SelectItem>
                             ))
                           ) : (
-                            <SelectItem value="no-options-available" disabled>No options available</SelectItem>
+                            <SelectItem value="default-option" disabled>No options available</SelectItem>
                           )}
                         </SelectContent>
                       </Select>
