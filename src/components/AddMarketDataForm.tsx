@@ -78,22 +78,30 @@ const AddMarketDataForm: React.FC<AddMarketDataFormProps> = ({
     }
   };
 
-  // Define valid options to ensure no empty strings
+  // Define valid options with strict filtering to ensure no empty values
   const typeOptions = [
-    { value: 'stock', label: 'Stock' },
-    { value: 'crypto', label: 'Cryptocurrency' },
-    { value: 'index', label: 'Index' },
-    { value: 'commodity', label: 'Commodity' },
-    { value: 'forex', label: 'Forex' }
-  ].filter(option => option.value && option.value.trim() !== '');
+    'stock',
+    'crypto', 
+    'index',
+    'commodity',
+    'forex'
+  ].filter(option => {
+    const isValid = option && typeof option === 'string' && option.trim().length > 0;
+    console.log(`AddMarketDataForm: Type option "${option}" is valid:`, isValid);
+    return isValid;
+  });
 
   const directionOptions = [
-    { value: 'up', label: 'Up' },
-    { value: 'down', label: 'Down' }
-  ].filter(option => option.value && option.value.trim() !== '');
+    'up',
+    'down'
+  ].filter(option => {
+    const isValid = option && typeof option === 'string' && option.trim().length > 0;
+    console.log(`AddMarketDataForm: Direction option "${option}" is valid:`, isValid);
+    return isValid;
+  });
 
-  console.log('AddMarketDataForm: Type options', typeOptions);
-  console.log('AddMarketDataForm: Direction options', directionOptions);
+  console.log('AddMarketDataForm: Final type options:', typeOptions);
+  console.log('AddMarketDataForm: Final direction options:', directionOptions);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -137,11 +145,20 @@ const AddMarketDataForm: React.FC<AddMarketDataFormProps> = ({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {typeOptions.map(option => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
+              {typeOptions.length > 0 ? (
+                typeOptions.map((option, index) => {
+                  console.log(`AddMarketDataForm: Rendering type option "${option}" with key "${option}-${index}"`);
+                  return (
+                    <SelectItem key={`type-${option}-${index}`} value={option}>
+                      {option.charAt(0).toUpperCase() + option.slice(1)}
+                    </SelectItem>
+                  );
+                })
+              ) : (
+                <SelectItem value="fallback-stock" disabled>
+                  Stock (fallback)
                 </SelectItem>
-              ))}
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -210,11 +227,20 @@ const AddMarketDataForm: React.FC<AddMarketDataFormProps> = ({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {directionOptions.map(option => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
+            {directionOptions.length > 0 ? (
+              directionOptions.map((option, index) => {
+                console.log(`AddMarketDataForm: Rendering direction option "${option}" with key "${option}-${index}"`);
+                return (
+                  <SelectItem key={`direction-${option}-${index}`} value={option}>
+                    {option.charAt(0).toUpperCase() + option.slice(1)}
+                  </SelectItem>
+                );
+              })
+            ) : (
+              <SelectItem value="fallback-up" disabled>
+                Up (fallback)
               </SelectItem>
-            ))}
+            )}
           </SelectContent>
         </Select>
       </div>
