@@ -1,4 +1,3 @@
-
 import { FC, useState } from "react";
 import { 
   CircleDollarSign, 
@@ -101,7 +100,7 @@ const TradingPanel: FC<TradingPanelProps> = ({ darkMode }) => {
   const [tradeTab, setTradeTab] = useState("stocks");
   const [buyOrSell, setBuyOrSell] = useState("buy");
   
-  // Define static valid options - no filtering needed
+  // Static valid options - ensuring no empty strings
   const orderTypeOptions = [
     { value: "market", label: "Market" },
     { value: "limit", label: "Limit" },
@@ -114,9 +113,6 @@ const TradingPanel: FC<TradingPanelProps> = ({ darkMode }) => {
     { value: "gtc", label: "Good Till Canceled" },
     { value: "ext", label: "Extended Hours" }
   ];
-
-  console.log('TradingPanel: Order type options', orderTypeOptions);
-  console.log('TradingPanel: Time in force options', timeInForceOptions);
   
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

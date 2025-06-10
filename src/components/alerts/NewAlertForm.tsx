@@ -63,22 +63,19 @@ const NewAlertForm: FC<NewAlertFormProps> = ({ onAddAlert, onCancel, darkMode })
     onAddAlert(newAlert);
   };
 
-  // Define valid options to ensure no empty strings
+  // Static valid options - ensuring no empty strings or invalid values
   const alertTypeOptions = [
     { value: 'price', label: 'Price Alert' },
     { value: 'volume', label: 'Volume Alert' },
     { value: 'news', label: 'News Alert' },
     { value: 'earnings', label: 'Earnings Alert' }
-  ].filter(option => option.value && option.value.trim() !== '');
+  ];
 
   const conditionOptions = [
     { value: 'above', label: 'Above' },
     { value: 'below', label: 'Below' },
     { value: 'equal', label: 'Equal to' }
-  ].filter(option => option.value && option.value.trim() !== '');
-
-  console.log('NewAlertForm: Alert type options', alertTypeOptions);
-  console.log('NewAlertForm: Condition options', conditionOptions);
+  ];
 
   return (
     <Card className={cn(
