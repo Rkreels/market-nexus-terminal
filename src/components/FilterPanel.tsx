@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -71,35 +72,27 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     }
   };
 
-  // Enhanced helper function to filter out empty/invalid options with comprehensive validation
-  const filterValidOptions = (options: string[] = []) => {
-    if (!Array.isArray(options)) {
-      console.warn('FilterPanel: Options is not an array:', options);
-      return [];
-    }
-    
-    const filtered = options.filter(option => {
-      const isValid = option && 
-                     typeof option === 'string' && 
-                     option.trim() !== "" &&
-                     option.trim().length > 0 &&
-                     option !== null &&
-                     option !== undefined;
-      console.log(`FilterPanel: Option "${option}" is valid:`, isValid);
-      return isValid;
-    });
-    
-    console.log('FilterPanel: Filtered options', { original: options, filtered });
-    return filtered;
-  };
-
   if (!isOpen) return null;
 
-  const validCategories = filterValidOptions(filterOptions.categories || []);
-  const validStatus = filterValidOptions(filterOptions.status || []);
-  const validTypes = filterValidOptions(filterOptions.types || []);
+  // Static valid options to prevent any empty string issues
+  const categoryOptions = [
+    "Technology",
+    "Healthcare", 
+    "Finance",
+    "Energy"
+  ];
 
-  console.log('FilterPanel: Valid options', { validCategories, validStatus, validTypes });
+  const statusOptions = [
+    "active",
+    "inactive"
+  ];
+
+  const typeOptions = [
+    "stock",
+    "crypto", 
+    "index",
+    "commodity"
+  ];
 
   return (
     <div className={cn(
@@ -134,91 +127,58 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           </div>
         )}
         
-        {filterOptions.categories && validCategories.length > 0 && (
+        {filterOptions.categories && (
           <div>
             <Label htmlFor="category">Category</Label>
-            <Select
-              value={category}
-              onValueChange={setCategory}
-            >
+            <Select value={category} onValueChange={setCategory}>
               <SelectTrigger id="category" className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
                 <SelectItem value="all">All Categories</SelectItem>
-                {validCategories.map((categoryOption, index) => {
-                  const trimmedOption = categoryOption.trim();
-                  if (!trimmedOption || trimmedOption.length === 0) {
-                    console.warn(`FilterPanel: Skipping invalid category option:`, categoryOption);
-                    return null;
-                  }
-                  console.log(`FilterPanel: Rendering category option "${trimmedOption}"`);
-                  return (
-                    <SelectItem key={`category-${trimmedOption}-${index}`} value={trimmedOption}>
-                      {trimmedOption}
-                    </SelectItem>
-                  );
-                })}
+                {categoryOptions.map((categoryOption, index) => (
+                  <SelectItem key={`category-${index}`} value={categoryOption}>
+                    {categoryOption}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
         )}
         
-        {filterOptions.status && validStatus.length > 0 && (
+        {filterOptions.status && (
           <div>
             <Label htmlFor="status">Status</Label>
-            <Select
-              value={status}
-              onValueChange={setStatus}
-            >
+            <Select value={status} onValueChange={setStatus}>
               <SelectTrigger id="status" className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
                 <SelectItem value="all">All Statuses</SelectItem>
-                {validStatus.map((statusOption, index) => {
-                  const trimmedOption = statusOption.trim();
-                  if (!trimmedOption || trimmedOption.length === 0) {
-                    console.warn(`FilterPanel: Skipping invalid status option:`, statusOption);
-                    return null;
-                  }
-                  console.log(`FilterPanel: Rendering status option "${trimmedOption}"`);
-                  return (
-                    <SelectItem key={`status-${trimmedOption}-${index}`} value={trimmedOption}>
-                      {trimmedOption}
-                    </SelectItem>
-                  );
-                })}
+                {statusOptions.map((statusOption, index) => (
+                  <SelectItem key={`status-${index}`} value={statusOption}>
+                    {statusOption}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
         )}
         
-        {filterOptions.types && validTypes.length > 0 && (
+        {filterOptions.types && (
           <div>
             <Label htmlFor="type">Type</Label>
-            <Select
-              value={type}
-              onValueChange={setType}
-            >
+            <Select value={type} onValueChange={setType}>
               <SelectTrigger id="type" className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
                 <SelectItem value="all">All Types</SelectItem>
-                {validTypes.map((typeOption, index) => {
-                  const trimmedOption = typeOption.trim();
-                  if (!trimmedOption || trimmedOption.length === 0) {
-                    console.warn(`FilterPanel: Skipping invalid type option:`, typeOption);
-                    return null;
-                  }
-                  console.log(`FilterPanel: Rendering type option "${trimmedOption}"`);
-                  return (
-                    <SelectItem key={`type-${trimmedOption}-${index}`} value={trimmedOption}>
-                      {trimmedOption}
-                    </SelectItem>
-                  );
-                })}
+                {typeOptions.map((typeOption, index) => (
+                  <SelectItem key={`type-${index}`} value={typeOption}>
+                    {typeOption}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
