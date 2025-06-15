@@ -1,3 +1,4 @@
+
 import { FC, useState } from "react";
 import { 
   CircleDollarSign, 
@@ -106,13 +107,13 @@ const TradingPanel: FC<TradingPanelProps> = ({ darkMode }) => {
     { value: "limit", label: "Limit" },
     { value: "stop", label: "Stop" },
     { value: "stopLimit", label: "Stop Limit" }
-  ];
+  ].filter(option => option.value && option.value.trim() !== "");
 
   const timeInForceOptions = [
     { value: "day", label: "Day" },
     { value: "gtc", label: "Good Till Canceled" },
     { value: "ext", label: "Extended Hours" }
-  ];
+  ].filter(option => option.value && option.value.trim() !== "");
   
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

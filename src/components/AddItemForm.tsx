@@ -57,16 +57,17 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
 
     const validOptions = options
       .filter(option => {
-        const isValid = option && 
+        // Ensure option is a string, not null/undefined, and not empty after trimming
+        const isValid = option !== null && 
+                        option !== undefined && 
                         typeof option === 'string' && 
                         option.trim() !== "" &&
-                        option.trim().length > 0 &&
-                        option !== null &&
-                        option !== undefined;
+                        option.trim().length > 0;
         console.log(`AddItemForm: Option "${option}" is valid:`, isValid);
         return isValid;
       })
-      .map(option => option.trim());
+      .map(option => option.trim())
+      .filter(option => option.length > 0); // Double check after trimming
     
     console.log(`AddItemForm: Processed valid options:`, validOptions);
     return validOptions;
@@ -104,15 +105,17 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
                         <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
                           {validOptions.length > 0 ? (
                             validOptions.map((option, index) => {
-                              console.log(`AddItemForm: Rendering select option "${option}" with key "${field.name}-${option}-${index}"`);
+                              // Ensure each option has a unique, non-empty value
+                              const safeValue = option || `option-${index}`;
+                              console.log(`AddItemForm: Rendering select option "${option}" with safe value "${safeValue}"`);
                               return (
-                                <SelectItem key={`${field.name}-${option}-${index}`} value={option}>
+                                <SelectItem key={`${field.name}-${safeValue}-${index}`} value={safeValue}>
                                   {option}
                                 </SelectItem>
                               );
                             })
                           ) : (
-                            <SelectItem value="no-options-available" disabled>
+                            <SelectItem value="no-options" disabled>
                               No options available
                             </SelectItem>
                           )}
