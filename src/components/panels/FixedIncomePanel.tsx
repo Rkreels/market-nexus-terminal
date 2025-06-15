@@ -426,10 +426,9 @@ const FixedIncomePanel: FC<FixedIncomePanelProps> = ({ darkMode }) => {
                 onApplyFilters={handleApplyFilters}
                 filterOptions={{
                   search: true,
-                  categories: ["US Treasury", "Corporate Bond", "Municipal Bond"],
-                  types: ["Treasury Note", "Treasury Bond", "Corporate Bond", "Municipal Bond"],
-                  dates: true,
-                  price: true
+                  categories: true,
+                  types: true,
+                  dates: true
                 }}
               />
             )}
