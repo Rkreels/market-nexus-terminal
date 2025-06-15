@@ -16,9 +16,9 @@ export interface MarketDataItem {
 }
 
 export interface FilterOptions {
-  categories?: string[];
-  types?: string[];
-  status?: string[];
+  categories?: boolean;
+  types?: boolean;
+  status?: boolean;
   dates?: boolean;
   search?: boolean;
 }
