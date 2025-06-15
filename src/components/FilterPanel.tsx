@@ -74,26 +74,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
   if (!isOpen) return null;
 
-  // Static valid options to prevent any empty string issues
-  const categoryOptions = [
-    "Technology",
-    "Healthcare", 
-    "Finance",
-    "Energy"
-  ];
-
-  const statusOptions = [
-    "active",
-    "inactive"
-  ];
-
-  const typeOptions = [
-    "stock",
-    "crypto", 
-    "index",
-    "commodity"
-  ];
-
   return (
     <div className={cn(
       "absolute top-16 right-0 z-10 w-full md:w-80 p-4 shadow-lg rounded-lg border",
@@ -136,11 +116,10 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
               </SelectTrigger>
               <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
                 <SelectItem value="all">All Categories</SelectItem>
-                {categoryOptions.map((categoryOption, index) => (
-                  <SelectItem key={`category-${index}`} value={categoryOption}>
-                    {categoryOption}
-                  </SelectItem>
-                ))}
+                <SelectItem value="technology">Technology</SelectItem>
+                <SelectItem value="healthcare">Healthcare</SelectItem>
+                <SelectItem value="finance">Finance</SelectItem>
+                <SelectItem value="energy">Energy</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -155,11 +134,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
               </SelectTrigger>
               <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
                 <SelectItem value="all">All Statuses</SelectItem>
-                {statusOptions.map((statusOption, index) => (
-                  <SelectItem key={`status-${index}`} value={statusOption}>
-                    {statusOption}
-                  </SelectItem>
-                ))}
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -174,11 +150,10 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
               </SelectTrigger>
               <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
                 <SelectItem value="all">All Types</SelectItem>
-                {typeOptions.map((typeOption, index) => (
-                  <SelectItem key={`type-${index}`} value={typeOption}>
-                    {typeOption}
-                  </SelectItem>
-                ))}
+                <SelectItem value="stock">Stock</SelectItem>
+                <SelectItem value="crypto">Crypto</SelectItem>
+                <SelectItem value="index">Index</SelectItem>
+                <SelectItem value="commodity">Commodity</SelectItem>
               </SelectContent>
             </Select>
           </div>
