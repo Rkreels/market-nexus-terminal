@@ -253,12 +253,12 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
     announceSuccess('Market data exported successfully');
   };
 
-  // Fixed filter options to ensure no empty strings
+  // Fixed filter options - use boolean flags only, not arrays
   const filterOptions = {
     search: true,
-    categories: ["Technology", "Healthcare", "Finance", "Energy", "Cryptocurrency"].filter(cat => cat && cat.trim() !== ""),
-    types: ["stock", "crypto", "index", "commodity", "forex"].filter(type => type && type.trim() !== ""),
-    status: ["active", "inactive"].filter(status => status && status.trim() !== ""),
+    categories: true,
+    types: true,
+    status: true,
     dates: true,
     price: true,
     advanced: true
