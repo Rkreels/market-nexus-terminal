@@ -41,6 +41,29 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   const [showOnlyActive, setShowOnlyActive] = useState<boolean>(true);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
+  // Static valid options with proper validation
+  const categoryOptions = [
+    { value: "all", label: "All Categories" },
+    { value: "technology", label: "Technology" },
+    { value: "healthcare", label: "Healthcare" },
+    { value: "finance", label: "Finance" },
+    { value: "energy", label: "Energy" }
+  ].filter(option => option.value && option.value.trim() !== "" && option.label && option.label.trim() !== "");
+
+  const statusOptions = [
+    { value: "all", label: "All Statuses" },
+    { value: "active", label: "Active" },
+    { value: "inactive", label: "Inactive" }
+  ].filter(option => option.value && option.value.trim() !== "" && option.label && option.label.trim() !== "");
+
+  const typeOptions = [
+    { value: "all", label: "All Types" },
+    { value: "stock", label: "Stock" },
+    { value: "crypto", label: "Crypto" },
+    { value: "index", label: "Index" },
+    { value: "commodity", label: "Commodity" }
+  ].filter(option => option.value && option.value.trim() !== "" && option.label && option.label.trim() !== "");
+
   const resetFilters = () => {
     setCategory("all");
     setType("all");
@@ -115,11 +138,11 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="technology">Technology</SelectItem>
-                <SelectItem value="healthcare">Healthcare</SelectItem>
-                <SelectItem value="finance">Finance</SelectItem>
-                <SelectItem value="energy">Energy</SelectItem>
+                {categoryOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -133,9 +156,11 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
+                {statusOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -149,11 +174,11 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="stock">Stock</SelectItem>
-                <SelectItem value="crypto">Crypto</SelectItem>
-                <SelectItem value="index">Index</SelectItem>
-                <SelectItem value="commodity">Commodity</SelectItem>
+                {typeOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
