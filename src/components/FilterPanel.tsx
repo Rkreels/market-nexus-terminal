@@ -10,6 +10,8 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { X } from "lucide-react";
 import { FilterOptions } from "@/types/marketData";
+import { useVoiceTrainer } from "@/contexts/VoiceTrainerContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface FilterPanelProps {
   darkMode: boolean;
@@ -31,8 +33,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   onApplyFilters,
   filterOptions 
 }) => {
-  console.log("FilterPanel: Rendering with isOpen =", isOpen);
-  console.log("FilterPanel: filterOptions =", filterOptions);
+  const { speak, announceAction } = useVoiceTrainer();
+  const isMobile = useIsMobile();
   
   const [category, setCategory] = useState<string>("all");
   const [type, setType] = useState<string>("all");
@@ -77,6 +79,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     setPriceRange([0, 1000]);
     setShowOnlyActive(true);
     setSelectedTags([]);
+    announceAction('All filters reset to default values');
+    speak('Filters have been reset. All categories and types are now selected.', 'medium');
   };
 
   const handleApplyFilters = () => {
@@ -92,62 +96,85 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     };
     
     onApplyFilters(filters);
+    announceAction('Filters applied successfully');
+    speak(`Filters applied. Category: ${category}, Type: ${type}, ${showOnlyActive ? 'showing only active items' : 'showing all items'}.`, 'medium');
     
     if (onClose) {
       onClose();
     }
   };
 
+  const handleFieldFocus = (fieldName: string, description: string) => {
+    speak(`${fieldName}: ${description}`, 'low');
+  };
+
   if (!isOpen) {
-    console.log("FilterPanel: Not rendering because isOpen is false");
     return null;
   }
 
-  console.log("FilterPanel: Rendering filter panel content");
-
   return (
     <div className={cn(
-      "absolute top-16 right-0 z-10 w-full md:w-80 p-4 shadow-lg rounded-lg border",
+      "absolute top-16 right-0 z-10 w-full md:w-80 p-3 sm:p-4 shadow-lg rounded-lg border",
       darkMode 
         ? "bg-zinc-800 border-zinc-700 text-white" 
-        : "bg-white border-gray-200 text-black"
+        : "bg-white border-gray-200 text-black",
+      isMobile ? "inset-x-2" : ""
     )}>
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="font-medium text-lg">Filters</h3>
+      <div className="flex justify-between items-center mb-3 sm:mb-4">
+        <h3 className="font-medium text-base sm:text-lg">Filters</h3>
         <Button
           variant="ghost" 
           size="icon"
-          onClick={onClose}
-          className="h-8 w-8"
+          onClick={() => {
+            if (onClose) onClose();
+            speak('Filter panel closed', 'low');
+          }}
+          className="h-6 w-6 sm:h-8 sm:w-8"
         >
-          <X className="h-4 w-4" />
+          <X className="h-3 w-3 sm:h-4 sm:w-4" />
         </Button>
       </div>
       
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4 max-h-[70vh] overflow-y-auto">
         {filterOptions.search && (
           <div>
-            <Label htmlFor="search">Search</Label>
+            <Label htmlFor="search" className="text-sm">Search</Label>
             <Input
               id="search"
               placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}
+              onFocus={() => handleFieldFocus('Search', 'Enter keywords to filter results')}
+              className={cn(
+                "text-sm",
+                darkMode ? "bg-zinc-700 border-zinc-600" : ""
+              )}
             />
           </div>
         )}
         
         {filterOptions.categories && (
           <div>
-            <Label htmlFor="category">Category</Label>
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger id="category" className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
+            <Label htmlFor="category" className="text-sm">Category</Label>
+            <Select 
+              value={category} 
+              onValueChange={(value) => {
+                setCategory(value);
+                speak(`Category selected: ${value}`, 'low');
+              }}
+              onOpenChange={(open) => {
+                if (open) handleFieldFocus('Category', 'Select a market sector or category');
+              }}
+            >
+              <SelectTrigger id="category" className={cn(
+                "text-sm",
+                darkMode ? "bg-zinc-700 border-zinc-600" : ""
+              )}>
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
                 {categoryOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
+                  <SelectItem key={option.value} value={option.value} className="text-sm">
                     {option.label}
                   </SelectItem>
                 ))}
@@ -158,14 +185,26 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         
         {filterOptions.status && (
           <div>
-            <Label htmlFor="status">Status</Label>
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger id="status" className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
+            <Label htmlFor="status" className="text-sm">Status</Label>
+            <Select 
+              value={status} 
+              onValueChange={(value) => {
+                setStatus(value);
+                speak(`Status selected: ${value}`, 'low');
+              }}
+              onOpenChange={(open) => {
+                if (open) handleFieldFocus('Status', 'Filter by active or inactive status');
+              }}
+            >
+              <SelectTrigger id="status" className={cn(
+                "text-sm",
+                darkMode ? "bg-zinc-700 border-zinc-600" : ""
+              )}>
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
                 {statusOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
+                  <SelectItem key={option.value} value={option.value} className="text-sm">
                     {option.label}
                   </SelectItem>
                 ))}
@@ -176,14 +215,26 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         
         {filterOptions.types && (
           <div>
-            <Label htmlFor="type">Type</Label>
-            <Select value={type} onValueChange={setType}>
-              <SelectTrigger id="type" className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
+            <Label htmlFor="type" className="text-sm">Type</Label>
+            <Select 
+              value={type} 
+              onValueChange={(value) => {
+                setType(value);
+                speak(`Type selected: ${value}`, 'low');
+              }}
+              onOpenChange={(open) => {
+                if (open) handleFieldFocus('Type', 'Select security type such as stock, crypto, or index');
+              }}
+            >
+              <SelectTrigger id="type" className={cn(
+                "text-sm",
+                darkMode ? "bg-zinc-700 border-zinc-600" : ""
+              )}>
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
                 {typeOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
+                  <SelectItem key={option.value} value={option.value} className="text-sm">
                     {option.label}
                   </SelectItem>
                 ))}
@@ -194,8 +245,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         
         {filterOptions.dates && (
           <div className="space-y-2">
-            <Label>Date Range</Label>
-            <div className="grid grid-cols-2 gap-2">
+            <Label className="text-sm">Date Range</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
                 <Label htmlFor="dateFrom" className="text-xs">From</Label>
                 <Input
@@ -203,7 +254,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   type="date"
                   value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
-                  className={cn("mt-1", darkMode ? "bg-zinc-700 border-zinc-600" : "")}
+                  onFocus={() => handleFieldFocus('Date from', 'Select start date for filtering')}
+                  className={cn("mt-1 text-sm", darkMode ? "bg-zinc-700 border-zinc-600" : "")}
                 />
               </div>
               <div>
@@ -213,7 +265,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   type="date"
                   value={dateTo}
                   onChange={(e) => setDateTo(e.target.value)}
-                  className={cn("mt-1", darkMode ? "bg-zinc-700 border-zinc-600" : "")}
+                  onFocus={() => handleFieldFocus('Date to', 'Select end date for filtering')}
+                  className={cn("mt-1 text-sm", darkMode ? "bg-zinc-700 border-zinc-600" : "")}
                 />
               </div>
             </div>
@@ -222,15 +275,19 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         
         {filterOptions.price && (
           <div className="space-y-2">
-            <Label>Price Range</Label>
+            <Label className="text-sm">Price Range</Label>
             <Slider
               defaultValue={priceRange}
               max={1000}
               step={1}
-              onValueChange={(value) => setPriceRange(value as [number, number])}
-              className="my-6"
+              onValueChange={(value) => {
+                setPriceRange(value as [number, number]);
+                speak(`Price range: ${value[0]} to ${value[1]} dollars`, 'low');
+              }}
+              onFocus={() => handleFieldFocus('Price range', 'Adjust minimum and maximum price values')}
+              className="my-4 sm:my-6"
             />
-            <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
+            <div className="flex justify-between text-xs sm:text-sm text-gray-500 dark:text-gray-400">
               <span>${priceRange[0]}</span>
               <span>${priceRange[1]}</span>
             </div>
@@ -242,21 +299,36 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             <Checkbox 
               id="active-only" 
               checked={showOnlyActive} 
-              onCheckedChange={(checked) => setShowOnlyActive(checked as boolean)}
+              onCheckedChange={(checked) => {
+                setShowOnlyActive(checked as boolean);
+                speak(checked ? 'Show only active items enabled' : 'Show only active items disabled', 'low');
+              }}
             />
-            <Label htmlFor="active-only" className="text-sm cursor-pointer">Show only active items</Label>
+            <Label 
+              htmlFor="active-only" 
+              className="text-xs sm:text-sm cursor-pointer"
+              onClick={() => handleFieldFocus('Active only', 'Toggle to show only active items')}
+            >
+              Show only active items
+            </Label>
           </div>
         )}
         
-        <div className="pt-2 flex justify-between">
+        <div className="pt-2 flex flex-col sm:flex-row justify-between space-y-2 sm:space-y-0 sm:space-x-2">
           <Button 
             variant="outline" 
             onClick={resetFilters}
-            className={darkMode ? "border-zinc-600 hover:bg-zinc-700" : ""}
+            className={cn(
+              "w-full sm:w-auto text-sm",
+              darkMode ? "border-zinc-600 hover:bg-zinc-700" : ""
+            )}
           >
             Reset
           </Button>
-          <Button onClick={handleApplyFilters}>
+          <Button 
+            onClick={handleApplyFilters}
+            className="w-full sm:w-auto text-sm"
+          >
             Apply Filters
           </Button>
         </div>

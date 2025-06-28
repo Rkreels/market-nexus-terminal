@@ -1,3 +1,4 @@
+
 import { FC, useState } from "react";
 import { 
   PlusCircle, 
@@ -37,6 +38,7 @@ import DataTable from "@/components/DataTable";
 import FilterPanel from "@/components/FilterPanel";
 import { useVoiceTrainer } from "@/contexts/VoiceTrainerContext";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface MarketDataPanelProps {
   darkMode: boolean;
@@ -55,8 +57,9 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   
   const { marketData, addMarketDataItem, deleteMarketDataItem, editMarketDataItem } = useUI();
-  const { announceAction, announceSuccess, announceError } = useVoiceTrainer();
+  const { announceAction, announceSuccess, announceError, speak } = useVoiceTrainer();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   console.log('MarketDataPanel: Market data', marketData);
   console.log('MarketDataPanel: Applied filters', appliedFilters);
@@ -105,12 +108,12 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
       };
       addMarketDataItem(newItem);
       setIsAddItemDialogOpen(false);
-      announceSuccess(`Added ${item.name} to market data`);
+      announceSuccess(`Added ${item.name} to market data tracking`);
+      speak(`${item.name} stock added successfully. Current price is ${item.value} dollars with ${item.change > 0 ? 'positive' : 'negative'} change of ${Math.abs(item.change)} dollars.`, 'medium');
       toast({
         title: "Market Data Added",
         description: `Successfully added ${item.name}`,
       });
-      console.log('Market Data: Successfully added new item', newItem);
     } catch (error) {
       console.error('Market Data: Error adding item', error);
       announceError('Error adding market data item');
@@ -127,7 +130,7 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
       editMarketDataItem(updatedItem.id, updatedItem);
       setIsEditDialogOpen(false);
       setSelectedItem(null);
-      announceSuccess(`Updated ${updatedItem.name}`);
+      announceSuccess(`Updated ${updatedItem.name} market data`);
       toast({
         title: "Market Data Updated",
         description: `Successfully updated ${updatedItem.name}`,
@@ -150,7 +153,7 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
       deleteMarketDataItem(selectedItem.id);
       setIsDeleteDialogOpen(false);
       setSelectedItem(null);
-      announceSuccess(`Deleted ${selectedItem.name}`);
+      announceSuccess(`Removed ${selectedItem.name} from tracking`);
       toast({
         title: "Market Data Deleted",
         description: `Successfully deleted ${selectedItem.name}`,
@@ -172,7 +175,7 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
     try {
       selectedItems.forEach(item => deleteMarketDataItem(item.id));
       setSelectedItems([]);
-      announceSuccess(`Deleted ${selectedItems.length} items`);
+      announceSuccess(`Removed ${selectedItems.length} items from tracking`);
       toast({
         title: "Bulk Delete Complete",
         description: `Successfully deleted ${selectedItems.length} items`,
@@ -185,12 +188,13 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    announceAction('Refreshing market data');
+    announceAction('Refreshing market data from live feeds');
+    speak('Updating real-time market data. This may take a few seconds.', 'medium');
     
     // Simulate data refresh
     setTimeout(() => {
       setIsRefreshing(false);
-      announceSuccess('Market data refreshed');
+      announceSuccess('Market data refreshed with latest prices');
       toast({
         title: "Data Refreshed",
         description: "Market data has been updated",
@@ -202,8 +206,8 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
     setAppliedFilters(filters);
     setIsFilterOpen(false);
     const resultCount = applyFilters(marketData).length;
-    announceSuccess(`Applied filters showing ${resultCount} results`);
-    console.log('Market Data: Applied filters', filters);
+    announceSuccess(`Filters applied. Showing ${resultCount} market data items`);
+    speak(`Filter results: ${resultCount} securities match your criteria. Use arrow keys to navigate through the results.`, 'medium');
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -211,20 +215,22 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
     setSearchQuery(value);
     if (value) {
       const results = applyFilters(marketData);
-      announceAction(`Search results: ${results.length} items found`);
+      announceAction(`Search updated: ${results.length} securities found`);
     }
   };
 
   const handleRowEdit = (item: MarketDataItem) => {
     setSelectedItem(item);
     setIsEditDialogOpen(true);
-    announceAction('Opening edit form', item.name);
+    announceAction('Opening edit form', `${item.name} - ${item.symbol}`);
+    speak(`Editing ${item.name}. Current price is ${item.value} dollars. Use tab to navigate through form fields.`, 'medium');
   };
 
   const handleRowDelete = (item: MarketDataItem) => {
     setSelectedItem(item);
     setIsDeleteDialogOpen(true);
-    announceAction('Confirming delete', item.name);
+    announceAction('Confirming delete', `${item.name} - ${item.symbol}`);
+    speak(`Confirm deletion of ${item.name}. This will remove it from your market data tracking.`, 'high');
   };
 
   const handleExport = (data: MarketDataItem[]) => {
@@ -250,7 +256,7 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
     a.click();
     URL.revokeObjectURL(url);
     
-    announceSuccess('Market data exported successfully');
+    announceSuccess(`Market data exported successfully as CSV file with ${data.length} items`);
   };
 
   // Fixed filter options - use boolean flags only, not arrays
@@ -263,8 +269,6 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
     price: true,
     advanced: true
   };
-
-  console.log('MarketDataPanel: Filter options', filterOptions);
 
   const columns = [
     {
@@ -300,15 +304,12 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
         </span>
       ),
     },
-    {
+    ...(!isMobile ? [{
       key: 'sector',
       header: 'Sector',
       sortable: true,
-    }
+    }] : [])
   ];
-
-  console.log('MarketDataPanel: Columns', columns);
-  console.log('MarketDataPanel: Filtered data', filteredData);
 
   return (
     <div className="relative">
@@ -319,21 +320,22 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
         )}
         data-component="market-data-panel"
       >
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-lg font-medium flex items-center">
-            <Bell className="w-5 h-5 mr-2" />
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 pb-2">
+          <CardTitle className="text-base sm:text-lg font-medium flex items-center">
+            <Bell className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
             Market Data ({filteredData.length} items)
           </CardTitle>
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-1 sm:gap-2 flex-wrap">
             <Button 
               size="sm" 
               variant="outline" 
               onClick={handleRefresh}
               disabled={isRefreshing}
               title="Refresh data"
+              className="text-xs sm:text-sm"
             >
-              <RefreshCw className={cn("w-4 h-4 mr-2", isRefreshing && "animate-spin")} />
-              Refresh
+              <RefreshCw className={cn("w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2", isRefreshing && "animate-spin")} />
+              {!isMobile && "Refresh"}
             </Button>
             
             <Button 
@@ -341,12 +343,13 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
               variant="outline" 
               onClick={() => setIsFilterOpen(!isFilterOpen)}
               className={cn(
-                "filter-button",
+                "filter-button text-xs sm:text-sm",
                 isFilterOpen && "bg-blue-100 dark:bg-blue-900"
               )}
               title="Open filter options"
             >
-              <Filter className="w-4 h-4 mr-2" /> Filter
+              <Filter className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> 
+              {!isMobile && "Filter"}
             </Button>
             
             <Button 
@@ -354,18 +357,22 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
               variant="outline" 
               onClick={() => setIsSettingsOpen(true)}
               title="Settings"
+              className="text-xs sm:text-sm"
             >
-              <Settings className="w-4 h-4 mr-2" /> Settings
+              <Settings className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> 
+              {!isMobile && "Settings"}
             </Button>
             
             <Dialog open={isAddItemDialogOpen} onOpenChange={setIsAddItemDialogOpen}>
               <DialogTrigger asChild>
                 <Button 
                   size="sm" 
-                  className="add-button"
+                  className="add-button text-xs sm:text-sm"
                   title="Add new market data item"
+                  onClick={() => speak('Opening add market data form. Enter symbol, name, and other details to track a new security.', 'medium')}
                 >
-                  <PlusCircle className="w-4 h-4 mr-2" /> Add Item
+                  <PlusCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> 
+                  {!isMobile && "Add Item"}
                 </Button>
               </DialogTrigger>
               <DialogContent className={cn(
@@ -387,7 +394,7 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
             </Dialog>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-2 sm:p-6">
           <DataTable 
             columns={columns} 
             data={filteredData} 
@@ -397,7 +404,7 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
             filterable={true}
             exportable={true}
             selectable={true}
-            pageSize={15}
+            pageSize={isMobile ? 10 : 15}
             onRowSelect={setSelectedItems}
             onEdit={handleRowEdit}
             onDelete={handleRowDelete}
@@ -405,24 +412,26 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
           />
           
           {selectedItems.length > 0 && (
-            <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <div className="flex items-center justify-between">
+            <div className="mt-4 p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
                 <span className="text-sm font-medium">
                   {selectedItems.length} items selected
                 </span>
-                <div className="flex gap-2">
+                <div className="flex gap-2 w-full sm:w-auto">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handleExport(selectedItems)}
+                    className="flex-1 sm:flex-none text-xs sm:text-sm"
                   >
-                    <Download className="w-4 h-4 mr-2" />
+                    <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                     Export Selected
                   </Button>
                   <Button
                     variant="destructive"
                     size="sm"
                     onClick={handleBulkDelete}
+                    className="flex-1 sm:flex-none text-xs sm:text-sm"
                   >
                     Delete Selected
                   </Button>
