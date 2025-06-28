@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -43,28 +44,20 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   const [showOnlyActive, setShowOnlyActive] = useState<boolean>(true);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
-  // Static valid options with proper validation
+  // Static valid options with proper validation - ensure no empty strings
   const categoryOptions = [
     { value: "all", label: "All Categories" },
     { value: "technology", label: "Technology" },
     { value: "healthcare", label: "Healthcare" },
     { value: "finance", label: "Finance" },
     { value: "energy", label: "Energy" }
-  ].filter(option => {
-    const isValid = option.value && option.value.trim() !== "" && option.label && option.label.trim() !== "";
-    console.log(`FilterPanel: Category option "${option.value}" is valid:`, isValid);
-    return isValid;
-  });
+  ];
 
   const statusOptions = [
     { value: "all", label: "All Statuses" },
     { value: "active", label: "Active" },
     { value: "inactive", label: "Inactive" }
-  ].filter(option => {
-    const isValid = option.value && option.value.trim() !== "" && option.label && option.label.trim() !== "";
-    console.log(`FilterPanel: Status option "${option.value}" is valid:`, isValid);
-    return isValid;
-  });
+  ];
 
   const typeOptions = [
     { value: "all", label: "All Types" },
@@ -72,11 +65,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     { value: "crypto", label: "Crypto" },
     { value: "index", label: "Index" },
     { value: "commodity", label: "Commodity" }
-  ].filter(option => {
-    const isValid = option.value && option.value.trim() !== "" && option.label && option.label.trim() !== "";
-    console.log(`FilterPanel: Type option "${option.value}" is valid:`, isValid);
-    return isValid;
-  });
+  ];
 
   const resetFilters = () => {
     setCategory("all");
@@ -157,14 +146,11 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
-                {categoryOptions.map((option) => {
-                  console.log(`FilterPanel: Rendering category SelectItem with value "${option.value}"`);
-                  return (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  );
-                })}
+                {categoryOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -178,14 +164,11 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
-                {statusOptions.map((option) => {
-                  console.log(`FilterPanel: Rendering status SelectItem with value "${option.value}"`);
-                  return (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  );
-                })}
+                {statusOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -199,14 +182,11 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
-                {typeOptions.map((option) => {
-                  console.log(`FilterPanel: Rendering type SelectItem with value "${option.value}"`);
-                  return (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  );
-                })}
+                {typeOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

@@ -48,36 +48,19 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
     });
   };
 
-  // Enhanced validation function for select options
-  const getValidOptions = (options: string[] = []) => {
-    if (!Array.isArray(options)) {
-      console.warn(`AddItemForm: Options is not an array for field:`, options);
-      return [];
-    }
-
-    const validOptions = options
-      .filter(option => {
-        // Ensure option is a string, not null/undefined, and not empty after trimming
-        const isValid = option !== null && 
-                        option !== undefined && 
-                        typeof option === 'string' && 
-                        option.trim() !== "" &&
-                        option.trim().length > 0;
-        console.log(`AddItemForm: Option "${option}" is valid:`, isValid);
-        return isValid;
-      })
-      .map(option => option.trim())
-      .filter(option => option.length > 0); // Double check after trimming
-    
-    console.log(`AddItemForm: Processed valid options:`, validOptions);
-    return validOptions;
-  };
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         {fields.map((field) => {
-          const validOptions = field.type === 'select' ? getValidOptions(field.options) : [];
+          // Get valid options for select fields, ensuring no empty strings
+          const validOptions = field.type === 'select' && Array.isArray(field.options) 
+            ? field.options.filter(option => 
+                option !== null && 
+                option !== undefined && 
+                typeof option === 'string' && 
+                option.trim() !== ""
+              )
+            : [];
           
           return (
             <FormField
@@ -97,25 +80,20 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
                     ) : field.type === 'select' ? (
                       <Select 
                         onValueChange={formField.onChange} 
-                        defaultValue={formField.value || undefined}
+                        value={formField.value || undefined}
                       >
                         <SelectTrigger className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
                           <SelectValue placeholder={field.placeholder || "Select an option"} />
                         </SelectTrigger>
                         <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
                           {validOptions.length > 0 ? (
-                            validOptions.map((option, index) => {
-                              // Ensure each option has a unique, non-empty value
-                              const safeValue = option || `option-${index}`;
-                              console.log(`AddItemForm: Rendering select option "${option}" with safe value "${safeValue}"`);
-                              return (
-                                <SelectItem key={`${field.name}-${safeValue}-${index}`} value={safeValue}>
-                                  {option}
-                                </SelectItem>
-                              );
-                            })
+                            validOptions.map((option, index) => (
+                              <SelectItem key={`${field.name}-${option}-${index}`} value={option}>
+                                {option}
+                              </SelectItem>
+                            ))
                           ) : (
-                            <SelectItem value="no-options" disabled>
+                            <SelectItem value="no-options-available" disabled>
                               No options available
                             </SelectItem>
                           )}
