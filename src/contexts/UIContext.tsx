@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { MarketDataItem } from '@/types/marketData';
+import { MarketDataItem, Timeframe } from '@/types/marketData';
 
 interface UIContextProps {
   isDarkMode: boolean;
@@ -9,12 +9,17 @@ interface UIContextProps {
   addMarketDataItem: (item: MarketDataItem) => void;
   editMarketDataItem: (id: string, updatedItem: MarketDataItem) => void;
   deleteMarketDataItem: (id: string) => void;
+  handleAction: (action: string, itemType: string, itemId?: string) => void;
+  toggleFilter: () => void;
+  activeTimeframe: Timeframe;
+  setActiveTimeframe: (timeframe: Timeframe) => void;
 }
 
 const UIContext = createContext<UIContextProps | undefined>(undefined);
 
 export const UIProvider = ({ children }: { children: ReactNode }) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [activeTimeframe, setActiveTimeframe] = useState<Timeframe>('1M');
   const [marketData, setMarketData] = useState<MarketDataItem[]>([
     {
       id: "1",
@@ -26,7 +31,10 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
       percentChange: 1.69,
       direction: "up",
       sector: "Technology",
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
+      volume: 50000000,
+      marketCap: 2500000000000,
+      description: "Apple Inc. designs, manufactures, and markets smartphones, personal computers, tablets, wearables, and accessories worldwide."
     },
     {
       id: "2",
@@ -38,7 +46,10 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
       percentChange: -0.42,
       direction: "down",
       sector: "Technology",
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
+      volume: 35000000,
+      marketCap: 2100000000000,
+      description: "Microsoft Corporation develops, licenses, and supports software, services, devices, and solutions worldwide."
     }
   ]);
 
@@ -58,6 +69,32 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
     setMarketData(prev => prev.filter(item => item.id !== id));
   };
 
+  const handleAction = (action: string, itemType: string, itemId?: string) => {
+    console.log(`Action: ${action}, Type: ${itemType}, ID: ${itemId}`);
+    // Handle different actions here
+    switch (action) {
+      case 'add':
+        console.log(`Adding new ${itemType}`);
+        break;
+      case 'edit':
+        console.log(`Editing ${itemType} with ID: ${itemId}`);
+        break;
+      case 'view':
+        console.log(`Viewing ${itemType} with ID: ${itemId}`);
+        break;
+      case 'delete':
+        console.log(`Deleting ${itemType} with ID: ${itemId}`);
+        break;
+      default:
+        console.log(`Unknown action: ${action}`);
+    }
+  };
+
+  const toggleFilter = () => {
+    console.log('Toggling filter');
+    // Implement filter toggle logic here
+  };
+
   return (
     <UIContext.Provider value={{
       isDarkMode,
@@ -65,7 +102,11 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
       marketData,
       addMarketDataItem,
       editMarketDataItem,
-      deleteMarketDataItem
+      deleteMarketDataItem,
+      handleAction,
+      toggleFilter,
+      activeTimeframe,
+      setActiveTimeframe
     }}>
       {children}
     </UIContext.Provider>

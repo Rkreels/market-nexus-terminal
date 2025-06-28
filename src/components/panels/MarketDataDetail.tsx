@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useUI } from "@/contexts/UIContext";
 import DetailView from "@/components/DetailView";
@@ -148,18 +147,17 @@ const MarketDataDetail: React.FC<MarketDataDetailProps> = ({
             {isEditMode ? (
               <Select
                 value={data.type}
-                onValueChange={(value) => setData({ ...data, type: value })}
+                onValueChange={(value: 'stock' | 'crypto' | 'etf' | 'index' | 'commodity') => setData({ ...data, type: value })}
               >
                 <SelectTrigger id="type" className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
-                  <SelectItem value="Index">Index</SelectItem>
-                  <SelectItem value="Stock">Stock</SelectItem>
-                  <SelectItem value="ETF">ETF</SelectItem>
-                  <SelectItem value="Crypto">Cryptocurrency</SelectItem>
-                  <SelectItem value="Forex">Forex</SelectItem>
-                  <SelectItem value="Commodity">Commodity</SelectItem>
+                  <SelectItem value="index">Index</SelectItem>
+                  <SelectItem value="stock">Stock</SelectItem>
+                  <SelectItem value="etf">ETF</SelectItem>
+                  <SelectItem value="crypto">Cryptocurrency</SelectItem>
+                  <SelectItem value="commodity">Commodity</SelectItem>
                 </SelectContent>
               </Select>
             ) : (
