@@ -22,10 +22,13 @@ interface DashboardViewProps {
 }
 
 const DashboardView: FC<DashboardViewProps> = ({ activeModule, darkMode }) => {
+  console.log(`DashboardView: Rendering activeModule = ${activeModule}`);
+  
   // Render the appropriate content based on the active module
   const renderContent = () => {
     switch (activeModule) {
       case "dashboard":
+        console.log("DashboardView: Rendering dashboard module");
         return (
           <div className="grid grid-cols-1 gap-4 p-4">
             <DashboardSummaryPanel darkMode={darkMode} />
@@ -44,6 +47,7 @@ const DashboardView: FC<DashboardViewProps> = ({ activeModule, darkMode }) => {
           </div>
         );
       case "market-data":
+        console.log("DashboardView: Rendering market-data module");
         return (
           <div className="p-4">
             <h2 className={cn("text-2xl font-bold mb-4", darkMode ? "text-white" : "text-black")}>
@@ -63,6 +67,7 @@ const DashboardView: FC<DashboardViewProps> = ({ activeModule, darkMode }) => {
           </div>
         );
       case "portfolio":
+        console.log("DashboardView: Rendering portfolio module");
         return (
           <div className="p-4">
             <h2 className={cn("text-2xl font-bold mb-4", darkMode ? "text-white" : "text-black")}>
@@ -72,6 +77,7 @@ const DashboardView: FC<DashboardViewProps> = ({ activeModule, darkMode }) => {
           </div>
         );
       case "research":
+        console.log("DashboardView: Rendering research module");
         return (
           <div className="p-4">
             <h2 className={cn("text-2xl font-bold mb-4", darkMode ? "text-white" : "text-black")}>
@@ -81,6 +87,7 @@ const DashboardView: FC<DashboardViewProps> = ({ activeModule, darkMode }) => {
           </div>
         );
       case "news":
+        console.log("DashboardView: Rendering news module");
         return (
           <div className="p-4">
             <h2 className={cn("text-2xl font-bold mb-4", darkMode ? "text-white" : "text-black")}>
@@ -93,6 +100,7 @@ const DashboardView: FC<DashboardViewProps> = ({ activeModule, darkMode }) => {
           </div>
         );
       case "alerts":
+        console.log("DashboardView: Rendering alerts module");
         return (
           <div className="p-4">
             <h2 className={cn("text-2xl font-bold mb-4", darkMode ? "text-white" : "text-black")}>
@@ -102,6 +110,7 @@ const DashboardView: FC<DashboardViewProps> = ({ activeModule, darkMode }) => {
           </div>
         );
       case "trading":
+        console.log("DashboardView: Rendering trading module");
         return (
           <div className="p-4">
             <h2 className={cn("text-2xl font-bold mb-4", darkMode ? "text-white" : "text-black")}>
@@ -111,6 +120,7 @@ const DashboardView: FC<DashboardViewProps> = ({ activeModule, darkMode }) => {
           </div>
         );
       case "risk":
+        console.log("DashboardView: Rendering risk module");
         return (
           <div className="p-4">
             <h2 className={cn("text-2xl font-bold mb-4", darkMode ? "text-white" : "text-black")}>
@@ -120,6 +130,7 @@ const DashboardView: FC<DashboardViewProps> = ({ activeModule, darkMode }) => {
           </div>
         );
       case "fixed-income":
+        console.log("DashboardView: Rendering fixed-income module");
         return (
           <div className="p-4">
             <h2 className={cn("text-2xl font-bold mb-4", darkMode ? "text-white" : "text-black")}>
@@ -129,6 +140,7 @@ const DashboardView: FC<DashboardViewProps> = ({ activeModule, darkMode }) => {
           </div>
         );
       case "macro":
+        console.log("DashboardView: Rendering macro module");
         return (
           <div className="p-4">
             <h2 className={cn("text-2xl font-bold mb-4", darkMode ? "text-white" : "text-black")}>
@@ -138,6 +150,7 @@ const DashboardView: FC<DashboardViewProps> = ({ activeModule, darkMode }) => {
           </div>
         );
       case "ai":
+        console.log("DashboardView: Rendering ai module");
         return (
           <div className="p-4">
             <h2 className={cn("text-2xl font-bold mb-4", darkMode ? "text-white" : "text-black")}>
@@ -147,6 +160,7 @@ const DashboardView: FC<DashboardViewProps> = ({ activeModule, darkMode }) => {
           </div>
         );
       case "terminal":
+        console.log("DashboardView: Rendering terminal module");
         return (
           <div className="p-4">
             <h2 className={cn("text-2xl font-bold mb-4", darkMode ? "text-white" : "text-black")}>
@@ -156,6 +170,7 @@ const DashboardView: FC<DashboardViewProps> = ({ activeModule, darkMode }) => {
           </div>
         );
       default:
+        console.log(`DashboardView: Rendering default module for ${activeModule}`);
         return (
           <div className="flex items-center justify-center h-full">
             <div className={cn("text-center p-8", darkMode ? "text-white" : "text-black")}>
