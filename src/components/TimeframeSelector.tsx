@@ -2,7 +2,24 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Timeframe, timeframeOptions, getTimeframeLabel } from "@/utils/timeframeUtils";
+import { Timeframe } from "@/types/marketData";
+
+const timeframeOptions: Timeframe[] = ['1D', '1W', '1M', '3M', '6M', '1Y', '5Y', 'ALL'];
+
+const getTimeframeLabel = (timeframe: Timeframe): string => {
+  const labels: Record<Timeframe, string> = {
+    '1D': 'Today',
+    '1W': 'Week',
+    '1M': 'Month',
+    '3M': '3 Months',
+    '6M': '6 Months',
+    '1Y': 'Year',
+    '5Y': '5 Years',
+    'ALL': 'All Time'
+  };
+  
+  return labels[timeframe];
+};
 
 interface TimeframeSelectorProps {
   darkMode: boolean;

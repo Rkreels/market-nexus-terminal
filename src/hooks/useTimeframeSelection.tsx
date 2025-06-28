@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Timeframe } from '@/utils/timeframeUtils';
+import { Timeframe } from '@/types/marketData';
 import { useUI } from '@/contexts/UIContext';
 
 export const useTimeframeSelection = (initialTimeframe: Timeframe = '1M') => {
