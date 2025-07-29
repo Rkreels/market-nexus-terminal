@@ -4,9 +4,10 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { UIProvider } from "@/contexts/UIContext";
+import { UIProvider, useUI } from "@/contexts/UIContext";
 import { VoiceTrainerProvider } from "@/contexts/VoiceTrainerContext";
 import VoiceTrainer from "@/components/VoiceTrainer";
+import { ActionModal } from "@/components/ui/modal";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import MarketDataPage from "./pages/MarketDataPage";
@@ -31,35 +32,52 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <BrowserRouter>
-        <UIProvider>
-          <VoiceTrainerProvider>
-            <Toaster />
-            <Sonner />
-            <VoiceTrainer />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/market-data" element={<MarketDataPage />} />
-              <Route path="/portfolio" element={<PortfolioPage />} />
-              <Route path="/research" element={<ResearchPage />} />
-              <Route path="/news" element={<NewsPage />} />
-              <Route path="/alerts" element={<AlertsPage />} />
-              <Route path="/trading" element={<TradingPage />} />
-              <Route path="/risk" element={<RiskAnalyticsPage />} />
-              <Route path="/fixed-income" element={<FixedIncomePage />} />
-              <Route path="/macro" element={<MacroEconomyPage />} />
-              <Route path="/ai" element={<AIModulePage />} />
-              <Route path="/terminal" element={<TerminalPage />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </VoiceTrainerProvider>
-        </UIProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <BrowserRouter>
+          <UIProvider>
+            <VoiceTrainerProvider>
+              <Toaster />
+              <Sonner />
+              <VoiceTrainer />
+              <GlobalModal />
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/market-data" element={<MarketDataPage />} />
+                <Route path="/portfolio" element={<PortfolioPage />} />
+                <Route path="/research" element={<ResearchPage />} />
+                <Route path="/news" element={<NewsPage />} />
+                <Route path="/alerts" element={<AlertsPage />} />
+                <Route path="/trading" element={<TradingPage />} />
+                <Route path="/risk" element={<RiskAnalyticsPage />} />
+                <Route path="/fixed-income" element={<FixedIncomePage />} />
+                <Route path="/macro" element={<MacroEconomyPage />} />
+                <Route path="/ai" element={<AIModulePage />} />
+                <Route path="/terminal" element={<TerminalPage />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </VoiceTrainerProvider>
+          </UIProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
+
+const GlobalModal = () => {
+  const { modalState, closeModal } = useUI();
+  
+  return (
+    <ActionModal
+      isOpen={modalState.isOpen}
+      onClose={closeModal}
+      action={modalState.type}
+      itemType={modalState.itemType}
+      itemId={modalState.itemId}
+    />
+  );
+};
 
 export default App;

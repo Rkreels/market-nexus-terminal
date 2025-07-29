@@ -45,8 +45,18 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
         }
       };
       
+      // Load voices immediately if available
       loadVoices();
+      
+      // Set up voice change listener for browsers that load voices asynchronously
       synth.onvoiceschanged = loadVoices;
+      
+      // Force voice loading on browsers that need it
+      if (synth.getVoices().length === 0) {
+        setTimeout(loadVoices, 100);
+        setTimeout(loadVoices, 500);
+        setTimeout(loadVoices, 1000);
+      }
       
       return () => {
         synth.onvoiceschanged = null;
@@ -100,7 +110,14 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const speakImmediate = (text: string, priority: 'low' | 'medium' | 'high' = 'medium') => {
-    if (isMuted || isPaused || !text || !voicesLoadedRef.current) {
+    if (isMuted || isPaused || !text) {
+      isProcessingRef.current = false;
+      return;
+    }
+
+    // Check if speech synthesis is supported
+    if (!window.speechSynthesis) {
+      console.warn('Voice Trainer: Speech synthesis not supported');
       isProcessingRef.current = false;
       return;
     }

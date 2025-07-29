@@ -28,6 +28,14 @@ interface UIContextProps {
   toggleFilter: () => void;
   activeTimeframe: Timeframe;
   setActiveTimeframe: (timeframe: Timeframe) => void;
+  showFilters: boolean;
+  modalState: {
+    isOpen: boolean;
+    type: 'add' | 'edit' | 'view' | 'delete' | null;
+    itemType: string;
+    itemId?: string;
+  };
+  closeModal: () => void;
 }
 
 const UIContext = createContext<UIContextProps | undefined>(undefined);
@@ -218,21 +226,58 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
     setPortfolioHoldings(prev => prev.filter(h => h.id !== id));
   };
 
+  const [showFilters, setShowFilters] = useState(false);
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    type: 'add' | 'edit' | 'view' | 'delete' | null;
+    itemType: string;
+    itemId?: string;
+  }>({
+    isOpen: false,
+    type: null,
+    itemType: ''
+  });
+
   const handleAction = (action: string, itemType: string, itemId?: string) => {
     console.log(`Action: ${action}, Type: ${itemType}, ID: ${itemId}`);
-    // Handle different actions here
+    
     switch (action) {
       case 'add':
-        console.log(`Adding new ${itemType}`);
+        setModalState({
+          isOpen: true,
+          type: 'add',
+          itemType,
+        });
         break;
       case 'edit':
-        console.log(`Editing ${itemType} with ID: ${itemId}`);
+        setModalState({
+          isOpen: true,
+          type: 'edit',
+          itemType,
+          itemId,
+        });
         break;
       case 'view':
-        console.log(`Viewing ${itemType} with ID: ${itemId}`);
+        setModalState({
+          isOpen: true,
+          type: 'view',
+          itemType,
+          itemId,
+        });
         break;
       case 'delete':
-        console.log(`Deleting ${itemType} with ID: ${itemId}`);
+        if (itemId) {
+          // Handle deletion based on item type
+          if (itemType === 'market-data') {
+            deleteMarketDataItem(itemId);
+          } else if (itemType === 'watchlist') {
+            deleteWatchlist(parseInt(itemId));
+          } else if (itemType === 'alert') {
+            deleteAlert(parseInt(itemId));
+          } else if (itemType === 'holding') {
+            deleteHolding(itemId);
+          }
+        }
         break;
       default:
         console.log(`Unknown action: ${action}`);
@@ -240,11 +285,18 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const toggleFilter = () => {
-    console.log('Toggling filter');
-    // Implement filter toggle logic here
+    setShowFilters(prev => !prev);
   };
 
-  return (
+  const closeModal = () => {
+    setModalState({
+      isOpen: false,
+      type: null,
+      itemType: ''
+    });
+  };
+
+    return (
     <UIContext.Provider value={{
       isDarkMode,
       toggleDarkMode,
@@ -269,7 +321,10 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
       handleAction,
       toggleFilter,
       activeTimeframe,
-      setActiveTimeframe
+      setActiveTimeframe,
+      showFilters,
+      modalState,
+      closeModal
     }}>
       {children}
     </UIContext.Provider>
