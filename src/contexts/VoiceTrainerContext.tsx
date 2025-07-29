@@ -146,41 +146,31 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
       utterance.pitch = 1.0;
       utterance.volume = 0.8;
       
+      // Force voice loading and selection
       const voices = window.speechSynthesis.getVoices();
-      const preferredVoices = [
-        'Microsoft Zira Desktop - English (United States)',
-        'Google US English',
-        'Samantha',
-        'Victoria',
-        'Alex'
-      ];
-      
       let selectedVoice = null;
-      for (const preferredVoice of preferredVoices) {
-        const found = voices.find(voice => 
-          voice.name.includes(preferredVoice) || 
-          voice.name.toLowerCase().includes(preferredVoice.toLowerCase())
-        );
-        if (found) {
-          selectedVoice = found;
-          break;
-        }
-      }
       
-      if (!selectedVoice) {
-        selectedVoice = voices.find(voice => 
-          voice.lang.startsWith('en') && voice.localService
-        ) || voices.find(voice => voice.lang.startsWith('en')) || voices[0];
+      // Try to find a good English voice
+      if (voices.length > 0) {
+        selectedVoice = voices.find(voice => voice.lang.includes('en') && voice.localService) ||
+                      voices.find(voice => voice.lang.includes('en')) ||
+                      voices[0];
       }
       
       if (selectedVoice) {
         utterance.voice = selectedVoice;
+        console.log(`Voice Trainer: Using voice: ${selectedVoice.name}`);
       }
       
       setSpeakingText(text);
       console.log(`Voice Trainer: Speaking (${priority}) - ${text.slice(0, 100)}...`);
       
+      utterance.onstart = () => {
+        console.log('Voice Trainer: Speech started');
+      };
+      
       utterance.onend = () => {
+        console.log('Voice Trainer: Speech ended');
         speechSynthRef.current = null;
         setSpeakingText(null);
         isProcessingRef.current = false;
@@ -197,7 +187,14 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
       };
       
       speechSynthRef.current = utterance;
-      window.speechSynthesis.speak(utterance);
+      
+      // Force speech synthesis to work
+      window.speechSynthesis.cancel(); // Clear any pending speech
+      setTimeout(() => {
+        if (speechSynthRef.current === utterance) {
+          window.speechSynthesis.speak(utterance);
+        }
+      }, 50);
       
     } catch (error) {
       console.error('Voice Trainer: Error creating speech:', error);
