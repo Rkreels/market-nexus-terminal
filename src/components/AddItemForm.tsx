@@ -6,24 +6,31 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useVoiceTrainer } from "@/contexts/VoiceTrainerContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { z } from 'zod';
+
+interface FormField {
+  name: string;
+  label: string;
+  type: "text" | "number" | "textarea" | "select" | "date";
+  placeholder?: string;
+  options?: string[];
+  required?: boolean;
+  defaultValue?: string;
+}
 
 interface AddItemFormProps {
   itemType: string;
-  fields: Array<{
-    name: string;
-    label: string;
-    type: "text" | "number" | "textarea" | "select" | "date";
-    placeholder?: string;
-    options?: string[];
-    required?: boolean;
-  }>;
+  fields: FormField[];
   onSubmit: (data: any) => void;
   onCancel: () => void;
   darkMode: boolean;
+  validationSchema?: z.ZodSchema<any>;
+  isLoading?: boolean;
 }
 
 const AddItemForm: React.FC<AddItemFormProps> = ({
@@ -31,28 +38,69 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
   fields,
   onSubmit,
   onCancel,
-  darkMode
+  darkMode,
+  validationSchema,
+  isLoading = false
 }) => {
   const { toast } = useToast();
   const { speak, announceAction } = useVoiceTrainer();
   const isMobile = useIsMobile();
+
+  // Create default schema if none provided
+  const defaultSchema = z.object(
+    fields.reduce((acc, field) => {
+      if (field.type === 'number') {
+        acc[field.name] = field.required 
+          ? z.number({ required_error: `${field.label} is required` }).positive(`${field.label} must be positive`)
+          : z.number().positive(`${field.label} must be positive`).optional();
+      } else {
+        acc[field.name] = field.required 
+          ? z.string().min(1, `${field.label} is required`)
+          : z.string().optional();
+      }
+      return acc;
+    }, {} as Record<string, z.ZodTypeAny>)
+  );
+
+  const schema = validationSchema || defaultSchema;
   
   const form = useForm({
+    resolver: zodResolver(schema),
     defaultValues: fields.reduce((acc, field) => {
-      acc[field.name] = "";
+      acc[field.name] = field.defaultValue || (field.type === 'number' ? 0 : "");
       return acc;
-    }, {} as Record<string, string>)
+    }, {} as Record<string, any>)
   });
 
-  const handleSubmit = (data: any) => {
-    onSubmit(data);
-    announceAction(`${itemType} created successfully`);
-    speak(`New ${itemType.toLowerCase()} has been added with the provided information. You can now view it in the main list.`, 'medium');
-    toast({
-      title: `${itemType} Added`,
-      description: `New ${itemType.toLowerCase()} has been created successfully`,
-      duration: 3000,
-    });
+  const handleSubmit = async (data: any) => {
+    try {
+      // Convert string numbers to actual numbers
+      const processedData = { ...data };
+      fields.forEach(field => {
+        if (field.type === 'number' && typeof processedData[field.name] === 'string') {
+          processedData[field.name] = parseFloat(processedData[field.name]);
+        }
+      });
+
+      await onSubmit(processedData);
+      announceAction(`${itemType} saved successfully`);
+      speak(`${itemType} has been saved with the provided information.`, 'medium');
+      
+      toast({
+        title: `${itemType} Saved`,
+        description: `${itemType} has been saved successfully`,
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error('Form submission error:', error);
+      toast({
+        title: "Error",
+        description: `Failed to save ${itemType.toLowerCase()}. Please try again.`,
+        variant: "destructive",
+        duration: 5000,
+      });
+      speak(`Error saving ${itemType.toLowerCase()}. Please check the form and try again.`, 'high');
+    }
   };
 
   const handleFieldFocus = (fieldLabel: string, fieldType: string) => {
@@ -80,9 +128,8 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3 sm:space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         {fields.map((field) => {
-          // Get valid options for select fields, ensuring no empty strings
           const validOptions = field.type === 'select' && Array.isArray(field.options) 
             ? field.options.filter(option => 
                 option !== null && 
@@ -99,18 +146,22 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
               name={field.name}
               render={({ field: formField }) => (
                 <FormItem>
-                  <FormLabel className="text-sm sm:text-base">{field.label}</FormLabel>
+                  <FormLabel className="text-sm font-medium">
+                    {field.label}
+                    {field.required && <span className="text-red-500 ml-1">*</span>}
+                  </FormLabel>
                   <FormControl>
                     {field.type === 'textarea' ? (
                       <Textarea 
                         placeholder={field.placeholder} 
                         {...formField} 
                         className={cn(
-                          "min-h-[80px] text-sm sm:text-base",
-                          darkMode ? "bg-zinc-700 border-zinc-600" : ""
+                          "min-h-[80px] resize-none",
+                          darkMode ? "bg-zinc-700 border-zinc-600 text-white" : "bg-white border-gray-300"
                         )}
                         onFocus={() => handleFieldFocus(field.label, field.type)}
                         rows={isMobile ? 3 : 4}
+                        disabled={isLoading}
                       />
                     ) : field.type === 'select' ? (
                       <Select 
@@ -124,20 +175,20 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
                             handleFieldFocus(field.label, field.type);
                           }
                         }}
+                        disabled={isLoading}
                       >
                         <SelectTrigger className={cn(
-                          "text-sm sm:text-base",
-                          darkMode ? "bg-zinc-700 border-zinc-600" : ""
+                          darkMode ? "bg-zinc-700 border-zinc-600 text-white" : "bg-white border-gray-300"
                         )}>
                           <SelectValue placeholder={field.placeholder || "Select an option"} />
                         </SelectTrigger>
-                        <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : ""}>
+                        <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : "bg-white border-gray-300"}>
                           {validOptions.length > 0 ? (
                             validOptions.map((option, index) => (
                               <SelectItem 
                                 key={`${field.name}-${option}-${index}`} 
                                 value={option}
-                                className="text-sm sm:text-base"
+                                className={darkMode ? "text-white hover:bg-zinc-600" : "text-black hover:bg-gray-100"}
                               >
                                 {option}
                               </SelectItem>
@@ -155,8 +206,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
                         placeholder={field.placeholder} 
                         {...formField} 
                         className={cn(
-                          "text-sm sm:text-base",
-                          darkMode ? "bg-zinc-700 border-zinc-600" : ""
+                          darkMode ? "bg-zinc-700 border-zinc-600 text-white placeholder:text-zinc-400" : "bg-white border-gray-300"
                         )}
                         onFocus={() => handleFieldFocus(field.label, field.type)}
                         onChange={(e) => {
@@ -165,17 +215,18 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
                             speak(`Value: ${e.target.value}`, 'low');
                           }
                         }}
+                        disabled={isLoading}
                       />
                     )}
                   </FormControl>
-                  <FormMessage className="text-xs sm:text-sm" />
+                  <FormMessage className="text-xs text-red-500" />
                 </FormItem>
               )}
             />
           );
         })}
         
-        <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4">
+        <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-6">
           <Button 
             type="button" 
             variant="outline" 
@@ -183,16 +234,18 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
               onCancel();
               speak('Form cancelled', 'low');
             }}
-            className="w-full sm:w-auto text-sm sm:text-base"
+            className="w-full sm:w-auto"
+            disabled={isLoading}
           >
             Cancel
           </Button>
           <Button 
             type="submit"
-            className="w-full sm:w-auto text-sm sm:text-base"
+            className="w-full sm:w-auto"
             onFocus={() => speak('Submit button active. Press Enter or Space to save the form.', 'low')}
+            disabled={isLoading}
           >
-            Add {itemType}
+            {isLoading ? 'Saving...' : `Save ${itemType}`}
           </Button>
         </div>
       </form>

@@ -1,11 +1,21 @@
-import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useUI } from '@/contexts/UIContext';
-import { useForm } from 'react-hook-form';
+import { useToast } from '@/hooks/use-toast';
+import AddMarketDataForm from '@/components/AddMarketDataForm';
+import AddItemForm from '@/components/AddItemForm';
+import DetailView from '@/components/DetailView';
+import LoadingState from '@/components/LoadingState';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import { cn } from '@/lib/utils';
+import { 
+  marketDataSchema, 
+  watchlistSchema, 
+  holdingSchema, 
+  alertSchema, 
+  symbolSchema 
+} from '@/utils/validation';
 
 interface ActionModalProps {
   isOpen: boolean;
@@ -23,6 +33,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
   itemId
 }) => {
   const { 
+    isDarkMode, 
     marketData, 
     watchlists, 
     alerts, 
@@ -34,13 +45,16 @@ export const ActionModal: React.FC<ActionModalProps> = ({
     addAlert,
     editAlert,
     addHolding,
-    editHolding
+    editHolding,
+    addToWatchlist
   } = useUI();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  if (!action || !itemType) return null;
 
-  const getTitle = () => {
-    const actionText = action?.charAt(0).toUpperCase() + action?.slice(1);
+  const getModalTitle = () => {
+    const actionText = action === 'add' ? 'Add' : action === 'edit' ? 'Edit' : action === 'view' ? 'View' : 'Delete';
     const typeText = itemType.charAt(0).toUpperCase() + itemType.slice(1).replace('-', ' ');
     return `${actionText} ${typeText}`;
   };
@@ -62,360 +76,232 @@ export const ActionModal: React.FC<ActionModalProps> = ({
     }
   };
 
-  const onSubmit = (data: any) => {
-    switch (action) {
-      case 'add':
-        switch (itemType) {
-          case 'market-data':
-            addMarketDataItem({
-              id: `item-${Date.now()}`,
-              symbol: data.symbol,
-              name: data.name,
-              type: data.type || 'stock',
-              value: parseFloat(data.value) || 0,
-              change: parseFloat(data.change) || 0,
-              percentChange: parseFloat(data.percentChange) || 0,
-              direction: parseFloat(data.change) >= 0 ? 'up' : 'down',
-              sector: data.sector || 'Technology',
-              lastUpdated: new Date().toISOString(),
-              volume: parseInt(data.volume) || 0,
-              marketCap: parseInt(data.marketCap) || 0,
-              description: data.description || ''
-            });
-            break;
-          case 'watchlist':
-            addWatchlist({
-              name: data.name,
-              symbols: []
-            });
-            break;
-          case 'alert':
+  const handleSubmit = async (data: any) => {
+    setIsLoading(true);
+    try {
+      switch (itemType) {
+        case 'market-data':
+          if (action === 'add') {
+            const newItem = {
+              ...data,
+              id: `market-${Date.now()}`,
+              change: 0,
+              percentChange: 0,
+              direction: 'up' as const,
+              lastUpdated: new Date().toISOString()
+            };
+            addMarketDataItem(newItem);
+          } else if (action === 'edit' && itemId) {
+            const currentItem = getCurrentItem();
+            if (currentItem) {
+              editMarketDataItem(itemId, { ...currentItem, ...data });
+            }
+          }
+          break;
+          
+        case 'watchlist':
+          if (action === 'add') {
+            addWatchlist({ name: data.name, symbols: [] });
+          } else if (action === 'edit' && itemId) {
+            const currentItem = getCurrentItem();
+            if (currentItem) {
+              editWatchlist(parseInt(itemId), { ...currentItem, ...data });
+            }
+          }
+          break;
+          
+        case 'alert':
+          if (action === 'add') {
             addAlert({
               type: data.type,
-              symbol: data.symbol,
+              symbol: data.symbol.toUpperCase(),
               name: data.name,
               condition: data.condition,
-              value: parseFloat(data.value),
-              currentValue: parseFloat(data.currentValue) || 0,
+              value: data.value,
               status: 'pending',
               created: new Date().toISOString()
             });
-            break;
-          case 'holding':
-            addHolding({
-              symbol: data.symbol,
-              name: data.name,
-              quantity: parseInt(data.quantity),
-              averagePrice: parseFloat(data.averagePrice),
-              currentPrice: parseFloat(data.currentPrice),
-              sector: data.sector || 'Technology'
-            });
-            break;
-        }
-        break;
-      case 'edit':
-        if (itemId) {
-          switch (itemType) {
-            case 'market-data':
-              const currentMarketItem = getCurrentItem();
-              if (currentMarketItem) {
-                editMarketDataItem(itemId, {
-                  ...currentMarketItem,
-                  ...data,
-                  value: parseFloat(data.value) || currentMarketItem.value,
-                  change: parseFloat(data.change) || currentMarketItem.change,
-                  percentChange: parseFloat(data.percentChange) || currentMarketItem.percentChange,
-                  volume: parseInt(data.volume) || currentMarketItem.volume,
-                  marketCap: parseInt(data.marketCap) || currentMarketItem.marketCap,
-                });
-              }
-              break;
-            case 'watchlist':
-              const currentWatchlist = getCurrentItem();
-              if (currentWatchlist) {
-                editWatchlist(parseInt(itemId), {
-                  ...currentWatchlist,
-                  name: data.name
-                });
-              }
-              break;
-            case 'alert':
-              const currentAlert = getCurrentItem();
-              if (currentAlert) {
-                editAlert(parseInt(itemId), {
-                  ...currentAlert,
-                  ...data,
-                  value: parseFloat(data.value) || currentAlert.value,
-                  currentValue: parseFloat(data.currentValue) || currentAlert.currentValue,
-                });
-              }
-              break;
-            case 'holding':
-              const currentHolding = getCurrentItem();
-              if (currentHolding) {
-                editHolding(itemId, {
-                  ...currentHolding,
-                  ...data,
-                  quantity: parseInt(data.quantity) || currentHolding.quantity,
-                  averagePrice: parseFloat(data.averagePrice) || currentHolding.averagePrice,
-                  currentPrice: parseFloat(data.currentPrice) || currentHolding.currentPrice,
-                });
-              }
-              break;
+          } else if (action === 'edit' && itemId) {
+            const currentItem = getCurrentItem();
+            if (currentItem) {
+              editAlert(parseInt(itemId), { ...currentItem, ...data });
+            }
           }
-        }
-        break;
+          break;
+          
+        case 'holding':
+          if (action === 'add') {
+            const marketItem = marketData.find(item => item.symbol.toUpperCase() === data.symbol.toUpperCase());
+            if (marketItem) {
+              addHolding({
+                symbol: data.symbol.toUpperCase(),
+                name: marketItem.name,
+                shares: data.shares,
+                avgPrice: data.avgPrice,
+              });
+            } else {
+              throw new Error('Symbol not found in market data');
+            }
+          } else if (action === 'edit' && itemId) {
+            const currentItem = getCurrentItem();
+            if (currentItem) {
+              editHolding(itemId, { ...currentItem, ...data });
+            }
+          }
+          break;
+          
+        case 'symbol':
+          if (action === 'add' && itemId) {
+            const marketItem = marketData.find(item => item.symbol.toUpperCase() === data.symbol.toUpperCase());
+            if (marketItem) {
+              const watchlistItem = {
+                symbol: marketItem.symbol,
+                name: marketItem.name,
+                price: marketItem.value,
+                change: marketItem.change,
+                direction: marketItem.direction
+              };
+              addToWatchlist(parseInt(itemId), watchlistItem);
+            } else {
+              throw new Error('Symbol not found in market data');
+            }
+          }
+          break;
+      }
+      
+      onClose();
+    } catch (error) {
+      console.error('Modal submission error:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
-    
-    reset();
-    onClose();
   };
 
-  const renderForm = () => {
-    const currentItem = getCurrentItem();
-    const isViewOnly = action === 'view';
-
+  const getFormFields = () => {
     switch (itemType) {
       case 'market-data':
-        return (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div>
-              <Label htmlFor="symbol">Symbol</Label>
-              <Input
-                id="symbol"
-                {...register('symbol', { required: !isViewOnly })}
-                defaultValue={currentItem?.symbol || ''}
-                disabled={isViewOnly}
-                placeholder="e.g., AAPL"
-              />
-            </div>
-            <div>
-              <Label htmlFor="name">Company Name</Label>
-              <Input
-                id="name"
-                {...register('name', { required: !isViewOnly })}
-                defaultValue={currentItem?.name || ''}
-                disabled={isViewOnly}
-                placeholder="e.g., Apple Inc."
-              />
-            </div>
-            <div>
-              <Label htmlFor="value">Current Price</Label>
-              <Input
-                id="value"
-                type="number"
-                step="0.01"
-                {...register('value')}
-                defaultValue={currentItem?.value || ''}
-                disabled={isViewOnly}
-                placeholder="e.g., 150.25"
-              />
-            </div>
-            <div>
-              <Label htmlFor="sector">Sector</Label>
-              <Input
-                id="sector"
-                {...register('sector')}
-                defaultValue={currentItem?.sector || ''}
-                disabled={isViewOnly}
-                placeholder="e.g., Technology"
-              />
-            </div>
-            {!isViewOnly && (
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={onClose}>
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  {action === 'add' ? 'Add' : 'Save'}
-                </Button>
-              </div>
-            )}
-          </form>
-        );
-
+        return [
+          { name: 'symbol', label: 'Symbol', type: 'text' as const, placeholder: 'e.g., AAPL', required: true },
+          { name: 'name', label: 'Company Name', type: 'text' as const, placeholder: 'e.g., Apple Inc.', required: true },
+          { name: 'type', label: 'Type', type: 'select' as const, options: ['stock', 'crypto', 'etf', 'index', 'commodity'], required: true },
+          { name: 'value', label: 'Current Price', type: 'number' as const, placeholder: '0.00', required: true },
+          { name: 'sector', label: 'Sector', type: 'select' as const, options: ['Technology', 'Healthcare', 'Finance', 'Energy', 'Consumer'], required: false }
+        ];
+        
       case 'watchlist':
-        return (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div>
-              <Label htmlFor="name">Watchlist Name</Label>
-              <Input
-                id="name"
-                {...register('name', { required: !isViewOnly })}
-                defaultValue={currentItem?.name || ''}
-                disabled={isViewOnly}
-                placeholder="e.g., Tech Stocks"
-              />
-            </div>
-            {!isViewOnly && (
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={onClose}>
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  {action === 'add' ? 'Create' : 'Save'}
-                </Button>
-              </div>
-            )}
-          </form>
-        );
-
+        return [
+          { name: 'name', label: 'Watchlist Name', type: 'text' as const, placeholder: 'e.g., Tech Stocks', required: true }
+        ];
+        
       case 'alert':
-        return (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div>
-              <Label htmlFor="symbol">Symbol</Label>
-              <Input
-                id="symbol"
-                {...register('symbol', { required: !isViewOnly })}
-                defaultValue={currentItem?.symbol || ''}
-                disabled={isViewOnly}
-                placeholder="e.g., AAPL"
-              />
-            </div>
-            <div>
-              <Label htmlFor="name">Company Name</Label>
-              <Input
-                id="name"
-                {...register('name', { required: !isViewOnly })}
-                defaultValue={currentItem?.name || ''}
-                disabled={isViewOnly}
-                placeholder="e.g., Apple Inc."
-              />
-            </div>
-            <div>
-              <Label htmlFor="type">Alert Type</Label>
-              <Select defaultValue={currentItem?.type || 'price'} disabled={isViewOnly}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="price">Price Alert</SelectItem>
-                  <SelectItem value="volume">Volume Alert</SelectItem>
-                  <SelectItem value="change">Percentage Change</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="condition">Condition</Label>
-              <Select defaultValue={currentItem?.condition || 'above'} disabled={isViewOnly}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select condition" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="above">Above</SelectItem>
-                  <SelectItem value="below">Below</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="value">Target Value</Label>
-              <Input
-                id="value"
-                type="number"
-                step="0.01"
-                {...register('value', { required: !isViewOnly })}
-                defaultValue={currentItem?.value || ''}
-                disabled={isViewOnly}
-                placeholder="e.g., 160.00"
-              />
-            </div>
-            {!isViewOnly && (
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={onClose}>
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  {action === 'add' ? 'Create Alert' : 'Save'}
-                </Button>
-              </div>
-            )}
-          </form>
-        );
-
+        return [
+          { name: 'symbol', label: 'Symbol', type: 'text' as const, placeholder: 'e.g., AAPL', required: true },
+          { name: 'name', label: 'Company Name', type: 'text' as const, placeholder: 'e.g., Apple Inc.', required: true },
+          { name: 'type', label: 'Alert Type', type: 'select' as const, options: ['price', 'volume', 'change'], required: true },
+          { name: 'condition', label: 'Condition', type: 'select' as const, options: ['above', 'below', 'equals'], required: true },
+          { name: 'value', label: 'Target Value', type: 'number' as const, placeholder: '0.00', required: true }
+        ];
+        
       case 'holding':
-        return (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div>
-              <Label htmlFor="symbol">Symbol</Label>
-              <Input
-                id="symbol"
-                {...register('symbol', { required: !isViewOnly })}
-                defaultValue={currentItem?.symbol || ''}
-                disabled={isViewOnly}
-                placeholder="e.g., AAPL"
-              />
-            </div>
-            <div>
-              <Label htmlFor="name">Company Name</Label>
-              <Input
-                id="name"
-                {...register('name', { required: !isViewOnly })}
-                defaultValue={currentItem?.name || ''}
-                disabled={isViewOnly}
-                placeholder="e.g., Apple Inc."
-              />
-            </div>
-            <div>
-              <Label htmlFor="quantity">Quantity</Label>
-              <Input
-                id="quantity"
-                type="number"
-                {...register('quantity', { required: !isViewOnly })}
-                defaultValue={currentItem?.quantity || ''}
-                disabled={isViewOnly}
-                placeholder="e.g., 100"
-              />
-            </div>
-            <div>
-              <Label htmlFor="averagePrice">Average Price</Label>
-              <Input
-                id="averagePrice"
-                type="number"
-                step="0.01"
-                {...register('averagePrice', { required: !isViewOnly })}
-                defaultValue={currentItem?.averagePrice || ''}
-                disabled={isViewOnly}
-                placeholder="e.g., 145.50"
-              />
-            </div>
-            <div>
-              <Label htmlFor="currentPrice">Current Price</Label>
-              <Input
-                id="currentPrice"
-                type="number"
-                step="0.01"
-                {...register('currentPrice')}
-                defaultValue={currentItem?.currentPrice || ''}
-                disabled={isViewOnly}
-                placeholder="e.g., 150.25"
-              />
-            </div>
-            {!isViewOnly && (
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={onClose}>
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  {action === 'add' ? 'Add Holding' : 'Save'}
-                </Button>
-              </div>
-            )}
-          </form>
-        );
-
+        return [
+          { name: 'symbol', label: 'Symbol', type: 'text' as const, placeholder: 'e.g., AAPL', required: true },
+          { name: 'shares', label: 'Shares', type: 'number' as const, placeholder: '100', required: true },
+          { name: 'avgPrice', label: 'Average Price', type: 'number' as const, placeholder: '150.00', required: true }
+        ];
+        
+      case 'symbol':
+        return [
+          { name: 'symbol', label: 'Symbol', type: 'text' as const, placeholder: 'e.g., AAPL', required: true }
+        ];
+        
       default:
-        return <div>Unsupported item type</div>;
+        return [];
     }
+  };
+
+  const getValidationSchema = () => {
+    switch (itemType) {
+      case 'market-data':
+        return marketDataSchema;
+      case 'watchlist':
+        return watchlistSchema;
+      case 'alert':
+        return alertSchema;
+      case 'holding':
+        return holdingSchema;
+      case 'symbol':
+        return symbolSchema;
+      default:
+        return undefined;
+    }
+  };
+
+  const renderContent = () => {
+    if (action === 'view') {
+      const currentItem = getCurrentItem();
+      if (!currentItem) {
+        return <div className="p-4 text-center text-gray-500">Item not found</div>;
+      }
+      
+      return (
+        <DetailView
+          title={getModalTitle()}
+          isOpen={isOpen}
+          onClose={onClose}
+          darkMode={isDarkMode}
+        >
+          <div className="space-y-3">
+            {Object.entries(currentItem).map(([key, value]) => (
+              <div key={key} className="flex justify-between">
+                <span className="font-medium capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</span>
+                <span>{typeof value === 'object' ? JSON.stringify(value) : String(value)}</span>
+              </div>
+            ))}
+          </div>
+        </DetailView>
+      );
+    }
+
+    const currentItem = action === 'edit' ? getCurrentItem() : null;
+    const fields = getFormFields().map(field => ({
+      ...field,
+      defaultValue: currentItem?.[field.name]?.toString() || field.defaultValue
+    }));
+
+    return (
+      <ErrorBoundary darkMode={isDarkMode}>
+        <AddItemForm
+          itemType={getModalTitle().split(' ').slice(1).join(' ')}
+          fields={fields}
+          onSubmit={handleSubmit}
+          onCancel={onClose}
+          darkMode={isDarkMode}
+          validationSchema={getValidationSchema()}
+          isLoading={isLoading}
+        />
+      </ErrorBoundary>
+    );
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className={cn(
+        "max-w-2xl max-h-[90vh] overflow-y-auto",
+        isDarkMode ? "bg-zinc-800 border-zinc-700" : "bg-white border-gray-200"
+      )}>
         <DialogHeader>
-          <DialogTitle>{getTitle()}</DialogTitle>
+          <DialogTitle>{getModalTitle()}</DialogTitle>
         </DialogHeader>
-        {renderForm()}
+        {isLoading && action !== 'view' ? (
+          <LoadingState message="Processing..." darkMode={isDarkMode} />
+        ) : (
+          renderContent()
+        )}
       </DialogContent>
     </Dialog>
   );
