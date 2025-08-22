@@ -6,12 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useVoiceTrainer } from "@/contexts/VoiceTrainerContext";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { z } from 'zod';
 
 interface FormField {
   name: string;
@@ -28,46 +26,23 @@ interface AddItemFormProps {
   fields: FormField[];
   onSubmit: (data: any) => void;
   onCancel: () => void;
-  darkMode: boolean;
-  validationSchema?: z.ZodSchema<any>;
   isLoading?: boolean;
 }
 
-const AddItemForm: React.FC<AddItemFormProps> = ({
-  itemType,
-  fields,
-  onSubmit,
-  onCancel,
-  darkMode,
-  validationSchema,
-  isLoading = false
+const AddItemForm: React.FC<AddItemFormProps> = ({ 
+  itemType, 
+  fields, 
+  onSubmit, 
+  onCancel, 
+  isLoading = false 
 }) => {
   const { toast } = useToast();
-  const { speak, announceAction } = useVoiceTrainer();
+  const { announceAction, announceError, announceSuccess } = useVoiceTrainer();
   const isMobile = useIsMobile();
 
-  // Create default schema if none provided
-  const defaultSchema = z.object(
-    fields.reduce((acc, field) => {
-      if (field.type === 'number') {
-        acc[field.name] = field.required 
-          ? z.number({ required_error: `${field.label} is required` }).positive(`${field.label} must be positive`)
-          : z.number().positive(`${field.label} must be positive`).optional();
-      } else {
-        acc[field.name] = field.required 
-          ? z.string().min(1, `${field.label} is required`)
-          : z.string().optional();
-      }
-      return acc;
-    }, {} as Record<string, z.ZodTypeAny>)
-  );
-
-  const schema = validationSchema || defaultSchema;
-  
   const form = useForm({
-    resolver: zodResolver(schema),
     defaultValues: fields.reduce((acc, field) => {
-      acc[field.name] = field.defaultValue || (field.type === 'number' ? 0 : "");
+      acc[field.name] = field.defaultValue || '';
       return acc;
     }, {} as Record<string, any>)
   });
@@ -83,8 +58,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
       });
 
       await onSubmit(processedData);
-      announceAction(`${itemType} saved successfully`);
-      speak(`${itemType} has been saved with the provided information.`, 'medium');
+      announceSuccess(`${itemType} saved successfully`);
       
       toast({
         title: `${itemType} Saved`,
@@ -99,7 +73,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
         variant: "destructive",
         duration: 5000,
       });
-      speak(`Error saving ${itemType.toLowerCase()}. Please check the form and try again.`, 'high');
+      announceError(`Error saving ${itemType.toLowerCase()}. Please check the form and try again.`);
     }
   };
 
@@ -122,8 +96,6 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
       default:
         guidance += ' Text input field.';
     }
-    
-    speak(guidance, 'low');
   };
 
   return (
@@ -155,10 +127,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
                       <Textarea 
                         placeholder={field.placeholder} 
                         {...formField} 
-                        className={cn(
-                          "min-h-[80px] resize-none",
-                          darkMode ? "bg-zinc-700 border-zinc-600 text-white" : "bg-white border-gray-300"
-                        )}
+                        className="min-h-[80px] resize-none"
                         onFocus={() => handleFieldFocus(field.label, field.type)}
                         rows={isMobile ? 3 : 4}
                         disabled={isLoading}
@@ -167,8 +136,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
                       <Select 
                         onValueChange={(value) => {
                           formField.onChange(value);
-                          speak(`Selected ${value}`, 'low');
-                        }} 
+                        }}
                         value={formField.value || undefined}
                         onOpenChange={(open) => {
                           if (open) {
@@ -176,19 +144,16 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
                           }
                         }}
                         disabled={isLoading}
-                      >
-                        <SelectTrigger className={cn(
-                          darkMode ? "bg-zinc-700 border-zinc-600 text-white" : "bg-white border-gray-300"
-                        )}>
+                        >
+                        <SelectTrigger>
                           <SelectValue placeholder={field.placeholder || "Select an option"} />
                         </SelectTrigger>
-                        <SelectContent className={darkMode ? "bg-zinc-700 border-zinc-600" : "bg-white border-gray-300"}>
+                        <SelectContent>
                           {validOptions.length > 0 ? (
                             validOptions.map((option, index) => (
                               <SelectItem 
                                 key={`${field.name}-${option}-${index}`} 
                                 value={option}
-                                className={darkMode ? "text-white hover:bg-zinc-600" : "text-black hover:bg-gray-100"}
                               >
                                 {option}
                               </SelectItem>
@@ -204,16 +169,10 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
                       <Input 
                         type={field.type} 
                         placeholder={field.placeholder} 
-                        {...formField} 
-                        className={cn(
-                          darkMode ? "bg-zinc-700 border-zinc-600 text-white placeholder:text-zinc-400" : "bg-white border-gray-300"
-                        )}
+                        {...formField}
                         onFocus={() => handleFieldFocus(field.label, field.type)}
                         onChange={(e) => {
                           formField.onChange(e);
-                          if (field.type === 'number' && e.target.value) {
-                            speak(`Value: ${e.target.value}`, 'low');
-                          }
                         }}
                         disabled={isLoading}
                       />
@@ -230,10 +189,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
           <Button 
             type="button" 
             variant="outline" 
-            onClick={() => {
-              onCancel();
-              speak('Form cancelled', 'low');
-            }}
+            onClick={onCancel}
             className="w-full sm:w-auto"
             disabled={isLoading}
           >
@@ -242,7 +198,6 @@ const AddItemForm: React.FC<AddItemFormProps> = ({
           <Button 
             type="submit"
             className="w-full sm:w-auto"
-            onFocus={() => speak('Submit button active. Press Enter or Space to save the form.', 'low')}
             disabled={isLoading}
           >
             {isLoading ? 'Saving...' : `Save ${itemType}`}

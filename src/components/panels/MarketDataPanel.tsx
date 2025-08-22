@@ -40,11 +40,9 @@ import { useVoiceTrainer } from "@/contexts/VoiceTrainerContext";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-interface MarketDataPanelProps {
-  darkMode: boolean;
-}
+interface MarketDataPanelProps {}
 
-const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
+const MarketDataPanel: FC<MarketDataPanelProps> = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddItemDialogOpen, setIsAddItemDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -314,10 +312,7 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
   return (
     <div className="relative">
       <Card 
-        className={cn(
-          "border", 
-          darkMode ? "bg-zinc-800 border-zinc-700" : "bg-white border-gray-200"
-        )}
+        className="border"
         data-component="market-data-panel"
       >
         <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 pb-2">
@@ -375,10 +370,7 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
                   {!isMobile && "Add Item"}
                 </Button>
               </DialogTrigger>
-              <DialogContent className={cn(
-                "w-[95vw] max-w-[500px] max-h-[90vh] overflow-y-auto z-50", 
-                darkMode ? "bg-zinc-800 border-zinc-700" : "bg-white border-gray-200"
-              )}>
+              <DialogContent className="w-[95vw] max-w-[500px] max-h-[90vh] overflow-y-auto z-50">
                 <DialogHeader>
                   <DialogTitle>Add New Market Data</DialogTitle>
                   <DialogDescription>
@@ -386,7 +378,6 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
                   </DialogDescription>
                 </DialogHeader>
                 <AddMarketDataForm 
-                  darkMode={darkMode} 
                   onSuccess={handleAddItem} 
                   onCancel={() => setIsAddItemDialogOpen(false)}
                 />
@@ -397,8 +388,8 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
         <CardContent className="p-2 sm:p-6">
           <DataTable 
             columns={columns} 
-            data={filteredData} 
-            darkMode={darkMode} 
+            data={filteredData}
+            darkMode={false}
             itemType="marketData"
             searchable={true}
             filterable={true}
@@ -444,10 +435,7 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
       
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className={cn(
-          "w-[95vw] max-w-[500px] max-h-[90vh] overflow-y-auto", 
-          darkMode ? "bg-zinc-800 border-zinc-700" : "bg-white border-gray-200"
-        )}>
+        <DialogContent className="w-[95vw] max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Market Data</DialogTitle>
             <DialogDescription>
@@ -456,7 +444,6 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
           </DialogHeader>
           {selectedItem && (
             <AddMarketDataForm 
-              darkMode={darkMode} 
               onSuccess={handleEditItem} 
               onCancel={() => setIsEditDialogOpen(false)}
               initialData={selectedItem}
@@ -467,7 +454,7 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent className={darkMode ? "bg-zinc-800 border-zinc-700" : ""}>
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Delete</AlertDialogTitle>
             <AlertDialogDescription>
@@ -484,7 +471,7 @@ const MarketDataPanel: FC<MarketDataPanelProps> = ({ darkMode }) => {
       </AlertDialog>
       
       <FilterPanel 
-        darkMode={darkMode}
+        darkMode={false}
         isOpen={isFilterOpen}
         onClose={() => setIsFilterOpen(false)}
         onApplyFilters={handleApplyFilters}

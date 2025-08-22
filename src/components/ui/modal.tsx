@@ -9,13 +9,6 @@ import DetailView from '@/components/DetailView';
 import LoadingState from '@/components/LoadingState';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { cn } from '@/lib/utils';
-import { 
-  marketDataSchema, 
-  watchlistSchema, 
-  holdingSchema, 
-  alertSchema, 
-  symbolSchema 
-} from '@/utils/validation';
 
 interface ActionModalProps {
   isOpen: boolean;
@@ -224,22 +217,6 @@ export const ActionModal: React.FC<ActionModalProps> = ({
     }
   };
 
-  const getValidationSchema = () => {
-    switch (itemType) {
-      case 'market-data':
-        return marketDataSchema;
-      case 'watchlist':
-        return watchlistSchema;
-      case 'alert':
-        return alertSchema;
-      case 'holding':
-        return holdingSchema;
-      case 'symbol':
-        return symbolSchema;
-      default:
-        return undefined;
-    }
-  };
 
   const renderContent = () => {
     if (action === 'view') {
@@ -280,8 +257,6 @@ export const ActionModal: React.FC<ActionModalProps> = ({
           fields={fields}
           onSubmit={handleSubmit}
           onCancel={onClose}
-          darkMode={isDarkMode}
-          validationSchema={getValidationSchema()}
           isLoading={isLoading}
         />
       </ErrorBoundary>

@@ -4,14 +4,12 @@ import { MarketDataItem } from '@/types/marketData';
 import AddItemForm from './AddItemForm';
 
 interface AddMarketDataFormProps {
-  darkMode: boolean;
   onSuccess: (item: MarketDataItem) => void;
   onCancel: () => void;
   initialData?: MarketDataItem;
 }
 
 const AddMarketDataForm: React.FC<AddMarketDataFormProps> = ({
-  darkMode,
   onSuccess,
   onCancel,
   initialData
@@ -76,7 +74,6 @@ const AddMarketDataForm: React.FC<AddMarketDataFormProps> = ({
       fields={fields}
       onSubmit={handleSubmit}
       onCancel={onCancel}
-      darkMode={darkMode}
     />
   );
 };

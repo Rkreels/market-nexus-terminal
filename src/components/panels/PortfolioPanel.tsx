@@ -10,11 +10,9 @@ import { useUI } from '@/contexts/UIContext';
 import { useToast } from '@/hooks/use-toast';
 import AddItemForm from '@/components/AddItemForm';
 
-interface PortfolioPanelProps {
-  darkMode: boolean;
-}
+interface PortfolioPanelProps {}
 
-const PortfolioPanel: React.FC<PortfolioPanelProps> = ({ darkMode }) => {
+const PortfolioPanel: React.FC<PortfolioPanelProps> = () => {
   const { portfolioHoldings, addHolding, editHolding, deleteHolding, marketData } = useUI();
   const { toast } = useToast();
   const [isAddHoldingOpen, setIsAddHoldingOpen] = useState(false);
@@ -117,10 +115,7 @@ const PortfolioPanel: React.FC<PortfolioPanelProps> = ({ darkMode }) => {
   };
 
   return (
-    <Card className={cn(
-      "border",
-      darkMode ? "bg-zinc-800 border-zinc-700" : "bg-white border-gray-200"
-    )}>
+    <Card className="border">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="flex items-center">
           <Briefcase className="w-4 h-4 mr-2" />
@@ -133,7 +128,7 @@ const PortfolioPanel: React.FC<PortfolioPanelProps> = ({ darkMode }) => {
               Add Holding
             </Button>
           </DialogTrigger>
-          <DialogContent className={darkMode ? "bg-zinc-800 border-zinc-700" : ""}>
+          <DialogContent>
             <DialogHeader>
               <DialogTitle>Add New Holding</DialogTitle>
             </DialogHeader>
@@ -142,17 +137,13 @@ const PortfolioPanel: React.FC<PortfolioPanelProps> = ({ darkMode }) => {
               fields={holdingFields}
               onSubmit={handleAddHolding}
               onCancel={() => setIsAddHoldingOpen(false)}
-              darkMode={darkMode}
             />
           </DialogContent>
         </Dialog>
       </CardHeader>
       <CardContent>
         {/* Portfolio Summary */}
-        <div className={cn(
-          "p-4 rounded-lg mb-4",
-          darkMode ? "bg-zinc-900" : "bg-gray-50"
-        )}>
+        <div className="p-4 rounded-lg mb-4 bg-muted">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Value</p>
@@ -183,10 +174,7 @@ const PortfolioPanel: React.FC<PortfolioPanelProps> = ({ darkMode }) => {
               const changePercent = ((currentPrice - holding.avgPrice) / holding.avgPrice) * 100;
               
               return (
-                <div key={holding.id} className={cn(
-                  "p-3 rounded-lg border",
-                  darkMode ? "border-zinc-600 bg-zinc-900" : "border-gray-200 bg-gray-50"
-                )}>
+                <div key={holding.id} className="p-3 rounded-lg border">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
@@ -240,7 +228,7 @@ const PortfolioPanel: React.FC<PortfolioPanelProps> = ({ darkMode }) => {
 
       {/* Edit Holding Dialog */}
       <Dialog open={isEditHoldingOpen} onOpenChange={setIsEditHoldingOpen}>
-        <DialogContent className={darkMode ? "bg-zinc-800 border-zinc-700" : ""}>
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Holding</DialogTitle>
           </DialogHeader>
@@ -255,7 +243,6 @@ const PortfolioPanel: React.FC<PortfolioPanelProps> = ({ darkMode }) => {
               }))}
               onSubmit={handleEditHolding}
               onCancel={() => setIsEditHoldingOpen(false)}
-              darkMode={darkMode}
             />
           )}
         </DialogContent>
@@ -263,7 +250,7 @@ const PortfolioPanel: React.FC<PortfolioPanelProps> = ({ darkMode }) => {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent className={darkMode ? "bg-zinc-800 border-zinc-700" : ""}>
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Remove Holding</AlertDialogTitle>
             <AlertDialogDescription>

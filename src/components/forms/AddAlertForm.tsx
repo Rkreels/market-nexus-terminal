@@ -3,14 +3,12 @@ import { Alert } from '@/types/marketData';
 import AddItemForm from '../AddItemForm';
 
 interface AddAlertFormProps {
-  darkMode: boolean;
   onSuccess: (alert: Omit<Alert, 'id'>) => void;
   onCancel: () => void;
   initialData?: Alert;
 }
 
 const AddAlertForm: React.FC<AddAlertFormProps> = ({
-  darkMode,
   onSuccess,
   onCancel,
   initialData
@@ -72,7 +70,6 @@ const AddAlertForm: React.FC<AddAlertFormProps> = ({
       fields={fields}
       onSubmit={handleSubmit}
       onCancel={onCancel}
-      darkMode={darkMode}
     />
   );
 };

@@ -59,15 +59,15 @@ const DashboardView: FC<DashboardViewProps> = ({ activeModule, darkMode }) => {
           <div className="grid grid-cols-1 gap-2 sm:gap-4 p-2 sm:p-4">
             <DashboardSummaryPanel darkMode={darkMode} />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-4">
-              <MarketDataPanel darkMode={darkMode} />
-              <PortfolioPanel darkMode={darkMode} />
+              <MarketDataPanel />
+              <PortfolioPanel />
             </div>
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-2 sm:gap-4">
               <div className="xl:col-span-2">
                 <NewsPanel darkMode={darkMode} />
               </div>
               <div>
-                <WatchlistPanel darkMode={darkMode} />
+                <WatchlistPanel />
               </div>
             </div>
           </div>
@@ -84,10 +84,10 @@ const DashboardView: FC<DashboardViewProps> = ({ activeModule, darkMode }) => {
             </h2>
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-2 sm:gap-4">
               <div className="xl:col-span-2">
-                <MarketDataPanel darkMode={darkMode} />
+                <MarketDataPanel />
               </div>
               <div className="xl:col-span-1">
-                <WatchlistPanel darkMode={darkMode} />
+                <WatchlistPanel />
               </div>
               <div className="xl:col-span-3">
                 <StockDetailPanel darkMode={darkMode} />
@@ -105,7 +105,7 @@ const DashboardView: FC<DashboardViewProps> = ({ activeModule, darkMode }) => {
             )}>
               Portfolio Management
             </h2>
-            <PortfolioPanel darkMode={darkMode} />
+            <PortfolioPanel />
           </div>
         );
       case "research":

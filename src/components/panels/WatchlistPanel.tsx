@@ -10,11 +10,9 @@ import { useUI } from '@/contexts/UIContext';
 import { useToast } from '@/hooks/use-toast';
 import AddItemForm from '@/components/AddItemForm';
 
-interface WatchlistPanelProps {
-  darkMode: boolean;
-}
+interface WatchlistPanelProps {}
 
-const WatchlistPanel: React.FC<WatchlistPanelProps> = ({ darkMode }) => {
+const WatchlistPanel: React.FC<WatchlistPanelProps> = () => {
   const { watchlists, addWatchlist, deleteWatchlist, addToWatchlist, removeFromWatchlist, marketData } = useUI();
   const { toast } = useToast();
   const [isAddWatchlistOpen, setIsAddWatchlistOpen] = useState(false);
@@ -101,10 +99,7 @@ const WatchlistPanel: React.FC<WatchlistPanelProps> = ({ darkMode }) => {
 
   return (
     <div className="space-y-4">
-      <Card className={cn(
-        "border",
-        darkMode ? "bg-zinc-800 border-zinc-700" : "bg-white border-gray-200"
-      )}>
+      <Card className="border">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="flex items-center">
             <Eye className="w-4 h-4 mr-2" />
@@ -117,7 +112,7 @@ const WatchlistPanel: React.FC<WatchlistPanelProps> = ({ darkMode }) => {
                 New List
               </Button>
             </DialogTrigger>
-            <DialogContent className={darkMode ? "bg-zinc-800 border-zinc-700" : ""}>
+            <DialogContent>
               <DialogHeader>
                 <DialogTitle>Create New Watchlist</DialogTitle>
               </DialogHeader>
@@ -126,7 +121,6 @@ const WatchlistPanel: React.FC<WatchlistPanelProps> = ({ darkMode }) => {
                 fields={watchlistFields}
                 onSubmit={handleCreateWatchlist}
                 onCancel={() => setIsAddWatchlistOpen(false)}
-                darkMode={darkMode}
               />
             </DialogContent>
           </Dialog>
@@ -141,10 +135,7 @@ const WatchlistPanel: React.FC<WatchlistPanelProps> = ({ darkMode }) => {
           ) : (
             <div className="space-y-4">
               {watchlists.map((watchlist) => (
-                <Card key={watchlist.id} className={cn(
-                  "border",
-                  darkMode ? "bg-zinc-900 border-zinc-600" : "bg-gray-50 border-gray-300"
-                )}>
+                <Card key={watchlist.id} className="border">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <div className="flex items-center">
                       <h4 className="font-medium">{watchlist.name}</h4>
@@ -220,7 +211,7 @@ const WatchlistPanel: React.FC<WatchlistPanelProps> = ({ darkMode }) => {
 
       {/* Add Symbol Dialog */}
       <Dialog open={isAddSymbolOpen} onOpenChange={setIsAddSymbolOpen}>
-        <DialogContent className={darkMode ? "bg-zinc-800 border-zinc-700" : ""}>
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Symbol to Watchlist</DialogTitle>
           </DialogHeader>
@@ -229,14 +220,13 @@ const WatchlistPanel: React.FC<WatchlistPanelProps> = ({ darkMode }) => {
             fields={symbolFields}
             onSubmit={handleAddSymbol}
             onCancel={() => setIsAddSymbolOpen(false)}
-            darkMode={darkMode}
           />
         </DialogContent>
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent className={darkMode ? "bg-zinc-800 border-zinc-700" : ""}>
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Watchlist</AlertDialogTitle>
             <AlertDialogDescription>
