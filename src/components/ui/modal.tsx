@@ -270,7 +270,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
     const currentItem = action === 'edit' ? getCurrentItem() : null;
     const fields = getFormFields().map(field => ({
       ...field,
-      defaultValue: currentItem?.[field.name]?.toString() || field.defaultValue
+      defaultValue: currentItem?.[field.name]?.toString() || (field as any).defaultValue || ''
     }));
 
     return (

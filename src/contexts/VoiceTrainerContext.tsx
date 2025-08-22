@@ -16,6 +16,13 @@ interface VoiceTrainerContextProps {
   announceNavigation: (from: string, to: string) => void;
   announceError: (error: string) => void;
   announceSuccess: (message: string) => void;
+  isEnabled: boolean;
+  setIsEnabled: (enabled: boolean) => void;
+  currentMessage: string | null;
+  isListening: boolean;
+  setIsListening: (listening: boolean) => void;
+  startListening: () => void;
+  stopListening: () => void;
 }
 
 const VoiceTrainerContext = createContext<VoiceTrainerContextProps | undefined>(undefined);
@@ -25,6 +32,9 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
   const [isPaused, setPaused] = useState<boolean>(false);
   const [speakingText, setSpeakingText] = useState<string | null>(null);
   const [currentContext, setCurrentContext] = useState<string | null>(null);
+  const [isEnabled, setIsEnabled] = useState<boolean>(true);
+  const [currentMessage, setCurrentMessage] = useState<string | null>(null);
+  const [isListening, setIsListening] = useState<boolean>(false);
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
   const spokenContextsRef = useRef<Set<string>>(new Set());
   const speechQueueRef = useRef<Array<{ text: string; priority: 'low' | 'medium' | 'high' }>>([]);
@@ -249,6 +259,17 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
   const announceSuccess = (message: string) => {
     speak(`Success: ${message}`, 'medium');
   };
+
+  const startListening = () => {
+    if (!isEnabled) return;
+    setIsListening(true);
+    setCurrentMessage('Listening for voice commands...');
+  };
+
+  const stopListening = () => {
+    setIsListening(false);
+    setCurrentMessage(null);
+  };
   
   return (
     <VoiceTrainerContext.Provider 
@@ -266,7 +287,14 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
         announceAction,
         announceNavigation,
         announceError,
-        announceSuccess
+        announceSuccess,
+        isEnabled,
+        setIsEnabled,
+        currentMessage,
+        isListening,
+        setIsListening,
+        startListening,
+        stopListening
       }}
     >
       {children}
