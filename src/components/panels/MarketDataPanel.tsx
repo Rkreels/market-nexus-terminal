@@ -59,8 +59,6 @@ const MarketDataPanel: FC<MarketDataPanelProps> = () => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
-  console.log('MarketDataPanel: Market data', marketData);
-  console.log('MarketDataPanel: Applied filters', appliedFilters);
 
   const applyFilters = (data: MarketDataItem[]) => {
     let filtered = [...data];

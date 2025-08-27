@@ -9,7 +9,7 @@ const VoiceTrainerTest: React.FC = () => {
     // Test speech synthesis on component mount
     const timer = setTimeout(() => {
       if (!isMuted) {
-        console.log('Voice Trainer Test: Testing speech synthesis...');
+        
         speak('Voice trainer is now active and ready to provide guidance.', 'high');
       }
     }, 2000);

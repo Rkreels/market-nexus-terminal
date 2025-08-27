@@ -16,7 +16,8 @@ import {
   Terminal,
   MoonStar,
   Sun,
-  Search
+  Search,
+  ExternalLink
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { 
@@ -164,6 +165,18 @@ const ModulePageLayout: React.FC<ModulePageLayoutProps> = ({
                 Market Nexus
               </h1>
               <div className="flex items-center space-x-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => window.open('https://skillsim.vercel.app/dashboard', '_self')}
+                  className={cn(
+                    "p-1 sm:p-2 text-xs", 
+                    darkMode ? "text-white hover:bg-zinc-800" : "text-black hover:bg-gray-200"
+                  )}
+                  title="Master Dashboard"
+                >
+                  {isMobile ? <ExternalLink size={14} /> : "Master Dashboard"}
+                </Button>
                 <Button
                   variant="ghost"
                   size="sm"
