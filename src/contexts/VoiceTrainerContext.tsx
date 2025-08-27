@@ -84,6 +84,10 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [currentContext]);
 
+  // Debounce speech to prevent infinite loops
+  const lastSpeechRef = useRef<string>('');
+  const speechDebounceRef = useRef<NodeJS.Timeout>();
+
   const clearSpokenContexts = () => {
     spokenContextsRef.current.clear();
     console.log('Voice Trainer: Cleared spoken contexts');
@@ -185,7 +189,8 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
         setSpeakingText(null);
         isProcessingRef.current = false;
         spokenContextsRef.current.add(contextKey);
-        setTimeout(processQueue, 200);
+        // Longer delay to prevent rapid succession
+        setTimeout(processQueue, 1000);
       };
       
       utterance.onerror = (event) => {
@@ -193,7 +198,10 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
         speechSynthRef.current = null;
         setSpeakingText(null);
         isProcessingRef.current = false;
-        setTimeout(processQueue, 300);
+        // Don't immediately retry on error to prevent loops
+        if (event.error !== 'interrupted' && event.error !== 'canceled') {
+          setTimeout(processQueue, 2000);
+        }
       };
       
       speechSynthRef.current = utterance;
@@ -231,14 +239,28 @@ export const VoiceTrainerProvider = ({ children }: { children: ReactNode }) => {
   const speak = (text: string, priority: 'low' | 'medium' | 'high' = 'medium') => {
     if (isMuted || isPaused || !text) return;
     
+    // Prevent duplicate speech within 2 seconds
+    const now = Date.now();
+    const speechKey = `${text.slice(0, 50)}-${priority}`;
+    if (lastSpeechRef.current === speechKey && now - lastSpeechTimeRef.current < 2000) {
+      return;
+    }
+    
+    // Clear any pending debounced speech
+    if (speechDebounceRef.current) {
+      clearTimeout(speechDebounceRef.current);
+    }
+    
+    lastSpeechRef.current = speechKey;
+    
     if (priority === 'high') {
       speechQueueRef.current = [];
       stopSpeaking();
-      setTimeout(() => speakImmediate(text, priority), 150);
+      speechDebounceRef.current = setTimeout(() => speakImmediate(text, priority), 150);
     } else {
       speechQueueRef.current.push({ text, priority });
       if (!isProcessingRef.current) {
-        setTimeout(processQueue, 200);
+        speechDebounceRef.current = setTimeout(processQueue, 500);
       }
     }
   };

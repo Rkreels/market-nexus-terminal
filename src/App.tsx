@@ -5,10 +5,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { UIProvider, useUI } from "@/contexts/UIContext";
-import { VoiceTrainerProvider } from "@/contexts/VoiceTrainerContext";
-import VoiceTrainer from "@/components/VoiceTrainer";
+import { VoiceTrainerProvider } from '@/contexts/VoiceTrainerContext';
+import VoiceTrainer from '@/components/VoiceTrainer';
 import { ActionModal } from "@/components/ui/modal";
-import VoiceTrainerTest from "@/components/VoiceTrainerTest";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import MarketDataPage from "./pages/MarketDataPage";
@@ -43,7 +42,6 @@ const App = () => {
               <Toaster />
               <Sonner />
               <VoiceTrainer />
-              <VoiceTrainerTest />
               <GlobalModal />
               <Routes>
                 <Route path="/" element={<Index />} />

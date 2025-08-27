@@ -168,18 +168,6 @@ const ModulePageLayout: React.FC<ModulePageLayoutProps> = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => window.open('https://skillsim.vercel.app/dashboard', '_self')}
-                  className={cn(
-                    "p-1 sm:p-2 text-xs", 
-                    darkMode ? "text-white hover:bg-zinc-800" : "text-black hover:bg-gray-200"
-                  )}
-                  title="Master Dashboard"
-                >
-                  {isMobile ? <ExternalLink size={14} /> : "Master Dashboard"}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
                   onClick={handleSearchOpen}
                   className={cn(
                     "p-1 sm:p-2", 
@@ -335,6 +323,16 @@ const ModulePageLayout: React.FC<ModulePageLayoutProps> = ({
                   >
                     <Terminal className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span className="hidden sm:inline">Terminal</span>
+                  </SidebarMenuButton>
+                 </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    onClick={() => window.open('https://skillsim.vercel.app/dashboard', '_self')}
+                    tooltip="Master Dashboard - External dashboard portal"
+                    className="text-xs sm:text-sm"
+                  >
+                    <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="hidden sm:inline">Master Dashboard</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
