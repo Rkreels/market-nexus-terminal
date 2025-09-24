@@ -39,6 +39,8 @@ import FilterPanel from "@/components/FilterPanel";
 import { useVoiceTrainer } from "@/contexts/VoiceTrainerContext";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface MarketDataPanelProps {}
 
@@ -53,6 +55,9 @@ const MarketDataPanel: FC<MarketDataPanelProps> = () => {
   const [selectedItem, setSelectedItem] = useState<MarketDataItem | null>(null);
   const [selectedItems, setSelectedItems] = useState<MarketDataItem[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  // Panel settings
+  const [showSectorColumn, setShowSectorColumn] = useState<boolean>(true);
+  const [compactMode, setCompactMode] = useState<boolean>(false);
   
   const { marketData, addMarketDataItem, deleteMarketDataItem, editMarketDataItem } = useUI();
   const { announceAction, announceSuccess, announceError, speak } = useVoiceTrainer();
@@ -300,7 +305,7 @@ const MarketDataPanel: FC<MarketDataPanelProps> = () => {
         </span>
       ),
     },
-    ...(!isMobile ? [{
+    ...(!isMobile && showSectorColumn ? [{
       key: 'sector',
       header: 'Sector',
       sortable: true,
@@ -381,6 +386,32 @@ const MarketDataPanel: FC<MarketDataPanelProps> = () => {
                 />
               </DialogContent>
             </Dialog>
+
+            {/* Settings Dialog */}
+            <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+              <DialogContent className="w-[95vw] max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>Market Data Settings</DialogTitle>
+                  <DialogDescription>
+                    Customize panel display options.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="show-sector">Show Sector column</Label>
+                    <Switch id="show-sector" checked={showSectorColumn} onCheckedChange={setShowSectorColumn} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="compact-mode">Compact mode (more rows)</Label>
+                    <Switch id="compact-mode" checked={compactMode} onCheckedChange={setCompactMode} />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="outline" onClick={() => setIsSettingsOpen(false)}>Close</Button>
+                  <Button onClick={() => { setIsSettingsOpen(false); toast({ title: 'Settings saved', description: 'Your preferences have been applied.' }); }}>Save</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardHeader>
         <CardContent className="p-2 sm:p-6">
@@ -393,7 +424,7 @@ const MarketDataPanel: FC<MarketDataPanelProps> = () => {
             filterable={true}
             exportable={true}
             selectable={true}
-            pageSize={isMobile ? 10 : 15}
+            pageSize={isMobile ? 10 : (compactMode ? 25 : 15)}
             onRowSelect={setSelectedItems}
             onEdit={handleRowEdit}
             onDelete={handleRowDelete}

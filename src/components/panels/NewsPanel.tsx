@@ -112,7 +112,16 @@ const NewsPanel: React.FC<NewsPanelProps> = ({ darkMode }) => {
                       {item.timestamp.toLocaleTimeString()}
                     </span>
                   </div>
-                  <Button variant="ghost" size="sm">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => {
+                      const link = item.url && item.url !== '#' 
+                        ? item.url 
+                        : `https://news.google.com/search?q=${encodeURIComponent(item.headline)}`;
+                      window.open(link, '_blank');
+                    }}
+                  >
                     <ExternalLink className="w-3 h-3" />
                   </Button>
                 </div>
