@@ -6,7 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CircleDollarSign, TrendingUp, TrendingDown } from 'lucide-react';
+import { CircleDollarSign, TrendingUp, TrendingDown, Download, X } from 'lucide-react';
+import { useUI } from '@/contexts/UIContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface TradingPanelProps {
   darkMode: boolean;
@@ -24,6 +26,8 @@ interface Order {
 }
 
 const TradingPanel: React.FC<TradingPanelProps> = ({ darkMode }) => {
+  const { marketData } = useUI();
+  const { toast } = useToast();
   const [orders, setOrders] = useState<Order[]>([
     { id: '1', symbol: 'AAPL', side: 'buy', quantity: 100, price: 178.45, type: 'limit', status: 'pending', timestamp: new Date() },
     { id: '2', symbol: 'MSFT', side: 'sell', quantity: 50, price: 415.20, type: 'market', status: 'filled', timestamp: new Date() },
@@ -38,14 +42,33 @@ const TradingPanel: React.FC<TradingPanelProps> = ({ darkMode }) => {
   });
 
   const handleSubmitOrder = () => {
-    if (!orderForm.symbol || !orderForm.quantity) return;
+    if (!orderForm.symbol || !orderForm.quantity) {
+      toast({
+        title: "Invalid Order",
+        description: "Please fill in all required fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (orderForm.type === 'limit' && (!orderForm.price || parseFloat(orderForm.price) <= 0)) {
+      toast({
+        title: "Invalid Price",
+        description: "Please enter a valid limit price.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const marketItem = marketData.find(item => item.symbol.toUpperCase() === orderForm.symbol.toUpperCase());
+    const marketPrice = marketItem ? marketItem.value : 0;
     
     const newOrder: Order = {
       id: Date.now().toString(),
       symbol: orderForm.symbol.toUpperCase(),
       side: orderForm.side,
       quantity: parseInt(orderForm.quantity),
-      price: orderForm.type === 'limit' ? parseFloat(orderForm.price) : 0,
+      price: orderForm.type === 'limit' ? parseFloat(orderForm.price) : marketPrice,
       type: orderForm.type,
       status: 'pending',
       timestamp: new Date()
@@ -53,15 +76,62 @@ const TradingPanel: React.FC<TradingPanelProps> = ({ darkMode }) => {
     
     setOrders(prev => [newOrder, ...prev]);
     setOrderForm({ symbol: '', side: 'buy', quantity: '', price: '', type: 'market' });
+    
+    toast({
+      title: "Order Submitted",
+      description: `${orderForm.side.toUpperCase()} order for ${orderForm.quantity} shares of ${orderForm.symbol.toUpperCase()} submitted successfully.`,
+    });
+  };
+
+  const handleCancelOrder = (orderId: string) => {
+    setOrders(prev => prev.map(order => 
+      order.id === orderId ? { ...order, status: 'cancelled' } : order
+    ));
+    toast({
+      title: "Order Cancelled",
+      description: "The order has been cancelled successfully.",
+    });
+  };
+
+  const handleExportOrders = () => {
+    const csvContent = [
+      ['Symbol', 'Side', 'Quantity', 'Price', 'Type', 'Status', 'Timestamp'],
+      ...orders.map(order => [
+        order.symbol,
+        order.side,
+        order.quantity.toString(),
+        order.price.toString(),
+        order.type,
+        order.status,
+        order.timestamp.toISOString()
+      ])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'trading_orders.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Export Complete",
+      description: "Trading orders exported to CSV successfully.",
+    });
   };
 
   return (
     <Card className={cn("border", darkMode ? "bg-zinc-800 border-zinc-700" : "bg-white border-gray-200")}>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="flex items-center">
           <CircleDollarSign className="w-4 h-4 mr-2" />
           Trading
         </CardTitle>
+        <Button size="sm" variant="outline" onClick={handleExportOrders}>
+          <Download className="w-4 h-4 mr-2" />
+          Export Orders
+        </Button>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="new-order" className="w-full">
@@ -167,13 +237,24 @@ const TradingPanel: React.FC<TradingPanelProps> = ({ darkMode }) => {
                         {order.side.toUpperCase()}
                       </span>
                     </div>
-                    <div className={cn(
-                      "px-2 py-1 rounded text-xs",
-                      order.status === 'filled' ? "bg-green-100 text-green-800" :
-                      order.status === 'pending' ? "bg-yellow-100 text-yellow-800" :
-                      "bg-red-100 text-red-800"
-                    )}>
-                      {order.status.toUpperCase()}
+                    <div className="flex items-center space-x-2">
+                      <div className={cn(
+                        "px-2 py-1 rounded text-xs",
+                        order.status === 'filled' ? "bg-green-100 text-green-800" :
+                        order.status === 'pending' ? "bg-yellow-100 text-yellow-800" :
+                        "bg-red-100 text-red-800"
+                      )}>
+                        {order.status.toUpperCase()}
+                      </div>
+                      {order.status === 'pending' && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleCancelOrder(order.id)}
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                   <div className="mt-2 text-sm text-gray-600">

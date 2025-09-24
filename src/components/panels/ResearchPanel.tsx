@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, FileText, TrendingUp, Star } from 'lucide-react';
+import { Search, FileText, TrendingUp, Star, Download, BookOpen } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface ResearchPanelProps {
   darkMode: boolean;
@@ -24,6 +25,7 @@ interface ResearchReport {
 }
 
 const ResearchPanel: React.FC<ResearchPanelProps> = ({ darkMode }) => {
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
 
   const researchReports: ResearchReport[] = [
@@ -95,13 +97,57 @@ const ResearchPanel: React.FC<ResearchPanelProps> = ({ darkMode }) => {
     }
   };
 
+  const handleViewFullReport = (reportId: string) => {
+    const report = researchReports.find(r => r.id === reportId);
+    if (report) {
+      toast({
+        title: "Full Report",
+        description: `Opening detailed analysis for ${report.symbol} by ${report.analyst}`,
+      });
+      // In a real app, this would open a detailed report modal or page
+    }
+  };
+
+  const handleExportReports = () => {
+    const csvContent = [
+      ['Symbol', 'Company', 'Analyst', 'Rating', 'Target Price', 'Current Price', 'Date', 'Summary'],
+      ...filteredReports.map(report => [
+        report.symbol,
+        report.company,
+        report.analyst,
+        report.rating,
+        report.targetPrice.toString(),
+        report.currentPrice.toString(),
+        report.date.toISOString(),
+        report.summary.replace(/,/g, ';') // Replace commas to avoid CSV issues
+      ])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'research_reports.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Export Complete",
+      description: "Research reports exported to CSV successfully.",
+    });
+  };
+
   return (
     <Card className={cn("border", darkMode ? "bg-zinc-800 border-zinc-700" : "bg-white border-gray-200")}>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="flex items-center">
           <FileText className="w-4 h-4 mr-2" />
           Research & Analysis
         </CardTitle>
+        <Button size="sm" variant="outline" onClick={handleExportReports}>
+          <Download className="w-4 h-4 mr-2" />
+          Export
+        </Button>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="reports" className="w-full">
@@ -159,6 +205,13 @@ const ResearchPanel: React.FC<ResearchPanelProps> = ({ darkMode }) => {
                         {(((report.targetPrice - report.currentPrice) / report.currentPrice) * 100).toFixed(1)}%
                       </span>
                     </div>
+                    <Button
+                      size="sm"
+                      variant="ghost" 
+                      onClick={() => handleViewFullReport(report.id)}
+                    >
+                      <BookOpen className="w-3 h-3" />
+                    </Button>
                   </div>
                 </div>
               ))}

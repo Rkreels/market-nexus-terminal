@@ -5,18 +5,29 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calculator, DollarSign, TrendingUp } from 'lucide-react';
+import { Calculator, DollarSign, TrendingUp, Download, Settings } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface FixedIncomePanelProps {
   darkMode: boolean;
 }
 
 const FixedIncomePanel: React.FC<FixedIncomePanelProps> = ({ darkMode }) => {
+  const { toast } = useToast();
   const [bondCalculator, setBondCalculator] = useState({
     faceValue: 1000,
     couponRate: 5.0,
     maturity: 10,
     ytm: 4.5
+  });
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [displaySettings, setDisplaySettings] = useState({
+    showDuration: true,
+    showConvexity: false,
+    realTimeUpdates: true
   });
 
   const bonds = [
@@ -80,13 +91,86 @@ const FixedIncomePanel: React.FC<FixedIncomePanelProps> = ({ darkMode }) => {
     return 'text-red-600 bg-red-100';
   };
 
+  const handleExportBonds = () => {
+    const csvContent = [
+      ['Symbol', 'Name', 'Yield', 'Price', 'Duration', 'Rating', 'Maturity'],
+      ...bonds.map(bond => [
+        bond.symbol,
+        bond.name,
+        `${bond.yield}%`,
+        bond.price.toString(),
+        bond.duration.toString(),
+        bond.rating,
+        bond.maturity
+      ])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'bonds_data.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Export Complete",
+      description: "Bond data exported to CSV successfully.",
+    });
+  };
+
+  const handleSaveSettings = () => {
+    setIsSettingsOpen(false);
+    toast({
+      title: "Settings Saved",
+      description: "Your display preferences have been updated.",
+    });
+  };
+
   return (
     <Card className={cn("border", darkMode ? "bg-zinc-800 border-zinc-700" : "bg-white border-gray-200")}>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="flex items-center">
           <DollarSign className="w-4 h-4 mr-2" />
           Fixed Income
         </CardTitle>
+        <div className="flex items-center space-x-2">
+          <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" variant="outline">
+                <Settings className="w-4 h-4 mr-2" />
+                Settings
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Display Settings</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="show-duration">Show Duration</Label>
+                  <Switch id="show-duration" checked={displaySettings.showDuration} onCheckedChange={(checked) => setDisplaySettings({...displaySettings, showDuration: checked})} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="show-convexity">Show Convexity</Label>
+                  <Switch id="show-convexity" checked={displaySettings.showConvexity} onCheckedChange={(checked) => setDisplaySettings({...displaySettings, showConvexity: checked})} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="real-time">Real-time Updates</Label>
+                  <Switch id="real-time" checked={displaySettings.realTimeUpdates} onCheckedChange={(checked) => setDisplaySettings({...displaySettings, realTimeUpdates: checked})} />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setIsSettingsOpen(false)}>Cancel</Button>
+                  <Button onClick={handleSaveSettings}>Save Settings</Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+          <Button size="sm" variant="outline" onClick={handleExportBonds}>
+            <Download className="w-4 h-4 mr-2" />
+            Export
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="bonds" className="w-full">

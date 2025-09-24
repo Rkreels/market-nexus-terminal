@@ -3,13 +3,16 @@ import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TrendingUp, TrendingDown, Globe, Calendar } from 'lucide-react';
+import { TrendingUp, TrendingDown, Globe, Calendar, Download, Bell } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 interface MacroEconomyPanelProps {
   darkMode: boolean;
 }
 
 const MacroEconomyPanel: React.FC<MacroEconomyPanelProps> = ({ darkMode }) => {
+  const { toast } = useToast();
   const economicIndicators = [
     {
       name: 'GDP Growth Rate',
@@ -124,13 +127,57 @@ const MacroEconomyPanel: React.FC<MacroEconomyPanelProps> = ({ darkMode }) => {
     }
   };
 
+  const handleExportData = () => {
+    const csvContent = [
+      ['Data Type', 'Name', 'Value', 'Change', 'Period'],
+      ...economicIndicators.map(indicator => [
+        'Economic Indicator',
+        indicator.name,
+        `${indicator.value}${indicator.unit}`,
+        `${indicator.change > 0 ? '+' : ''}${indicator.change}${indicator.unit}`,
+        indicator.period
+      ]),
+      ...centralBankData.map(bank => [
+        'Central Bank Rate',
+        bank.bank,
+        `${bank.rate}%`,
+        `${bank.lastChange > 0 ? '+' : ''}${bank.lastChange}%`,
+        bank.nextMeeting
+      ])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'macro_economy_data.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Export Complete",
+      description: "Macro economy data exported to CSV successfully.",
+    });
+  };
+
+  const handleSetEventAlert = (event: any) => {
+    toast({
+      title: "Alert Set",
+      description: `You'll be notified about ${event.event} on ${new Date(event.date).toLocaleDateString()}`,
+    });
+  };
+
   return (
     <Card className={cn("border", darkMode ? "bg-zinc-800 border-zinc-700" : "bg-white border-gray-200")}>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="flex items-center">
           <Globe className="w-4 h-4 mr-2" />
           Macro Economy
         </CardTitle>
+        <Button size="sm" variant="outline" onClick={handleExportData}>
+          <Download className="w-4 h-4 mr-2" />
+          Export
+        </Button>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="indicators" className="w-full">
@@ -221,9 +268,18 @@ const MacroEconomyPanel: React.FC<MacroEconomyPanelProps> = ({ darkMode }) => {
                   <div className="text-gray-600">
                     {new Date(event.date).toLocaleDateString()}
                   </div>
-                  <div>
-                    <span className="text-gray-600">Expected: </span>
-                    <span className="font-medium">{event.expected}</span>
+                  <div className="flex items-center space-x-2">
+                    <div>
+                      <span className="text-gray-600">Expected: </span>
+                      <span className="font-medium">{event.expected}</span>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleSetEventAlert(event)}
+                    >
+                      <Bell className="w-3 h-3" />
+                    </Button>
                   </div>
                 </div>
               </div>

@@ -6,24 +6,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Bell, Plus, X, Eye } from 'lucide-react';
+import { Bell, Plus, X, Eye, Download } from 'lucide-react';
 import { Alert, WatchlistItem } from '@/types/marketData';
+import { useUI } from '@/contexts/UIContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface AlertsPanelProps {
   darkMode: boolean;
 }
 
 const AlertsPanel: React.FC<AlertsPanelProps> = ({ darkMode }) => {
-  const [alerts, setAlerts] = useState<Alert[]>([
-    { id: 1, type: 'price', symbol: 'AAPL', name: 'Apple Inc.', condition: 'above', value: 180, currentValue: 178.45, status: 'pending', created: '2024-01-15' },
-    { id: 2, type: 'price', symbol: 'TSLA', name: 'Tesla Inc.', condition: 'below', value: 200, currentValue: 245.50, status: 'pending', created: '2024-01-14' },
-  ]);
-
-  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([
-    { symbol: 'AAPL', name: 'Apple Inc.', price: 178.45, change: 2.34, direction: 'up' },
-    { symbol: 'MSFT', name: 'Microsoft Corp.', price: 415.20, change: -3.45, direction: 'down' },
-    { symbol: 'GOOGL', name: 'Alphabet Inc.', price: 140.25, change: 1.23, direction: 'up' },
-  ]);
+  const { alerts: contextAlerts, addAlert, deleteAlert, watchlists, marketData } = useUI();
+  const { toast } = useToast();
 
   const [newAlert, setNewAlert] = useState({
     symbol: '',
@@ -36,52 +30,127 @@ const AlertsPanel: React.FC<AlertsPanelProps> = ({ darkMode }) => {
   const handleAddAlert = () => {
     if (!newAlert.symbol || !newAlert.value) return;
     
-    const alert: Alert = {
-      id: Date.now(),
+    const marketItem = marketData.find(item => item.symbol.toUpperCase() === newAlert.symbol.toUpperCase());
+    if (!marketItem) {
+      toast({
+        title: "Symbol Not Found",
+        description: "Please add this symbol to market data first.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const alert: Omit<Alert, 'id'> = {
       type: 'price',
       symbol: newAlert.symbol.toUpperCase(),
-      name: `${newAlert.symbol.toUpperCase()} Inc.`,
+      name: marketItem.name,
       condition: newAlert.condition,
       value: parseFloat(newAlert.value),
-      currentValue: Math.random() * 500 + 50,
+      currentValue: marketItem.value,
       status: 'pending',
-      created: new Date().toISOString().split('T')[0]
+      created: new Date().toISOString()
     };
     
-    setAlerts(prev => [...prev, alert]);
+    addAlert(alert);
     setNewAlert({ symbol: '', condition: 'above', value: '' });
+    toast({
+      title: "Alert Created",
+      description: `Alert set for ${alert.symbol} ${alert.condition} $${alert.value}`,
+    });
   };
 
   const handleAddToWatchlist = () => {
     if (!newWatchlistItem.trim()) return;
     
+    if (watchlists.length === 0) {
+      toast({
+        title: "No Watchlist",
+        description: "Please create a watchlist first.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const marketItem = marketData.find(item => item.symbol.toUpperCase() === newWatchlistItem.toUpperCase());
+    if (!marketItem) {
+      toast({
+        title: "Symbol Not Found",
+        description: "Please add this symbol to market data first.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const item: WatchlistItem = {
-      symbol: newWatchlistItem.toUpperCase(),
-      name: `${newWatchlistItem.toUpperCase()} Inc.`,
-      price: Math.random() * 500 + 50,
-      change: (Math.random() - 0.5) * 10,
-      direction: Math.random() > 0.5 ? 'up' : 'down'
+      symbol: marketItem.symbol,
+      name: marketItem.name,
+      price: marketItem.value,
+      change: marketItem.change,
+      direction: marketItem.direction
     };
     
-    setWatchlist(prev => [...prev, item]);
+    // Add to first watchlist (or create logic to select which watchlist)
+    // For simplicity, we'll show a message to use the dedicated watchlist page
+    toast({
+      title: "Use Watchlist Page",
+      description: "Please use the dedicated Watchlist page to manage watchlists.",
+    });
     setNewWatchlistItem('');
   };
 
   const handleRemoveAlert = (id: number) => {
-    setAlerts(prev => prev.filter(alert => alert.id !== id));
+    deleteAlert(id);
+    toast({
+      title: "Alert Removed",
+      description: "The alert has been removed successfully.",
+    });
+  };
+
+  const handleExportAlerts = () => {
+    const csvContent = [
+      ['Symbol', 'Type', 'Condition', 'Value', 'Status', 'Created'],
+      ...contextAlerts.map(alert => [
+        alert.symbol,
+        alert.type,
+        alert.condition,
+        alert.value.toString(),
+        alert.status,
+        alert.created
+      ])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'alerts.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Export Complete",
+      description: "Alerts exported to CSV successfully.",
+    });
   };
 
   const handleRemoveFromWatchlist = (symbol: string) => {
-    setWatchlist(prev => prev.filter(item => item.symbol !== symbol));
+    toast({
+      title: "Use Watchlist Page", 
+      description: "Please use the dedicated Watchlist page to manage watchlists.",
+    });
   };
 
   return (
     <Card className={cn("border", darkMode ? "bg-zinc-800 border-zinc-700" : "bg-white border-gray-200")}>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="flex items-center">
           <Bell className="w-4 h-4 mr-2" />
           Alerts & Watchlists
         </CardTitle>
+        <Button size="sm" variant="outline" onClick={handleExportAlerts}>
+          <Download className="w-4 h-4 mr-2" />
+          Export
+        </Button>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="alerts" className="w-full">
@@ -120,7 +189,7 @@ const AlertsPanel: React.FC<AlertsPanelProps> = ({ darkMode }) => {
             </div>
             
             <div className="space-y-2">
-              {alerts.map((alert) => (
+              {contextAlerts.map((alert) => (
                 <div key={alert.id} className={cn(
                   "p-3 rounded border flex justify-between items-center",
                   darkMode ? "border-zinc-600 bg-zinc-700" : "border-gray-200 bg-gray-50"
@@ -130,7 +199,7 @@ const AlertsPanel: React.FC<AlertsPanelProps> = ({ darkMode }) => {
                       {alert.symbol} {alert.condition} ${alert.value}
                     </div>
                     <div className="text-sm text-gray-600">
-                      Current: ${alert.currentValue?.toFixed(2)} | Created: {alert.created}
+                      Current: ${alert.currentValue?.toFixed(2)} | Created: {new Date(alert.created).toLocaleDateString()}
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -164,7 +233,7 @@ const AlertsPanel: React.FC<AlertsPanelProps> = ({ darkMode }) => {
             </div>
             
             <div className="space-y-2">
-              {watchlist.map((item) => (
+              {watchlists.length > 0 && watchlists[0]?.symbols?.map((item) => (
                 <div key={item.symbol} className={cn(
                   "p-3 rounded border flex justify-between items-center",
                   darkMode ? "border-zinc-600 bg-zinc-700" : "border-gray-200 bg-gray-50"

@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Bot, TrendingUp, AlertTriangle, Target } from 'lucide-react';
+import { Bot, TrendingUp, AlertTriangle, Target, Download, RefreshCw } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface AIModulePanelProps {
   darkMode: boolean;
@@ -21,8 +22,9 @@ interface AIInsight {
 }
 
 const AIModulePanel: React.FC<AIModulePanelProps> = ({ darkMode }) => {
+  const { toast } = useToast();
   const [query, setQuery] = useState('');
-  const [insights] = useState<AIInsight[]>([
+  const [insights, setInsights] = useState<AIInsight[]>([
     {
       id: '1',
       type: 'prediction',
@@ -73,13 +75,67 @@ const AIModulePanel: React.FC<AIModulePanelProps> = ({ darkMode }) => {
     }
   };
 
+  const handleRefreshInsights = () => {
+    const newInsights = [
+      {
+        id: Date.now().toString(),
+        type: 'prediction' as const,
+        title: 'Market Correction Signal',
+        description: 'Technical indicators suggest potential 5-8% market correction in next 2 weeks based on historical patterns.',
+        confidence: Math.floor(Math.random() * 30) + 70,
+        timestamp: new Date()
+      }
+    ];
+    setInsights(prev => [newInsights[0], ...prev.slice(0, 2)]);
+    toast({
+      title: "Insights Refreshed",
+      description: "AI insights have been updated with latest market data.",
+    });
+  };
+
+  const handleExportInsights = () => {
+    const csvContent = [
+      ['Type', 'Title', 'Description', 'Confidence', 'Timestamp'],
+      ...insights.map(insight => [
+        insight.type,
+        insight.title,
+        insight.description.replace(/,/g, ';'),
+        `${insight.confidence}%`,
+        insight.timestamp.toISOString()
+      ])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ai_insights.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Export Complete",
+      description: "AI insights exported to CSV successfully.",
+    });
+  };
+
   return (
     <Card className={cn("border", darkMode ? "bg-zinc-800 border-zinc-700" : "bg-white border-gray-200")}>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="flex items-center">
           <Bot className="w-4 h-4 mr-2" />
           AI Module
         </CardTitle>
+        <div className="flex items-center space-x-2">
+          <Button size="sm" variant="outline" onClick={handleRefreshInsights}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh
+          </Button>
+          <Button size="sm" variant="outline" onClick={handleExportInsights}>
+            <Download className="w-4 h-4 mr-2" />
+            Export
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="insights" className="w-full">

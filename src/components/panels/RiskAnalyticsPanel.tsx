@@ -5,14 +5,24 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { AlertTriangle, Shield, TrendingDown, Activity } from 'lucide-react';
+import { AlertTriangle, Shield, TrendingDown, Activity, Download, Settings } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface RiskAnalyticsPanelProps {
   darkMode: boolean;
 }
 
 const RiskAnalyticsPanel: React.FC<RiskAnalyticsPanelProps> = ({ darkMode }) => {
+  const { toast } = useToast();
   const [selectedTimeframe, setSelectedTimeframe] = useState('1M');
+  const [riskSettings, setRiskSettings] = useState({
+    confidenceLevel: '95',
+    riskModel: 'montecarlo',
+    includeOptions: true
+  });
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const portfolioRisk = {
     var95: 2.45, // Value at Risk 95%
@@ -74,13 +84,98 @@ const RiskAnalyticsPanel: React.FC<RiskAnalyticsPanelProps> = ({ darkMode }) => 
     return 'text-red-600 bg-red-100';
   };
 
+  const handleExportRiskData = () => {
+    const csvContent = [
+      ['Metric', 'Value'],
+      ['VaR 95%', `${portfolioRisk.var95}%`],
+      ['VaR 99%', `${portfolioRisk.var99}%`],
+      ['Beta', portfolioRisk.beta.toString()],
+      ['Sharpe Ratio', portfolioRisk.sharpe.toString()],
+      ['Max Drawdown', `${portfolioRisk.maxDrawdown}%`],
+      ['Volatility', `${portfolioRisk.volatility}%`],
+      ...sectorExposure.map(sector => [`${sector.sector} Allocation`, `${sector.allocation}%`])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'risk_analytics.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Export Complete",
+      description: "Risk analytics exported to CSV successfully.",
+    });
+  };
+
+  const handleSaveSettings = () => {
+    setIsSettingsOpen(false);
+    toast({
+      title: "Settings Saved",
+      description: "Your risk analytics preferences have been updated.",
+    });
+  };
+
   return (
     <Card className={cn("border", darkMode ? "bg-zinc-800 border-zinc-700" : "bg-white border-gray-200")}>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="flex items-center">
           <Shield className="w-4 h-4 mr-2" />
           Risk Analytics
         </CardTitle>
+        <div className="flex items-center space-x-2">
+          <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" variant="outline">
+                <Settings className="w-4 h-4 mr-2" />
+                Settings
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Risk Analytics Settings</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Confidence Level</label>
+                  <Select value={riskSettings.confidenceLevel} onValueChange={(value) => setRiskSettings({...riskSettings, confidenceLevel: value})}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="90">90%</SelectItem>
+                      <SelectItem value="95">95%</SelectItem>
+                      <SelectItem value="99">99%</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Risk Model</label>
+                  <Select value={riskSettings.riskModel} onValueChange={(value) => setRiskSettings({...riskSettings, riskModel: value})}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="montecarlo">Monte Carlo</SelectItem>
+                      <SelectItem value="historical">Historical</SelectItem>
+                      <SelectItem value="parametric">Parametric</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setIsSettingsOpen(false)}>Cancel</Button>
+                  <Button onClick={handleSaveSettings}>Save Settings</Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+          <Button size="sm" variant="outline" onClick={handleExportRiskData}>
+            <Download className="w-4 h-4 mr-2" />
+            Export
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="overview" className="w-full">
